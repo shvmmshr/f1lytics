@@ -16,6 +16,7 @@
   /* --- Tracking (letter-spacing) --- */
   --tracking-tighter: -0.04em;
   --tracking-tight: -0.02em;
+  --tracking-display: -0.05em;
 
   /* --- GridLock custom colors --- */
 
@@ -38,6 +39,9 @@
   --color-status-red: #EF4444;
   --color-status-yellow: #EAB308;
   --color-status-blue: #3B82F6;
+
+  /* Glows */
+  --color-glow-red: rgba(239, 68, 68, 0.4);
 
   /* F1 Team colors */
   --color-team-mclaren: #FF8000;
@@ -192,4 +196,52 @@
   h1, h2, h3, h4, h5, h6 {
     @apply font-sans tracking-tight;
   }
+}
+
+/* ============================================================
+   Keyframes & Utility Animations
+   ============================================================ */
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 4px 1px var(--color-status-red);
+  }
+  50% {
+    opacity: 0.5;
+    box-shadow: 0 0 8px 3px var(--color-status-red);
+  }
+}
+
+@keyframes checkered-fade {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.08;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 1.5s infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-checkered-fade {
+  animation: checkered-fade 3s ease-in-out infinite;
 }
