@@ -100,7 +100,7 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
   return (
     <PageTransition>
       <section
-        className="mb-8 overflow-hidden rounded-2xl border border-[hsl(var(--border-subtle))] bg-surface-secondary p-6"
+        className="mb-8 overflow-hidden rounded-2xl border border-border-subtle bg-bg-secondary p-6"
         style={{
           boxShadow: `inset 4px 0 0 0 ${team.color}`,
         }}
@@ -121,7 +121,7 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
             </div>
           </div>
 
-          <div className="rounded-xl border border-[hsl(var(--border-subtle))] bg-bg-tertiary px-6 py-5 text-center">
+          <div className="rounded-xl border border-border-subtle bg-bg-tertiary px-6 py-5 text-center">
             <p className="text-xs uppercase tracking-widest text-text-muted">Championship</p>
             <p className="mt-2 font-mono text-4xl font-bold text-text-primary">
               {driverStanding ? `P${driverStanding.position}` : "—"}
@@ -138,7 +138,7 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
         <StatCard label="Avg Finish" value={Math.round(averageFinish)} />
       </section>
 
-      <section className="mb-8 rounded-2xl border border-[hsl(var(--border-subtle))] bg-surface-secondary p-6">
+      <section className="mb-8 rounded-2xl border border-border-subtle bg-bg-secondary p-6">
         <h2 className="text-xl font-semibold tracking-tight text-text-primary">Position Trend</h2>
         <p className="mt-2 text-sm text-text-secondary">
           Interactive race-by-race position chart will be enabled in the Phase 6 chart tasks.
@@ -147,7 +147,7 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
           {driverRaceResults.slice(0, 12).map((result) => (
             <div
               key={`${result.round}-${result.raceName}`}
-              className="rounded-lg border border-[hsl(var(--border-subtle))] bg-bg-tertiary p-3"
+              className="rounded-lg border border-border-subtle bg-bg-tertiary p-3"
             >
               <p className="text-[10px] uppercase tracking-widest text-text-muted">R{result.round}</p>
               <p className="mt-1 font-mono text-lg font-bold text-text-primary">P{result.position}</p>
@@ -160,7 +160,7 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
         </div>
       </section>
 
-      <section className="rounded-2xl border border-[hsl(var(--border-subtle))] bg-surface-secondary p-6">
+      <section className="rounded-2xl border border-border-subtle bg-bg-secondary p-6">
         <h2 className="text-xl font-semibold tracking-tight text-text-primary">Teammate Comparison</h2>
         <p className="mt-2 text-sm text-text-secondary">
           Same-team comparison snapshot for the current season.
@@ -168,7 +168,7 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
 
         {teammate ? (
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            <div className="rounded-lg border border-[hsl(var(--border-subtle))] bg-bg-tertiary p-4">
+            <div className="rounded-lg border border-border-subtle bg-bg-tertiary p-4">
               <p className="text-sm text-text-secondary">{driver.firstName} {driver.lastName}</p>
               <p className="mt-2 font-mono text-2xl font-bold text-text-primary">
                 {driverStanding ? `${driverStanding.points} PTS` : "—"}
@@ -178,7 +178,7 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
               </p>
             </div>
 
-            <div className="rounded-lg border border-[hsl(var(--border-subtle))] bg-bg-tertiary p-4">
+            <div className="rounded-lg border border-border-subtle bg-bg-tertiary p-4">
               <p className="text-sm text-text-secondary">{teammate.firstName} {teammate.lastName}</p>
               <p className="mt-2 font-mono text-2xl font-bold text-text-primary">
                 {teammateStanding ? `${teammateStanding.points} PTS` : "—"}

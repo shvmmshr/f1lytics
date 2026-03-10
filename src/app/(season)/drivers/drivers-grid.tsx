@@ -18,7 +18,7 @@ export function DriversGrid({ children }: { children: React.ReactNode }) {
   return (
     <div
       ref={gridRef}
-      className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+      className="mx-auto flex max-w-4xl flex-col gap-3"
     >
       {children}
     </div>

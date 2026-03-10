@@ -138,12 +138,17 @@ export default async function CalendarPage() {
                   </div>
 
                   <div className="text-right">
+                    {circuit.isSprint && circuit.sprintDate && (
+                      <p className="font-mono text-xs text-status-yellow">
+                        Sprint: {formatRaceDate(circuit.sprintDate)}
+                      </p>
+                    )}
                     <p className="font-mono text-sm text-text-primary">
-                      {formatRaceDate(circuit.raceDate)}
+                      Race: {formatRaceDate(circuit.raceDate)}
                     </p>
                     {circuit.isSprint && (
                       <span className="mt-2 inline-flex rounded-full bg-status-yellow/20 px-2 py-1 text-[10px] font-semibold uppercase tracking-widest text-status-yellow">
-                        Sprint
+                        Sprint Weekend
                       </span>
                     )}
                     {isNext && (

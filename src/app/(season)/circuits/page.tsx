@@ -3,7 +3,7 @@ import Link from "next/link";
 import { CIRCUIT_LIST } from "@/lib/constants";
 import { PageTransition } from "@/components/layout/page-transition";
 import { SectionHeader } from "@/components/shared/section-header";
-import { AnimatedMap } from "./animated-map";
+import { CircuitGlobe } from "./circuit-globe";
 import { CircuitsGrid } from "./circuits-grid";
 
 export const metadata: Metadata = {
@@ -28,29 +28,14 @@ function countryCodeToFlag(countryCode: string): string {
     .join("");
 }
 
-function projectCoordinates(lat: number, lng: number) {
-  const width = 1000;
-  const height = 500;
-  const x = ((lng + 180) / 360) * width;
-  const y = ((90 - lat) / 180) * height;
-  return { x, y };
-}
-
 export default function CircuitsPage() {
-  const mapDots = CIRCUIT_LIST.map((circuit) => {
-    const point = projectCoordinates(
-      circuit.coordinates.lat,
-      circuit.coordinates.lng
-    );
-    return {
-      id: circuit.id,
-      x: point.x,
-      y: point.y,
-      r: circuit.isSprint ? 6 : 4,
-      fill: circuit.isSprint ? "#EAB308" : "#3B82F6",
-      label: `R${circuit.round} ${circuit.name}`,
-    };
-  });
+  const globeCircuits = CIRCUIT_LIST.map((circuit) => ({
+    id: circuit.id,
+    lat: circuit.coordinates.lat,
+    lng: circuit.coordinates.lng,
+    name: circuit.name,
+    isSprint: circuit.isSprint,
+  }));
 
   return (
     <PageTransition>
@@ -59,7 +44,7 @@ export default function CircuitsPage() {
         subtitle="Every track on the 2026 Formula 1 world tour"
       />
 
-      <AnimatedMap dots={mapDots} />
+      <CircuitGlobe circuits={globeCircuits} />
 
       <CircuitsGrid>
         {CIRCUIT_LIST.map((circuit) => (
@@ -95,10 +80,12 @@ export default function CircuitsPage() {
               <div className="mt-4 grid grid-cols-3 gap-2 text-sm">
                 <div className="rounded-lg border border-border-subtle bg-bg-tertiary p-2">
                   <p className="text-[10px] uppercase tracking-widest text-text-muted">
-                    Date
+                    {circuit.isSprint ? "Sprint / Race" : "Race Date"}
                   </p>
                   <p className="mt-1 text-xs text-text-primary">
-                    {formatRaceDate(circuit.raceDate)}
+                    {circuit.isSprint && circuit.sprintDate
+                      ? `${formatRaceDate(circuit.sprintDate)} / ${formatRaceDate(circuit.raceDate)}`
+                      : formatRaceDate(circuit.raceDate)}
                   </p>
                 </div>
                 <div className="rounded-lg border border-border-subtle bg-bg-tertiary p-2">

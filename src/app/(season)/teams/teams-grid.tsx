@@ -18,7 +18,7 @@ export function TeamsGrid({ children }: { children: React.ReactNode }) {
   return (
     <div
       ref={gridRef}
-      className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3"
+      className="mx-auto flex max-w-4xl flex-col gap-3"
     >
       {children}
     </div>

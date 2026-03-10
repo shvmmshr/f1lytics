@@ -25,17 +25,22 @@ export function animateCounter(
 }
 
 export function staggerEntrance(selector: string, container: HTMLElement) {
-  return gsap.from(selector, {
-    y: 40,
-    opacity: 0,
-    duration: 0.6,
-    stagger: 0.08,
-    ease: "power3.out",
-    scrollTrigger: {
-      trigger: container,
-      start: "top 80%",
-    },
-  });
+  return gsap.fromTo(
+    selector,
+    { x: -30, y: 20, opacity: 0 },
+    {
+      x: 0,
+      y: 0,
+      opacity: 1,
+      duration: 0.5,
+      stagger: 0.06,
+      ease: "power3.out",
+      scrollTrigger: {
+        trigger: container,
+        start: "top 85%",
+      },
+    }
+  );
 }
 
 export function barFill(element: HTMLElement, targetWidthPercent: number) {

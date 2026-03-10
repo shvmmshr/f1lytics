@@ -21,7 +21,7 @@ export const TEAMS: Record<string, Team> = {
     base: "Woking, United Kingdom",
     principal: "Andrea Stella",
     drivers: ["norris", "piastri"],
-    logo: "/teams/mclaren.svg",
+    logo: "/teams/mclaren.webp",
     slug: "mclaren",
   },
   ferrari: {
@@ -33,7 +33,7 @@ export const TEAMS: Record<string, Team> = {
     base: "Maranello, Italy",
     principal: "Frederic Vasseur",
     drivers: ["leclerc", "hamilton"],
-    logo: "/teams/ferrari.svg",
+    logo: "/teams/ferrari.webp",
     slug: "ferrari",
   },
   red_bull: {
@@ -45,7 +45,7 @@ export const TEAMS: Record<string, Team> = {
     base: "Milton Keynes, United Kingdom",
     principal: "Christian Horner",
     drivers: ["verstappen", "hadjar"],
-    logo: "/teams/red-bull.svg",
+    logo: "/teams/red-bull.webp",
     slug: "red-bull",
   },
   mercedes: {
@@ -57,7 +57,7 @@ export const TEAMS: Record<string, Team> = {
     base: "Brackley, United Kingdom",
     principal: "Toto Wolff",
     drivers: ["russell", "antonelli"],
-    logo: "/teams/mercedes.svg",
+    logo: "/teams/mercedes.webp",
     slug: "mercedes",
   },
   aston_martin: {
@@ -69,7 +69,7 @@ export const TEAMS: Record<string, Team> = {
     base: "Silverstone, United Kingdom",
     principal: "Mike Krack",
     drivers: ["alonso", "stroll"],
-    logo: "/teams/aston-martin.svg",
+    logo: "/teams/aston-martin.webp",
     slug: "aston-martin",
   },
   alpine: {
@@ -81,7 +81,7 @@ export const TEAMS: Record<string, Team> = {
     base: "Enstone, United Kingdom",
     principal: "Oliver Oakes",
     drivers: ["gasly", "colapinto"],
-    logo: "/teams/alpine.svg",
+    logo: "/teams/alpine.webp",
     slug: "alpine",
   },
   williams: {
@@ -93,7 +93,7 @@ export const TEAMS: Record<string, Team> = {
     base: "Grove, United Kingdom",
     principal: "James Vowles",
     drivers: ["albon", "sainz"],
-    logo: "/teams/williams.svg",
+    logo: "/teams/williams.webp",
     slug: "williams",
   },
   racing_bulls: {
@@ -105,7 +105,7 @@ export const TEAMS: Record<string, Team> = {
     base: "Faenza, Italy",
     principal: "Laurent Mekies",
     drivers: ["lawson", "lindblad"],
-    logo: "/teams/racing-bulls.svg",
+    logo: "/teams/racing-bulls.webp",
     slug: "racing-bulls",
   },
   haas: {
@@ -117,7 +117,7 @@ export const TEAMS: Record<string, Team> = {
     base: "Kannapolis, United States",
     principal: "Ayao Komatsu",
     drivers: ["ocon", "bearman"],
-    logo: "/teams/haas.svg",
+    logo: "/teams/haas.webp",
     slug: "haas",
   },
   audi: {
@@ -129,7 +129,7 @@ export const TEAMS: Record<string, Team> = {
     base: "Hinwil, Switzerland",
     principal: "Mattia Binotto",
     drivers: ["hulkenberg", "bortoleto"],
-    logo: "/teams/audi.svg",
+    logo: "/teams/audi.webp",
     slug: "audi",
   },
   cadillac: {
@@ -141,7 +141,7 @@ export const TEAMS: Record<string, Team> = {
     base: "United States",
     principal: "TBD",
     drivers: ["bottas", "perez"],
-    logo: "/teams/cadillac.svg",
+    logo: "/teams/cadillac.webp",
     slug: "cadillac",
   },
 } as const;

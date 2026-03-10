@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { getConstructorStandings } from "@/lib/api/jolpica";
 import { TEAM_LIST, TEAMS } from "@/lib/constants";
 import { DRIVERS } from "@/lib/constants/drivers";
@@ -95,63 +96,128 @@ export default async function TeamsPage() {
       <SectionHeader title="Teams" subtitle="Constructor Championship" />
 
       <TeamsGrid>
-        {sortedTeams.map((team) => {
-          const standing = standingsByTeam.get(team.id);
-          const teamDrivers = team.drivers.map((driverId) => DRIVERS[driverId]);
-
-          return (
-            <Link key={team.id} href={`/teams/${team.slug}`}>
-              <article
-                data-animate="team-card"
-                className="group h-full overflow-hidden rounded-xl border border-border-subtle bg-bg-secondary p-5 transition-all duration-200 hover:-translate-y-1"
-                style={{
-                  backgroundImage: `linear-gradient(160deg, ${team.color}30 0%, ${team.color}08 40%, transparent 70%)`,
-                }}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-xs uppercase tracking-widest text-text-muted">Constructor</p>
-                    <h2 className="mt-1 text-2xl font-bold tracking-tight text-text-primary">{team.name}</h2>
-                    <p className="mt-1 text-sm text-text-secondary">{team.fullName}</p>
-                  </div>
-
-                  <div className="text-right">
-                    <p className="text-xs uppercase tracking-widest text-text-muted">Championship</p>
-                    <p className="mt-1 font-mono text-xl font-bold text-text-primary">
-                      {standing ? `P${standing.position}` : "\u2014"}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="mt-5 flex flex-wrap gap-2">
-                  {teamDrivers.map((driver) => (
-                    <span
-                      key={driver.id}
-                      className="rounded-full border border-border-subtle bg-bg-tertiary px-3 py-1 text-xs text-text-secondary"
-                    >
-                      {driver.firstName} {driver.lastName}
-                    </span>
-                  ))}
-                </div>
-
-                <div className="mt-5 flex items-center justify-between">
-                  <span className="text-xs uppercase tracking-widest text-text-muted">Points</span>
-                  <span className="font-mono text-lg font-bold text-text-primary">
-                    {standing ? standing.points.toFixed(1) : "\u2014"}
-                  </span>
-                </div>
-
-                {/* Expandable extra info on hover */}
-                <div className="mt-0 max-h-0 overflow-hidden transition-all duration-300 group-hover:mt-4 group-hover:max-h-20">
-                  <div className="flex justify-between border-t border-border-subtle pt-3 text-xs text-text-muted">
-                    <span>{team.engine} engine</span>
-                    <span>{team.base}</span>
-                  </div>
-                </div>
-              </article>
-            </Link>
+        {(() => {
+          const maxPoints = Math.max(
+            ...sortedTeams.map((t) => standingsByTeam.get(t.id)?.points ?? 0),
+            1
           );
-        })}
+
+          return sortedTeams.map((team) => {
+            const standing = standingsByTeam.get(team.id);
+            const teamDrivers = team.drivers.map((driverId) => DRIVERS[driverId]);
+            const barPct = standing ? (standing.points / maxPoints) * 100 : 0;
+            const isPodium = standing !== undefined && standing.position <= 3;
+
+            return (
+              <Link key={team.id} href={`/teams/${team.slug}`}>
+                <article
+                  data-animate="team-card"
+                  className="group relative overflow-hidden rounded-xl border border-border-subtle bg-bg-secondary transition-all duration-300 hover:border-transparent hover:shadow-lg"
+                >
+                  {/* Left accent stripe */}
+                  <div
+                    className="absolute inset-y-0 left-0 w-1"
+                    style={{ backgroundColor: team.color }}
+                  />
+
+                  {/* Background gradient wash */}
+                  <div
+                    className="pointer-events-none absolute inset-0 opacity-[0.04] transition-opacity duration-300 group-hover:opacity-[0.08]"
+                    style={{
+                      background: `linear-gradient(135deg, ${team.color}, transparent 60%)`,
+                    }}
+                  />
+
+                  <div className="relative flex items-center gap-5 py-5 pl-6 pr-5">
+                    {/* Position */}
+                    <div
+                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg font-mono text-xl font-bold"
+                      style={{
+                        backgroundColor: isPodium ? team.color + "20" : undefined,
+                        color: isPodium ? team.color : "var(--color-text-muted)",
+                        border: isPodium
+                          ? `1px solid ${team.color}40`
+                          : "1px solid var(--color-border-subtle)",
+                      }}
+                    >
+                      {standing ? standing.position : "-"}
+                    </div>
+
+                    {/* Team logo */}
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center">
+                      <Image
+                        src={team.logo}
+                        alt={team.name}
+                        width={40}
+                        height={40}
+                        className="object-contain opacity-70 transition-opacity group-hover:opacity-100"
+                        unoptimized
+                      />
+                    </div>
+
+                    {/* Team info */}
+                    <div className="min-w-0 flex-1">
+                      <h2 className="text-lg font-bold tracking-tight text-text-primary">
+                        {team.name}
+                      </h2>
+                      <div className="mt-1.5 flex flex-wrap gap-2">
+                        {teamDrivers.map((driver) => (
+                          <span
+                            key={driver.id}
+                            className="rounded-md border border-border-subtle bg-bg-primary/50 px-2 py-0.5 text-xs text-text-secondary"
+                          >
+                            {driver.firstName[0]}. {driver.lastName}
+                          </span>
+                        ))}
+                        <span className="hidden items-center gap-1 text-xs text-text-muted sm:flex">
+                          {team.engine}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Points + bar */}
+                    <div className="flex shrink-0 flex-col items-end gap-1.5">
+                      {standing ? (
+                        <>
+                          <div className="text-right">
+                            <span className="font-mono text-2xl font-bold text-text-primary">
+                              {standing.points % 1 === 0
+                                ? standing.points
+                                : standing.points.toFixed(1)}
+                            </span>
+                            <span className="ml-1 text-[10px] uppercase tracking-widest text-text-muted">
+                              PTS
+                            </span>
+                          </div>
+                          {/* Mini points bar */}
+                          <div className="h-1 w-24 overflow-hidden rounded-full bg-bg-tertiary">
+                            <div
+                              className="h-full rounded-full transition-all duration-700"
+                              style={{
+                                width: `${barPct}%`,
+                                backgroundColor: team.color,
+                              }}
+                            />
+                          </div>
+                        </>
+                      ) : (
+                        <span className="font-mono text-sm text-text-muted">&mdash;</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Bottom hover glow */}
+                  <div
+                    className="absolute inset-x-0 bottom-0 h-16 translate-y-full opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100"
+                    style={{
+                      background: `linear-gradient(to top, ${team.color}10, transparent)`,
+                    }}
+                  />
+                </article>
+              </Link>
+            );
+          });
+        })()}
       </TeamsGrid>
     </PageTransition>
   );

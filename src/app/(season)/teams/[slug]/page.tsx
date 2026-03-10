@@ -199,7 +199,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
   return (
     <PageTransition>
       <section
-        className="mb-8 overflow-hidden rounded-2xl border border-[hsl(var(--border-subtle))] p-6"
+        className="mb-8 overflow-hidden rounded-2xl border border-border-subtle p-6"
         style={{
           backgroundImage: `linear-gradient(135deg, ${team.color}1F 0%, transparent 62%)`,
         }}
@@ -218,7 +218,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
             </div>
           </div>
 
-          <div className="rounded-xl border border-[hsl(var(--border-subtle))] bg-bg-tertiary px-6 py-5 text-right">
+          <div className="rounded-xl border border-border-subtle bg-bg-tertiary px-6 py-5 text-right">
             <p className="text-xs uppercase tracking-widest text-text-muted">Championship</p>
             <p className="mt-2 font-mono text-4xl font-bold text-text-primary">
               {constructorStanding ? `P${constructorStanding.position}` : "—"}
@@ -231,15 +231,15 @@ export default async function TeamPage({ params }: TeamPageProps) {
       </section>
 
       <section className="mb-8 grid gap-4 sm:grid-cols-3">
-        <article className="rounded-xl border border-[hsl(var(--border-subtle))] bg-surface-secondary p-4">
+        <article className="rounded-xl border border-border-subtle bg-bg-secondary p-4">
           <p className="text-xs uppercase tracking-widest text-text-muted">Engine</p>
           <p className="mt-2 text-lg font-semibold text-text-primary">{team.engine}</p>
         </article>
-        <article className="rounded-xl border border-[hsl(var(--border-subtle))] bg-surface-secondary p-4">
+        <article className="rounded-xl border border-border-subtle bg-bg-secondary p-4">
           <p className="text-xs uppercase tracking-widest text-text-muted">Base</p>
           <p className="mt-2 text-lg font-semibold text-text-primary">{team.base}</p>
         </article>
-        <article className="rounded-xl border border-[hsl(var(--border-subtle))] bg-surface-secondary p-4">
+        <article className="rounded-xl border border-border-subtle bg-bg-secondary p-4">
           <p className="text-xs uppercase tracking-widest text-text-muted">Team Principal</p>
           <p className="mt-2 text-lg font-semibold text-text-primary">{team.principal}</p>
         </article>
@@ -262,7 +262,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
         </div>
       </section>
 
-      <section className="mb-8 rounded-2xl border border-[hsl(var(--border-subtle))] bg-surface-secondary p-6">
+      <section className="mb-8 rounded-2xl border border-border-subtle bg-bg-secondary p-6">
         <h2 className="text-2xl font-semibold tracking-tight text-text-primary">Points Progression</h2>
         <p className="mt-2 text-sm text-text-secondary">
           Race-by-race constructor points accumulation through the 2026 season.
@@ -300,7 +300,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
         )}
       </section>
 
-      <section className="rounded-2xl border border-[hsl(var(--border-subtle))] bg-surface-secondary p-6">
+      <section className="rounded-2xl border border-border-subtle bg-bg-secondary p-6">
         <h2 className="text-2xl font-semibold tracking-tight text-text-primary">Season Results</h2>
         <p className="mt-2 text-sm text-text-secondary">Per-race result summary for both team cars.</p>
 
@@ -308,7 +308,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
           <div className="mt-4 overflow-x-auto">
             <table className="w-full min-w-[640px] border-collapse text-left">
               <thead>
-                <tr className="border-b border-[hsl(var(--border-subtle))] text-xs uppercase tracking-widest text-text-muted">
+                <tr className="border-b border-border-subtle text-xs uppercase tracking-widest text-text-muted">
                   <th className="px-3 py-2">Round</th>
                   <th className="px-3 py-2">Race</th>
                   <th className="px-3 py-2">Date</th>
@@ -321,7 +321,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
                 {raceSummaries.map((summary) => (
                   <tr
                     key={`table-${summary.round}-${summary.raceName}`}
-                    className="border-b border-[hsl(var(--border-subtle))] text-sm text-text-secondary"
+                    className="border-b border-border-subtle text-sm text-text-secondary"
                   >
                     <td className="px-3 py-3 font-mono text-text-primary">{summary.round}</td>
                     <td className="px-3 py-3">{summary.raceName}</td>
