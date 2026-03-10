@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRef, useState, useCallback, useEffect } from "react";
 import { useGSAP } from "@gsap/react";
-import { gsap, ScrollTrigger } from "@/lib/gsap";
+import { gsap } from "@/lib/gsap";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
@@ -32,9 +32,9 @@ export function Navbar() {
 
       gsap.fromTo(
         headerRef.current,
-        { backgroundColor: "rgba(var(--color-bg-primary-rgb, 10, 10, 10), 0.6)" },
+        { backgroundColor: "rgba(12, 12, 14, 0.6)" },
         {
-          backgroundColor: "rgba(var(--color-bg-primary-rgb, 10, 10, 10), 0.95)",
+          backgroundColor: "rgba(12, 12, 14, 0.95)",
           ease: "none",
           scrollTrigger: {
             start: "top top",
