@@ -11,7 +11,6 @@ export function PageTransition({ children }: { children: React.ReactNode }) {
       transition={{
         duration: 0.4,
         ease: [0.25, 0.46, 0.45, 0.94],
-        exit: { duration: 0.25 },
       }}
     >
       {children}
