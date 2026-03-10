@@ -1,0 +1,63 @@
+import type { Metadata } from "next";
+import { DRIVER_LIST } from "@/lib/constants";
+import { getDriverStandings } from "@/lib/api/jolpica";
+import { DriverCard } from "@/components/shared/driver-card";
+import { PageTransition } from "@/components/layout/page-transition";
+import { SectionHeader } from "@/components/shared/section-header";
+import { DriversGrid } from "./drivers-grid";
+
+export const metadata: Metadata = {
+  title: "Drivers — GridLock F1 2026",
+  description: "All 22 drivers competing in the 2026 Formula 1 season",
+};
+
+export default async function DriversPage() {
+  let standings: Awaited<ReturnType<typeof getDriverStandings>> = [];
+  try {
+    standings = await getDriverStandings("2026");
+  } catch {
+    // Fall back to static data if API unavailable.
+  }
+
+  const pointsMap = new Map<string, { points: number; position: number }>();
+  standings.forEach((standing) => {
+    const code = standing.Driver.code?.toUpperCase();
+    if (!code) return;
+
+    pointsMap.set(code, {
+      points: Number.parseFloat(standing.points),
+      position: Number.parseInt(standing.position, 10),
+    });
+  });
+
+  const sortedDrivers = [...DRIVER_LIST].sort((a, b) => {
+    const aStanding = pointsMap.get(a.abbreviation);
+    const bStanding = pointsMap.get(b.abbreviation);
+
+    if (aStanding && bStanding) return aStanding.position - bStanding.position;
+    if (aStanding) return -1;
+    if (bStanding) return 1;
+    return 0;
+  });
+
+  return (
+    <PageTransition>
+      <SectionHeader title="Drivers" subtitle="2026 F1 Season Grid" />
+
+      <DriversGrid>
+        {sortedDrivers.map((driver) => {
+          const standing = pointsMap.get(driver.abbreviation);
+
+          return (
+            <DriverCard
+              key={driver.id}
+              driver={driver}
+              points={standing?.points}
+              position={standing?.position}
+            />
+          );
+        })}
+      </DriversGrid>
+    </PageTransition>
+  );
+}
