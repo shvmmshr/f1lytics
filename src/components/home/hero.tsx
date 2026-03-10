@@ -56,7 +56,7 @@ export function Hero() {
           // Red light streak traces car path
           .to(streakRef.current, { opacity: 1, duration: 0.2 }, 0.7)
           .to(
-            streakRef.current?.querySelector("line"),
+            streakRef.current!.querySelector("line")!,
             {
               strokeDashoffset: 0,
               duration: 0.8,
