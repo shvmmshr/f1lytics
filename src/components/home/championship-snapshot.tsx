@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 import { useGSAP } from "@gsap/react";
-import { gsap, barFill } from "@/lib/gsap";
+import { barFill } from "@/lib/gsap";
 import { getTeamColor } from "@/lib/utils";
 
 interface ChampionshipSnapshotProps {
