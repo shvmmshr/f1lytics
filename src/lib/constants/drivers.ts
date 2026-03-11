@@ -18,12 +18,12 @@ export const DRIVERS: Record<string, Driver> = {
     firstName: "Max",
     lastName: "Verstappen",
     abbreviation: "VER",
-    number: 1,
+    number: 3,
     teamId: "red_bull",
     nationality: "Dutch",
     countryCode: "NL",
     dateOfBirth: "1997-09-30",
-    image: "/drivers/verstappen.png",
+    image: "/drivers/verstappen.webp",
     slug: "max-verstappen",
   },
   norris: {
@@ -31,12 +31,12 @@ export const DRIVERS: Record<string, Driver> = {
     firstName: "Lando",
     lastName: "Norris",
     abbreviation: "NOR",
-    number: 4,
+    number: 1,
     teamId: "mclaren",
     nationality: "British",
     countryCode: "GB",
     dateOfBirth: "1999-11-13",
-    image: "/drivers/norris.png",
+    image: "/drivers/norris.webp",
     slug: "lando-norris",
   },
   leclerc: {
@@ -49,7 +49,7 @@ export const DRIVERS: Record<string, Driver> = {
     nationality: "Monegasque",
     countryCode: "MC",
     dateOfBirth: "1997-10-16",
-    image: "/drivers/leclerc.png",
+    image: "/drivers/leclerc.webp",
     slug: "charles-leclerc",
   },
   hamilton: {
@@ -62,7 +62,7 @@ export const DRIVERS: Record<string, Driver> = {
     nationality: "British",
     countryCode: "GB",
     dateOfBirth: "1985-01-07",
-    image: "/drivers/hamilton.png",
+    image: "/drivers/hamilton.webp",
     slug: "lewis-hamilton",
   },
   piastri: {
@@ -75,7 +75,7 @@ export const DRIVERS: Record<string, Driver> = {
     nationality: "Australian",
     countryCode: "AU",
     dateOfBirth: "2001-04-06",
-    image: "/drivers/piastri.png",
+    image: "/drivers/piastri.webp",
     slug: "oscar-piastri",
   },
   russell: {
@@ -88,7 +88,7 @@ export const DRIVERS: Record<string, Driver> = {
     nationality: "British",
     countryCode: "GB",
     dateOfBirth: "1998-02-15",
-    image: "/drivers/russell.png",
+    image: "/drivers/russell.webp",
     slug: "george-russell",
   },
   antonelli: {
@@ -101,7 +101,7 @@ export const DRIVERS: Record<string, Driver> = {
     nationality: "Italian",
     countryCode: "IT",
     dateOfBirth: "2006-08-25",
-    image: "/drivers/antonelli.png",
+    image: "/drivers/antonelli.webp",
     slug: "kimi-antonelli",
   },
   alonso: {
@@ -114,7 +114,7 @@ export const DRIVERS: Record<string, Driver> = {
     nationality: "Spanish",
     countryCode: "ES",
     dateOfBirth: "1981-07-29",
-    image: "/drivers/alonso.png",
+    image: "/drivers/alonso.webp",
     slug: "fernando-alonso",
   },
   stroll: {
@@ -127,7 +127,7 @@ export const DRIVERS: Record<string, Driver> = {
     nationality: "Canadian",
     countryCode: "CA",
     dateOfBirth: "1998-10-29",
-    image: "/drivers/stroll.png",
+    image: "/drivers/stroll.webp",
     slug: "lance-stroll",
   },
   gasly: {
@@ -140,7 +140,7 @@ export const DRIVERS: Record<string, Driver> = {
     nationality: "French",
     countryCode: "FR",
     dateOfBirth: "1996-02-07",
-    image: "/drivers/gasly.png",
+    image: "/drivers/gasly.webp",
     slug: "pierre-gasly",
   },
   colapinto: {
@@ -153,7 +153,7 @@ export const DRIVERS: Record<string, Driver> = {
     nationality: "Argentine",
     countryCode: "AR",
     dateOfBirth: "2003-05-27",
-    image: "/drivers/colapinto.png",
+    image: "/drivers/colapinto.webp",
     slug: "franco-colapinto",
   },
   albon: {
@@ -166,7 +166,7 @@ export const DRIVERS: Record<string, Driver> = {
     nationality: "Thai",
     countryCode: "TH",
     dateOfBirth: "1996-03-23",
-    image: "/drivers/albon.png",
+    image: "/drivers/albon.webp",
     slug: "alex-albon",
   },
   sainz: {
@@ -179,7 +179,7 @@ export const DRIVERS: Record<string, Driver> = {
     nationality: "Spanish",
     countryCode: "ES",
     dateOfBirth: "1994-09-01",
-    image: "/drivers/sainz.png",
+    image: "/drivers/sainz.webp",
     slug: "carlos-sainz",
   },
   lawson: {
@@ -192,7 +192,7 @@ export const DRIVERS: Record<string, Driver> = {
     nationality: "New Zealander",
     countryCode: "NZ",
     dateOfBirth: "2002-02-11",
-    image: "/drivers/lawson.png",
+    image: "/drivers/lawson.webp",
     slug: "liam-lawson",
   },
   lindblad: {
@@ -200,12 +200,12 @@ export const DRIVERS: Record<string, Driver> = {
     firstName: "Arvid",
     lastName: "Lindblad",
     abbreviation: "LIN",
-    number: 27,
+    number: 41,
     teamId: "racing_bulls",
     nationality: "British",
     countryCode: "GB",
     dateOfBirth: "2006-10-17",
-    image: "/drivers/lindblad.png",
+    image: "/drivers/lindblad.webp",
     slug: "arvid-lindblad",
   },
   ocon: {
@@ -218,12 +218,12 @@ export const DRIVERS: Record<string, Driver> = {
     nationality: "French",
     countryCode: "FR",
     dateOfBirth: "1996-09-17",
-    image: "/drivers/ocon.png",
+    image: "/drivers/ocon.webp",
     slug: "esteban-ocon",
   },
   bearman: {
     id: "bearman",
-    firstName: "Ollie",
+    firstName: "Oliver",
     lastName: "Bearman",
     abbreviation: "BEA",
     number: 87,
@@ -231,7 +231,7 @@ export const DRIVERS: Record<string, Driver> = {
     nationality: "British",
     countryCode: "GB",
     dateOfBirth: "2005-05-08",
-    image: "/drivers/bearman.png",
+    image: "/drivers/bearman.webp",
     slug: "ollie-bearman",
   },
   hulkenberg: {
@@ -244,7 +244,7 @@ export const DRIVERS: Record<string, Driver> = {
     nationality: "German",
     countryCode: "DE",
     dateOfBirth: "1987-08-19",
-    image: "/drivers/hulkenberg.png",
+    image: "/drivers/hulkenberg.webp",
     slug: "nico-hulkenberg",
   },
   bortoleto: {
@@ -257,7 +257,7 @@ export const DRIVERS: Record<string, Driver> = {
     nationality: "Brazilian",
     countryCode: "BR",
     dateOfBirth: "2004-10-14",
-    image: "/drivers/bortoleto.png",
+    image: "/drivers/bortoleto.webp",
     slug: "gabriel-bortoleto",
   },
   hadjar: {
@@ -270,7 +270,7 @@ export const DRIVERS: Record<string, Driver> = {
     nationality: "French",
     countryCode: "FR",
     dateOfBirth: "2004-09-28",
-    image: "/drivers/hadjar.png",
+    image: "/drivers/hadjar.webp",
     slug: "isack-hadjar",
   },
   bottas: {
@@ -283,7 +283,7 @@ export const DRIVERS: Record<string, Driver> = {
     nationality: "Finnish",
     countryCode: "FI",
     dateOfBirth: "1989-08-28",
-    image: "/drivers/bottas.png",
+    image: "/drivers/bottas.webp",
     slug: "valtteri-bottas",
   },
   perez: {
@@ -296,7 +296,7 @@ export const DRIVERS: Record<string, Driver> = {
     nationality: "Mexican",
     countryCode: "MX",
     dateOfBirth: "1990-01-26",
-    image: "/drivers/perez.png",
+    image: "/drivers/perez.webp",
     slug: "sergio-perez",
   },
 } as const;

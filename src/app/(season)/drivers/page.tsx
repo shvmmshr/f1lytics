@@ -24,10 +24,11 @@ export default async function DriversPage() {
     const code = standing.Driver.code?.toUpperCase();
     if (!code) return;
 
-    pointsMap.set(code, {
-      points: Number.parseFloat(standing.points),
-      position: Number.parseInt(standing.position, 10),
-    });
+    const pts = Number.parseFloat(standing.points) || 0;
+    const pos = Number.parseInt(standing.position, 10);
+    if (!Number.isNaN(pos)) {
+      pointsMap.set(code, { points: pts, position: pos });
+    }
   });
 
   const sortedDrivers = [...DRIVER_LIST].sort((a, b) => {

@@ -75,10 +75,11 @@ export default async function TeamsPage() {
     );
     if (!teamId) return;
 
-    standingsByTeam.set(teamId, {
-      position: Number.parseInt(standing.position, 10),
-      points: Number.parseFloat(standing.points),
-    });
+    const pos = Number.parseInt(standing.position, 10);
+    const pts = Number.parseFloat(standing.points) || 0;
+    if (!Number.isNaN(pos)) {
+      standingsByTeam.set(teamId, { position: pos, points: pts });
+    }
   });
 
   const sortedTeams = [...TEAM_LIST].sort((a, b) => {
@@ -91,133 +92,104 @@ export default async function TeamsPage() {
     return 0;
   });
 
+  const maxPoints = Math.max(
+    ...sortedTeams.map((t) => standingsByTeam.get(t.id)?.points ?? 0),
+    1
+  );
+
   return (
     <PageTransition>
-      <SectionHeader title="Teams" subtitle="Constructor Championship" />
+      <SectionHeader title="Teams" subtitle="Constructor Championship 2026" />
 
       <TeamsGrid>
-        {(() => {
-          const maxPoints = Math.max(
-            ...sortedTeams.map((t) => standingsByTeam.get(t.id)?.points ?? 0),
-            1
-          );
+        {sortedTeams.map((team) => {
+          const standing = standingsByTeam.get(team.id);
+          const teamDrivers = team.drivers.map((driverId) => DRIVERS[driverId]);
+          const barPct = standing ? (standing.points / maxPoints) * 100 : 0;
+          const isPodium = standing !== undefined && standing.position <= 3;
 
-          return sortedTeams.map((team) => {
-            const standing = standingsByTeam.get(team.id);
-            const teamDrivers = team.drivers.map((driverId) => DRIVERS[driverId]);
-            const barPct = standing ? (standing.points / maxPoints) * 100 : 0;
-            const isPodium = standing !== undefined && standing.position <= 3;
+          return (
+            <Link key={team.id} href={`/teams/${team.slug}`}>
+              <article className="group relative overflow-hidden rounded-xl border border-border-subtle bg-bg-secondary transition-colors duration-200 hover:bg-bg-tertiary">
+                {/* Top team color accent */}
+                <div className="absolute inset-x-0 top-0 h-0.5" style={{ backgroundColor: team.color }} />
 
-            return (
-              <Link key={team.id} href={`/teams/${team.slug}`}>
-                <article
-                  data-animate="team-card"
-                  className="group relative overflow-hidden rounded-xl border border-border-subtle bg-bg-secondary transition-all duration-300 hover:border-transparent hover:shadow-lg"
-                >
-                  {/* Left accent stripe */}
-                  <div
-                    className="absolute inset-y-0 left-0 w-1"
-                    style={{ backgroundColor: team.color }}
-                  />
-
-                  {/* Background gradient wash */}
-                  <div
-                    className="pointer-events-none absolute inset-0 opacity-[0.04] transition-opacity duration-300 group-hover:opacity-[0.08]"
-                    style={{
-                      background: `linear-gradient(135deg, ${team.color}, transparent 60%)`,
-                    }}
-                  />
-
-                  <div className="relative flex items-center gap-5 py-5 pl-6 pr-5">
-                    {/* Position */}
+                <div className="p-4">
+                  {/* Header row: position + logo + name + points */}
+                  <div className="flex items-center gap-3">
+                    {/* Position badge */}
                     <div
-                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg font-mono text-xl font-bold"
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg font-mono text-sm font-bold"
                       style={{
-                        backgroundColor: isPodium ? team.color + "20" : undefined,
+                        backgroundColor: isPodium ? team.color + "20" : "var(--color-bg-tertiary)",
                         color: isPodium ? team.color : "var(--color-text-muted)",
-                        border: isPodium
-                          ? `1px solid ${team.color}40`
-                          : "1px solid var(--color-border-subtle)",
                       }}
                     >
                       {standing ? standing.position : "-"}
                     </div>
 
                     {/* Team logo */}
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center">
                       <Image
                         src={team.logo}
                         alt={team.name}
-                        width={40}
-                        height={40}
-                        className="object-contain opacity-70 transition-opacity group-hover:opacity-100"
+                        width={28}
+                        height={28}
+                        className="object-contain opacity-70 group-hover:opacity-100"
                         unoptimized
                       />
                     </div>
 
-                    {/* Team info */}
+                    {/* Team name */}
                     <div className="min-w-0 flex-1">
-                      <h2 className="text-lg font-bold tracking-tight text-text-primary">
-                        {team.name}
-                      </h2>
-                      <div className="mt-1.5 flex flex-wrap gap-2">
-                        {teamDrivers.map((driver) => (
-                          <span
-                            key={driver.id}
-                            className="rounded-md border border-border-subtle bg-bg-primary/50 px-2 py-0.5 text-xs text-text-secondary"
-                          >
-                            {driver.firstName[0]}. {driver.lastName}
-                          </span>
-                        ))}
-                        <span className="hidden items-center gap-1 text-xs text-text-muted sm:flex">
-                          {team.engine}
-                        </span>
-                      </div>
+                      <h2 className="text-sm font-bold tracking-tight text-text-primary">{team.name}</h2>
+                      <p className="truncate text-[10px] text-text-muted">{team.engine}</p>
                     </div>
 
-                    {/* Points + bar */}
-                    <div className="flex shrink-0 flex-col items-end gap-1.5">
-                      {standing ? (
-                        <>
-                          <div className="text-right">
-                            <span className="font-mono text-2xl font-bold text-text-primary">
-                              {standing.points % 1 === 0
-                                ? standing.points
-                                : standing.points.toFixed(1)}
-                            </span>
-                            <span className="ml-1 text-[10px] uppercase tracking-widest text-text-muted">
-                              PTS
-                            </span>
-                          </div>
-                          {/* Mini points bar */}
-                          <div className="h-1 w-24 overflow-hidden rounded-full bg-bg-tertiary">
-                            <div
-                              className="h-full rounded-full transition-all duration-700"
-                              style={{
-                                width: `${barPct}%`,
-                                backgroundColor: team.color,
-                              }}
-                            />
-                          </div>
-                        </>
-                      ) : (
-                        <span className="font-mono text-sm text-text-muted">&mdash;</span>
-                      )}
+                    {/* Points */}
+                    <div className="shrink-0 text-right">
+                      <span className="font-mono text-lg font-bold text-text-primary">
+                        {standing ? (standing.points % 1 === 0 ? standing.points : standing.points.toFixed(1)) : "—"}
+                      </span>
+                      <span className="ml-1 text-[9px] text-text-muted">pts</span>
                     </div>
                   </div>
 
-                  {/* Bottom hover glow */}
-                  <div
-                    className="absolute inset-x-0 bottom-0 h-16 translate-y-full opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100"
-                    style={{
-                      background: `linear-gradient(to top, ${team.color}10, transparent)`,
-                    }}
-                  />
-                </article>
-              </Link>
-            );
-          });
-        })()}
+                  {/* Points bar */}
+                  {standing && (
+                    <div className="mt-3 h-1 w-full overflow-hidden rounded-full bg-bg-tertiary">
+                      <div
+                        className="h-full rounded-full"
+                        style={{ width: `${barPct}%`, backgroundColor: team.color }}
+                      />
+                    </div>
+                  )}
+
+                  {/* Drivers row */}
+                  <div className="mt-3 flex gap-2">
+                    {teamDrivers.map((d) => (
+                      <div key={d.id} className="flex flex-1 items-center gap-2 rounded-lg bg-bg-tertiary/50 p-2">
+                        <div className="relative h-7 w-7 shrink-0 overflow-hidden rounded-full border border-border-subtle bg-bg-primary">
+                          <Image
+                            src={d.image}
+                            alt={`${d.firstName} ${d.lastName}`}
+                            fill
+                            className="object-cover object-top"
+                            unoptimized
+                          />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="truncate text-xs font-medium text-text-primary">{d.lastName}</p>
+                          <p className="text-[10px] text-text-muted">#{d.number}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </article>
+            </Link>
+          );
+        })}
       </TeamsGrid>
     </PageTransition>
   );

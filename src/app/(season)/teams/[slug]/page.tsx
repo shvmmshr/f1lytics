@@ -1,16 +1,14 @@
 import type { Metadata } from "next";
+import Image from "next/image";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getConstructorStandings, getDriverStandings, getRaceResults } from "@/lib/api/jolpica";
 import { TEAM_LIST, TEAMS, getTeamBySlug } from "@/lib/constants";
 import { DRIVERS, type Driver } from "@/lib/constants/drivers";
 import { PageTransition } from "@/components/layout/page-transition";
-import { DriverCard } from "@/components/shared/driver-card";
-import { TeamBadge } from "@/components/shared/team-badge";
 
 interface TeamPageProps {
-  params: Promise<{
-    slug: string;
-  }>;
+  params: Promise<{ slug: string }>;
 }
 
 const CONSTRUCTOR_TO_TEAM: Record<string, string> = {
@@ -37,71 +35,68 @@ function normalize(value: string): string {
 function mapConstructorToTeamId(constructorId: string, constructorName: string): string | undefined {
   const mappedId = CONSTRUCTOR_TO_TEAM[constructorId];
   if (mappedId && TEAMS[mappedId]) return mappedId;
-
-  const normalizedName = normalize(constructorName);
-
-  if (normalizedName.includes("racingbulls") || normalizedName === "rb") return "racing_bulls";
-  if (normalizedName.includes("sauber")) return "audi";
-  if (normalizedName.includes("redbull")) return "red_bull";
-
-  const matchedTeam = TEAM_LIST.find((team) => {
-    const teamName = normalize(team.name);
-    const teamFullName = normalize(team.fullName);
-    return (
-      teamName === normalizedName ||
-      teamFullName.includes(normalizedName) ||
-      normalizedName.includes(teamName)
-    );
-  });
-
-  return matchedTeam?.id;
+  const n = normalize(constructorName);
+  if (n.includes("racingbulls") || n === "rb") return "racing_bulls";
+  if (n.includes("sauber")) return "audi";
+  if (n.includes("redbull")) return "red_bull";
+  return TEAM_LIST.find((t) => n.includes(normalize(t.name)) || normalize(t.name).includes(n))?.id;
 }
 
 export function generateStaticParams() {
-  return TEAM_LIST.map((team) => ({
-    slug: team.slug,
-  }));
+  return TEAM_LIST.map((team) => ({ slug: team.slug }));
 }
 
 export async function generateMetadata({ params }: TeamPageProps): Promise<Metadata> {
   const { slug } = await params;
   const team = getTeamBySlug(slug);
-
-  if (!team) {
-    return {
-      title: "Team Not Found — GridLock F1 2026",
-    };
-  }
-
+  if (!team) return { title: "Team Not Found — GridLock F1 2026" };
   return {
     title: `${team.name} — GridLock F1 2026`,
     description: `${team.fullName} team profile, drivers, and season results`,
   };
 }
 
-interface TeamRaceSummary {
-  round: number;
-  raceName: string;
-  date: string;
-  bestFinish: number | null;
-  racePoints: number;
-  cumulativePoints: number;
+function getTeamDrivers(ids: [string, string]): Driver[] {
+  return ids.map((id) => DRIVERS[id]).filter(Boolean);
 }
 
-function getTeamDrivers(teamDriverIds: [string, string]): Driver[] {
-  return teamDriverIds
-    .map((driverId) => DRIVERS[driverId])
-    .filter((driver): driver is Driver => Boolean(driver));
+// Fetch historical constructor standings
+async function getHistoricalStandings(teamName: string) {
+  const years = ["2022", "2023", "2024", "2025"];
+  const results: { year: string; position: number | null; points: number; wins: number }[] = [];
+
+  try {
+    const all = await Promise.all(years.map((y) => getConstructorStandings(y).catch(() => [])));
+    for (let i = 0; i < years.length; i++) {
+      const n = normalize(teamName);
+      const entry = all[i].find((s) => {
+        const cn = normalize(s.Constructor.name);
+        return cn.includes(n) || n.includes(cn);
+      });
+      if (entry) {
+        const pos = Number.parseInt(entry.position, 10);
+        results.push({
+          year: years[i],
+          position: Number.isNaN(pos) ? null : pos,
+          points: Number.parseFloat(entry.points) || 0,
+          wins: Number.parseInt(entry.wins, 10) || 0,
+        });
+      }
+    }
+  } catch {
+    // ignore
+  }
+
+  return results;
 }
 
 export default async function TeamPage({ params }: TeamPageProps) {
   const { slug } = await params;
   const team = getTeamBySlug(slug);
-
   if (!team) notFound();
 
   const teamDrivers = getTeamDrivers(team.drivers);
-  const driverCodeSet = new Set(teamDrivers.map((driver) => driver.abbreviation));
+  const driverCodeSet = new Set(teamDrivers.map((d) => d.abbreviation));
 
   let constructorStandings: Awaited<ReturnType<typeof getConstructorStandings>> = [];
   let driverStandings: Awaited<ReturnType<typeof getDriverStandings>> = [];
@@ -114,234 +109,276 @@ export default async function TeamPage({ params }: TeamPageProps) {
       getRaceResults("2026"),
     ]);
   } catch {
-    // Render static profile details when APIs are unavailable.
+    // API unavailable
   }
 
-  const constructorStanding = constructorStandings.find((standing) => {
-    return (
-      mapConstructorToTeamId(standing.Constructor.constructorId, standing.Constructor.name) ===
-      team.id
-    );
-  });
+  const historicalStandings = await getHistoricalStandings(team.name);
 
-  const driverStandingMap = new Map<
-    string,
-    {
-      points: number;
-      position: number;
-    }
-  >();
+  const constructorStanding = constructorStandings.find(
+    (s) => mapConstructorToTeamId(s.Constructor.constructorId, s.Constructor.name) === team.id
+  );
 
-  driverStandings.forEach((standing) => {
-    const code = standing.Driver.code?.toUpperCase();
-    if (!code) return;
-
+  const driverStandingMap = new Map<string, { points: number; position: number | null }>();
+  for (const s of driverStandings) {
+    const code = s.Driver.code?.toUpperCase();
+    if (!code) continue;
+    const pos = Number.parseInt(s.position, 10);
     driverStandingMap.set(code, {
-      points: Number.parseFloat(standing.points),
-      position: Number.parseInt(standing.position, 10),
+      points: Number.parseFloat(s.points) || 0,
+      position: Number.isNaN(pos) ? null : pos,
     });
-  });
+  }
 
-  const raceSummariesRaw = raceResults
+  // Build race summaries
+  const raceSummaries = raceResults
     .map((race) => {
-      const teamEntries = (race.Results ?? []).filter((entry) => {
-        const mappedTeamId = mapConstructorToTeamId(
-          entry.Constructor.constructorId,
-          entry.Constructor.name
-        );
-        if (mappedTeamId === team.id) return true;
-
-        const code = entry.Driver.code?.toUpperCase();
+      const teamEntries = (race.Results ?? []).filter((e) => {
+        const mapped = mapConstructorToTeamId(e.Constructor.constructorId, e.Constructor.name);
+        if (mapped === team.id) return true;
+        const code = e.Driver.code?.toUpperCase();
         return Boolean(code && driverCodeSet.has(code));
       });
+      if (!teamEntries.length) return null;
 
-      if (teamEntries.length === 0) return null;
+      const positions = teamEntries.map((e) => Number.parseInt(e.position, 10)).filter((p) => !Number.isNaN(p));
+      const bestFinish = positions.length ? Math.min(...positions) : null;
+      const racePoints = teamEntries.reduce((sum, e) => sum + (Number.parseFloat(e.points) || 0), 0);
 
-      const bestFinish = teamEntries.reduce((best, entry) => {
-        const position = Number.parseInt(entry.position, 10);
-        return Number.isNaN(position) ? best : Math.min(best, position);
-      }, Number.POSITIVE_INFINITY);
-
-      const racePoints = teamEntries.reduce((sum, entry) => {
-        const points = Number.parseFloat(entry.points);
-        return sum + (Number.isNaN(points) ? 0 : points);
-      }, 0);
+      // Per-driver results
+      const driverResults = teamDrivers.map((d) => {
+        const entry = teamEntries.find((e) => e.Driver.code?.toUpperCase() === d.abbreviation);
+        if (!entry) return { driver: d, position: null, points: 0 };
+        const pos = Number.parseInt(entry.position, 10);
+        return {
+          driver: d,
+          position: Number.isNaN(pos) ? null : pos,
+          points: Number.parseFloat(entry.points) || 0,
+        };
+      });
 
       return {
         round: Number.parseInt(race.round, 10),
         raceName: race.raceName,
-        date: race.date,
-        bestFinish: Number.isFinite(bestFinish) ? bestFinish : null,
+        bestFinish,
         racePoints,
+        driverResults,
       };
     })
-    .filter((summary): summary is NonNullable<typeof summary> => summary !== null)
+    .filter((s): s is NonNullable<typeof s> => s !== null)
     .sort((a, b) => a.round - b.round);
 
-  const raceSummaries: TeamRaceSummary[] = raceSummariesRaw.reduce<TeamRaceSummary[]>(
-    (summaries, summary) => {
-      const previousTotal = summaries[summaries.length - 1]?.cumulativePoints ?? 0;
-      const cumulativePoints = Math.round((previousTotal + summary.racePoints) * 10) / 10;
+  // Cumulative points
+  let cumulative = 0;
+  const raceData = raceSummaries.map((s) => {
+    cumulative += s.racePoints;
+    return { ...s, cumulativePoints: Math.round(cumulative * 10) / 10 };
+  });
 
-      return [
-        ...summaries,
-        {
-          ...summary,
-          cumulativePoints,
-        },
-      ];
-    },
-    []
-  );
+  const totalPoints = constructorStanding ? Number.parseFloat(constructorStanding.points) || 0 : 0;
+  const totalWins = raceData.filter((r) => r.bestFinish === 1).length;
 
-  const maxCumulative = raceSummaries[raceSummaries.length - 1]?.cumulativePoints ?? 0;
+  const posColor = (pos: number | null) => {
+    if (pos === null) return "var(--color-text-muted)";
+    if (pos === 1) return "#FFD700";
+    if (pos === 2) return "#C0C0C0";
+    if (pos === 3) return "#CD7F32";
+    if (pos <= 10) return team.color;
+    return "var(--color-text-secondary)";
+  };
 
   return (
     <PageTransition>
-      <section
-        className="mb-8 overflow-hidden rounded-2xl border border-border-subtle p-6"
-        style={{
-          backgroundImage: `linear-gradient(135deg, ${team.color}1F 0%, transparent 62%)`,
-        }}
-      >
-        <div className="flex flex-wrap items-start justify-between gap-6">
-          <div>
-            <p className="font-mono text-sm uppercase tracking-widest text-text-muted">
-              Team Profile
-            </p>
-            <h1 className="mt-2 text-4xl font-bold tracking-display text-text-primary">
-              {team.name}
-            </h1>
-            <p className="mt-2 text-text-secondary">{team.fullName}</p>
-            <div className="mt-4">
-              <TeamBadge team={team} size="lg" />
+      <div className="grid auto-rows-auto grid-cols-2 gap-3 md:grid-cols-6">
+
+        {/* ── A. Team Hero — wide banner ── */}
+        <div
+          className="col-span-2 overflow-hidden rounded-2xl border border-border-subtle md:col-span-4"
+          style={{ backgroundImage: `linear-gradient(135deg, ${team.color}18 0%, transparent 60%)` }}
+        >
+          <div className="absolute inset-x-0 top-0 h-1" style={{ backgroundColor: team.color }} />
+          <div className="relative p-6">
+            <div className="flex items-center gap-4">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-border-subtle bg-bg-primary p-3">
+                <Image src={team.logo} alt={team.name} width={40} height={40} className="object-contain" unoptimized />
+              </div>
+              <div>
+                <p className="text-[10px] uppercase tracking-widest text-text-muted">Constructor</p>
+                <h1 className="text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
+                  {team.name}
+                </h1>
+                <p className="mt-0.5 text-sm text-text-secondary">{team.fullName}</p>
+              </div>
             </div>
           </div>
-
-          <div className="rounded-xl border border-border-subtle bg-bg-tertiary px-6 py-5 text-right">
-            <p className="text-xs uppercase tracking-widest text-text-muted">Championship</p>
-            <p className="mt-2 font-mono text-4xl font-bold text-text-primary">
-              {constructorStanding ? `P${constructorStanding.position}` : "—"}
-            </p>
-            <p className="mt-1 font-mono text-sm text-text-secondary">
-              {constructorStanding ? `${constructorStanding.points} PTS` : "No data"}
-            </p>
-          </div>
         </div>
-      </section>
 
-      <section className="mb-8 grid gap-4 sm:grid-cols-3">
-        <article className="rounded-xl border border-border-subtle bg-bg-secondary p-4">
-          <p className="text-xs uppercase tracking-widest text-text-muted">Engine</p>
-          <p className="mt-2 text-lg font-semibold text-text-primary">{team.engine}</p>
-        </article>
-        <article className="rounded-xl border border-border-subtle bg-bg-secondary p-4">
-          <p className="text-xs uppercase tracking-widest text-text-muted">Base</p>
-          <p className="mt-2 text-lg font-semibold text-text-primary">{team.base}</p>
-        </article>
-        <article className="rounded-xl border border-border-subtle bg-bg-secondary p-4">
-          <p className="text-xs uppercase tracking-widest text-text-muted">Team Principal</p>
-          <p className="mt-2 text-lg font-semibold text-text-primary">{team.principal}</p>
-        </article>
-      </section>
-
-      <section className="mb-8">
-        <h2 className="text-2xl font-semibold tracking-tight text-text-primary">Drivers</h2>
-        <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-          {teamDrivers.map((driver) => {
-            const standing = driverStandingMap.get(driver.abbreviation);
-            return (
-              <DriverCard
-                key={driver.id}
-                driver={driver}
-                points={standing?.points}
-                position={standing?.position}
-              />
-            );
-          })}
+        {/* ── B. Championship Position ── */}
+        <div
+          className="col-span-2 flex flex-col items-center justify-center rounded-2xl border p-6 text-center"
+          style={{ borderColor: team.color + "30", backgroundColor: team.color + "08" }}
+        >
+          <p className="text-[10px] uppercase tracking-widest text-text-muted">Championship</p>
+          <p className="mt-2 font-mono text-5xl font-black" style={{ color: team.color }}>
+            {constructorStanding?.position ? `P${constructorStanding.position}` : "-"}
+          </p>
+          <p className="mt-1 font-mono text-sm text-text-secondary">
+            {totalPoints} <span className="text-text-muted">pts</span> · {totalWins} <span className="text-text-muted">wins</span>
+          </p>
         </div>
-      </section>
 
-      <section className="mb-8 rounded-2xl border border-border-subtle bg-bg-secondary p-6">
-        <h2 className="text-2xl font-semibold tracking-tight text-text-primary">Points Progression</h2>
-        <p className="mt-2 text-sm text-text-secondary">
-          Race-by-race constructor points accumulation through the 2026 season.
-        </p>
-
-        {raceSummaries.length > 0 ? (
-          <div className="mt-5 space-y-3">
-            {raceSummaries.map((summary) => {
-              const widthPercent =
-                maxCumulative > 0 ? Math.max((summary.cumulativePoints / maxCumulative) * 100, 3) : 0;
-
+        {/* ── C. Drivers — wide card with headshots ── */}
+        <div className="col-span-2 rounded-2xl border border-border-subtle bg-bg-secondary p-5 md:col-span-4">
+          <h3 className="text-xs font-semibold uppercase tracking-widest text-text-muted">Drivers</h3>
+          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {teamDrivers.map((d) => {
+              const standing = driverStandingMap.get(d.abbreviation);
+              const pos = standing?.position;
+              const pts = standing?.points ?? 0;
               return (
-                <div key={`${summary.round}-${summary.raceName}`}>
-                  <div className="mb-1 flex items-center justify-between text-xs text-text-secondary">
-                    <span>
-                      R{summary.round} · {summary.raceName}
-                    </span>
-                    <span className="font-mono">{summary.cumulativePoints.toFixed(1)} PTS</span>
+                <Link
+                  key={d.id}
+                  href={`/drivers/${d.slug}`}
+                  className="flex items-center gap-4 rounded-xl border border-border-subtle bg-bg-tertiary p-4 transition-colors hover:bg-bg-primary"
+                >
+                  <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border-2 bg-bg-primary" style={{ borderColor: team.color }}>
+                    <Image src={d.image} alt={`${d.firstName} ${d.lastName}`} fill className="object-cover object-top" unoptimized />
                   </div>
-                  <div className="h-2 rounded-full bg-bg-tertiary">
-                    <div
-                      className="h-2 rounded-full"
-                      style={{
-                        width: `${widthPercent}%`,
-                        backgroundColor: team.color,
-                      }}
-                    />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-bold text-text-primary">
+                      {d.firstName} <span style={{ color: team.color }}>{d.lastName}</span>
+                    </p>
+                    <p className="text-xs text-text-muted">#{d.number} · {d.abbreviation}</p>
                   </div>
-                </div>
+                  <div className="text-right">
+                    <p className="font-mono text-xs font-bold" style={{ color: team.color }}>
+                      {pos ? `P${pos}` : "-"}
+                    </p>
+                    <p className="font-mono text-lg font-bold text-text-primary">
+                      {pts}<span className="text-[9px] text-text-muted"> pts</span>
+                    </p>
+                  </div>
+                </Link>
               );
             })}
           </div>
-        ) : (
-          <p className="mt-4 text-sm text-text-muted">No race data available yet for this team in 2026.</p>
-        )}
-      </section>
+        </div>
 
-      <section className="rounded-2xl border border-border-subtle bg-bg-secondary p-6">
-        <h2 className="text-2xl font-semibold tracking-tight text-text-primary">Season Results</h2>
-        <p className="mt-2 text-sm text-text-secondary">Per-race result summary for both team cars.</p>
-
-        {raceSummaries.length > 0 ? (
-          <div className="mt-4 overflow-x-auto">
-            <table className="w-full min-w-[640px] border-collapse text-left">
-              <thead>
-                <tr className="border-b border-border-subtle text-xs uppercase tracking-widest text-text-muted">
-                  <th className="px-3 py-2">Round</th>
-                  <th className="px-3 py-2">Race</th>
-                  <th className="px-3 py-2">Date</th>
-                  <th className="px-3 py-2">Best Finish</th>
-                  <th className="px-3 py-2">Race Pts</th>
-                  <th className="px-3 py-2">Total Pts</th>
-                </tr>
-              </thead>
-              <tbody>
-                {raceSummaries.map((summary) => (
-                  <tr
-                    key={`table-${summary.round}-${summary.raceName}`}
-                    className="border-b border-border-subtle text-sm text-text-secondary"
-                  >
-                    <td className="px-3 py-3 font-mono text-text-primary">{summary.round}</td>
-                    <td className="px-3 py-3">{summary.raceName}</td>
-                    <td className="px-3 py-3 font-mono">{summary.date}</td>
-                    <td className="px-3 py-3 font-mono">
-                      {summary.bestFinish ? `P${summary.bestFinish}` : "—"}
-                    </td>
-                    <td className="px-3 py-3 font-mono">{summary.racePoints.toFixed(1)}</td>
-                    <td className="px-3 py-3 font-mono text-text-primary">
-                      {summary.cumulativePoints.toFixed(1)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {/* ── D. Team Info ── */}
+        <div className="col-span-2 rounded-2xl border border-border-subtle bg-bg-secondary p-5">
+          <h3 className="text-xs font-semibold uppercase tracking-widest text-text-muted">Details</h3>
+          <div className="mt-4 space-y-4">
+            {[
+              { label: "Engine", value: team.engine },
+              { label: "Base", value: team.base },
+              { label: "Principal", value: team.principal },
+            ].map((row) => (
+              <div key={row.label} className="flex items-center justify-between border-b border-border-subtle pb-3 last:border-0 last:pb-0">
+                <span className="text-xs text-text-muted">{row.label}</span>
+                <span className="text-right text-sm font-medium text-text-primary">{row.value}</span>
+              </div>
+            ))}
           </div>
-        ) : (
-          <p className="mt-4 text-sm text-text-muted">Season results will appear after races are available.</p>
+        </div>
+
+        {/* ── E. Constructor History ── */}
+        {historicalStandings.length > 0 && (
+          <div className="col-span-2 rounded-2xl border border-border-subtle bg-bg-secondary p-5 md:col-span-6">
+            <h3 className="text-xs font-semibold uppercase tracking-widest text-text-muted">Constructor Timeline</h3>
+            <div className="mt-4 grid grid-cols-5 gap-2">
+              {historicalStandings.map((h) => (
+                <div key={h.year} className="rounded-xl border border-border-subtle bg-bg-tertiary p-4 text-center">
+                  <p className="font-mono text-xs text-text-muted">{h.year}</p>
+                  <p className="mt-2 font-mono text-2xl font-bold" style={{ color: posColor(h.position) }}>
+                    {h.position ? `P${h.position}` : "-"}
+                  </p>
+                  <div className="mx-auto mt-2 h-1 w-8 rounded-full" style={{ backgroundColor: posColor(h.position), opacity: 0.4 }} />
+                  <p className="mt-2 font-mono text-[10px] text-text-muted">{h.points} pts</p>
+                  <p className="font-mono text-[10px] text-text-muted">{h.wins} {h.wins === 1 ? "win" : "wins"}</p>
+                </div>
+              ))}
+              <div className="rounded-xl border p-4 text-center" style={{ borderColor: team.color + "40", backgroundColor: team.color + "06" }}>
+                <p className="font-mono text-xs font-semibold" style={{ color: team.color }}>2026</p>
+                <p className="mt-2 font-mono text-2xl font-bold" style={{ color: team.color }}>
+                  {constructorStanding?.position ? `P${constructorStanding.position}` : "-"}
+                </p>
+                <div className="mx-auto mt-2 h-1 w-8 rounded-full" style={{ backgroundColor: team.color, opacity: 0.5 }} />
+                <p className="mt-2 font-mono text-[10px] text-text-muted">{totalPoints} pts</p>
+                <p className="font-mono text-[10px] text-text-muted">{totalWins} {totalWins === 1 ? "win" : "wins"}</p>
+              </div>
+            </div>
+          </div>
         )}
-      </section>
+
+        {/* ── F. Season Results Table ── */}
+        <div className="col-span-2 rounded-2xl border border-border-subtle bg-bg-secondary p-5 md:col-span-6">
+          <h3 className="text-xs font-semibold uppercase tracking-widest text-text-muted">2026 Race Results</h3>
+
+          {raceData.length > 0 ? (
+            <div className="mt-4 overflow-hidden rounded-lg border border-border-subtle">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border-subtle bg-bg-tertiary text-[10px] uppercase tracking-widest text-text-muted">
+                    <th className="px-4 py-2.5 text-left font-medium">Rnd</th>
+                    <th className="px-4 py-2.5 text-left font-medium">Race</th>
+                    {teamDrivers.map((d) => (
+                      <th key={d.id} className="hidden px-4 py-2.5 text-right font-medium sm:table-cell">{d.abbreviation}</th>
+                    ))}
+                    <th className="px-4 py-2.5 text-right font-medium">Pts</th>
+                    <th className="px-4 py-2.5 text-right font-medium">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {raceData.map((r) => (
+                    <tr key={r.round} className="border-b border-border-subtle last:border-0">
+                      <td className="px-4 py-3 font-mono text-text-muted">R{r.round}</td>
+                      <td className="px-4 py-3 text-text-primary">{r.raceName}</td>
+                      {r.driverResults.map((dr) => (
+                        <td key={dr.driver.id} className="hidden px-4 py-3 text-right sm:table-cell">
+                          <span className="font-mono font-bold" style={{ color: posColor(dr.position) }}>
+                            {dr.position ? `P${dr.position}` : "-"}
+                          </span>
+                        </td>
+                      ))}
+                      <td className="px-4 py-3 text-right font-mono text-text-secondary">
+                        {r.racePoints > 0 ? r.racePoints : "-"}
+                      </td>
+                      <td className="px-4 py-3 text-right font-mono font-bold text-text-primary">
+                        {r.cumulativePoints}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="mt-4 text-sm text-text-muted">No race data available yet for 2026.</p>
+          )}
+        </div>
+
+        {/* ── G. Points Progression Bars ── */}
+        {raceData.length > 0 && (
+          <div className="col-span-2 rounded-2xl border border-border-subtle bg-bg-secondary p-5 md:col-span-6">
+            <h3 className="text-xs font-semibold uppercase tracking-widest text-text-muted">Points Progression</h3>
+            <div className="mt-4 space-y-2">
+              {raceData.map((r) => {
+                const maxCum = raceData[raceData.length - 1].cumulativePoints || 1;
+                const pct = Math.max((r.cumulativePoints / maxCum) * 100, 3);
+                return (
+                  <div key={r.round}>
+                    <div className="mb-1 flex items-center justify-between text-[10px] text-text-muted">
+                      <span>R{r.round} · {r.raceName}</span>
+                      <span className="font-mono">{r.cumulativePoints} pts</span>
+                    </div>
+                    <div className="h-2 overflow-hidden rounded-full bg-bg-tertiary">
+                      <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: team.color }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
     </PageTransition>
   );
 }

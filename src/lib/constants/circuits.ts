@@ -16,6 +16,7 @@ export interface Circuit {
   round: number;
   isSprint: boolean;
   slug: string;
+  trackImage: string;
 }
 
 export const CIRCUITS: Record<string, Circuit> = {
@@ -35,6 +36,7 @@ export const CIRCUITS: Record<string, Circuit> = {
     round: 1,
     isSprint: false,
     slug: "australian-gp",
+    trackImage: "/circuits/albert_park.webp",
   },
   shanghai: {
     id: "shanghai",
@@ -53,6 +55,7 @@ export const CIRCUITS: Record<string, Circuit> = {
     round: 2,
     isSprint: true,
     slug: "chinese-gp",
+    trackImage: "/circuits/shanghai.webp",
   },
   suzuka: {
     id: "suzuka",
@@ -70,6 +73,7 @@ export const CIRCUITS: Record<string, Circuit> = {
     round: 3,
     isSprint: false,
     slug: "japanese-gp",
+    trackImage: "/circuits/suzuka.webp",
   },
   bahrain: {
     id: "bahrain",
@@ -87,6 +91,7 @@ export const CIRCUITS: Record<string, Circuit> = {
     round: 4,
     isSprint: false,
     slug: "bahrain-gp",
+    trackImage: "/circuits/bahrain.webp",
   },
   jeddah: {
     id: "jeddah",
@@ -104,6 +109,7 @@ export const CIRCUITS: Record<string, Circuit> = {
     round: 5,
     isSprint: false,
     slug: "saudi-arabian-gp",
+    trackImage: "/circuits/jeddah.webp",
   },
   miami: {
     id: "miami",
@@ -122,6 +128,7 @@ export const CIRCUITS: Record<string, Circuit> = {
     round: 6,
     isSprint: true,
     slug: "miami-gp",
+    trackImage: "/circuits/miami.webp",
   },
   montreal: {
     id: "montreal",
@@ -140,6 +147,7 @@ export const CIRCUITS: Record<string, Circuit> = {
     round: 7,
     isSprint: true,
     slug: "canadian-gp",
+    trackImage: "/circuits/montreal.webp",
   },
   monaco: {
     id: "monaco",
@@ -157,6 +165,7 @@ export const CIRCUITS: Record<string, Circuit> = {
     round: 8,
     isSprint: false,
     slug: "monaco-gp",
+    trackImage: "/circuits/monaco.webp",
   },
   barcelona: {
     id: "barcelona",
@@ -174,6 +183,7 @@ export const CIRCUITS: Record<string, Circuit> = {
     round: 9,
     isSprint: false,
     slug: "spanish-gp",
+    trackImage: "/circuits/barcelona.webp",
   },
   spielberg: {
     id: "spielberg",
@@ -191,6 +201,7 @@ export const CIRCUITS: Record<string, Circuit> = {
     round: 10,
     isSprint: false,
     slug: "austrian-gp",
+    trackImage: "/circuits/spielberg.webp",
   },
   silverstone: {
     id: "silverstone",
@@ -209,6 +220,7 @@ export const CIRCUITS: Record<string, Circuit> = {
     round: 11,
     isSprint: true,
     slug: "british-gp",
+    trackImage: "/circuits/silverstone.webp",
   },
   spa: {
     id: "spa",
@@ -226,6 +238,7 @@ export const CIRCUITS: Record<string, Circuit> = {
     round: 12,
     isSprint: false,
     slug: "belgian-gp",
+    trackImage: "/circuits/spa.webp",
   },
   budapest: {
     id: "budapest",
@@ -243,6 +256,7 @@ export const CIRCUITS: Record<string, Circuit> = {
     round: 13,
     isSprint: false,
     slug: "hungarian-gp",
+    trackImage: "/circuits/budapest.webp",
   },
   zandvoort: {
     id: "zandvoort",
@@ -261,6 +275,7 @@ export const CIRCUITS: Record<string, Circuit> = {
     round: 14,
     isSprint: true,
     slug: "dutch-gp",
+    trackImage: "/circuits/zandvoort.webp",
   },
   monza: {
     id: "monza",
@@ -278,6 +293,7 @@ export const CIRCUITS: Record<string, Circuit> = {
     round: 15,
     isSprint: false,
     slug: "italian-gp",
+    trackImage: "/circuits/monza.webp",
   },
   madrid: {
     id: "madrid",
@@ -295,6 +311,7 @@ export const CIRCUITS: Record<string, Circuit> = {
     round: 16,
     isSprint: false,
     slug: "madrid-gp",
+    trackImage: "/circuits/madrid.webp",
   },
   baku: {
     id: "baku",
@@ -312,6 +329,7 @@ export const CIRCUITS: Record<string, Circuit> = {
     round: 17,
     isSprint: false,
     slug: "azerbaijan-gp",
+    trackImage: "/circuits/baku.webp",
   },
   singapore: {
     id: "singapore",
@@ -330,6 +348,7 @@ export const CIRCUITS: Record<string, Circuit> = {
     round: 18,
     isSprint: true,
     slug: "singapore-gp",
+    trackImage: "/circuits/singapore.webp",
   },
   austin: {
     id: "austin",
@@ -347,6 +366,7 @@ export const CIRCUITS: Record<string, Circuit> = {
     round: 19,
     isSprint: false,
     slug: "us-gp",
+    trackImage: "/circuits/austin.webp",
   },
   mexico_city: {
     id: "mexico_city",
@@ -364,6 +384,7 @@ export const CIRCUITS: Record<string, Circuit> = {
     round: 20,
     isSprint: false,
     slug: "mexico-city-gp",
+    trackImage: "/circuits/mexico_city.webp",
   },
   interlagos: {
     id: "interlagos",
@@ -381,6 +402,7 @@ export const CIRCUITS: Record<string, Circuit> = {
     round: 21,
     isSprint: false,
     slug: "sao-paulo-gp",
+    trackImage: "/circuits/interlagos.webp",
   },
   las_vegas: {
     id: "las_vegas",
@@ -398,6 +420,7 @@ export const CIRCUITS: Record<string, Circuit> = {
     round: 22,
     isSprint: false,
     slug: "las-vegas-gp",
+    trackImage: "/circuits/las_vegas.webp",
   },
   lusail: {
     id: "lusail",
@@ -415,6 +438,7 @@ export const CIRCUITS: Record<string, Circuit> = {
     round: 23,
     isSprint: false,
     slug: "qatar-gp",
+    trackImage: "/circuits/lusail.webp",
   },
   yas_marina: {
     id: "yas_marina",
@@ -432,6 +456,7 @@ export const CIRCUITS: Record<string, Circuit> = {
     round: 24,
     isSprint: false,
     slug: "abu-dhabi-gp",
+    trackImage: "/circuits/yas_marina.webp",
   },
 } as const;
 

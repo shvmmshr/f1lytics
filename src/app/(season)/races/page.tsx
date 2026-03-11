@@ -73,7 +73,7 @@ export default async function RacesPage() {
                   </div>
                   {circuit.isSprint && (
                     <span className="inline-flex rounded-full bg-status-yellow/20 px-2 py-1 text-[10px] font-semibold uppercase tracking-widest text-status-yellow">
-                      Sprint
+                      Sprint Weekend
                     </span>
                   )}
                 </div>

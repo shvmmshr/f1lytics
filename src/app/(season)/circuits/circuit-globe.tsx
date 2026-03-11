@@ -5,11 +5,15 @@ import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Sphere, Html, Line } from "@react-three/drei";
 import * as THREE from "three";
 
-interface GlobeCircuit {
+export interface GlobeCircuit {
   id: string;
   lat: number;
   lng: number;
   name: string;
+  fullName: string;
+  country: string;
+  round: number;
+  raceDate: string;
   isSprint: boolean;
 }
 
@@ -26,7 +30,7 @@ function latLngToVector3(lat: number, lng: number, radius: number) {
   return new THREE.Vector3(x, y, z);
 }
 
-/** Loads /land.json (simplified Natural Earth land polygons) and renders as 3D lines */
+/* ── Continent outlines from /land.json ── */
 function ContinentOutlines({ radius }: { radius: number }) {
   const [polygons, setPolygons] = useState<[number, number][][]>([]);
 
@@ -52,16 +56,17 @@ function ContinentOutlines({ radius }: { radius: number }) {
         <Line
           key={i}
           points={points}
-          color="#52525B"
-          lineWidth={1.2}
+          color="#3f3f46"
+          lineWidth={1}
           transparent
-          opacity={0.5}
+          opacity={0.6}
         />
       ))}
     </>
   );
 }
 
+/* ── Circuit marker with rich tooltip ── */
 function CircuitMarker({
   circuit,
   radius,
@@ -71,49 +76,91 @@ function CircuitMarker({
 }) {
   const [hovered, setHovered] = useState(false);
   const position = latLngToVector3(circuit.lat, circuit.lng, radius);
-  const color = circuit.isSprint ? "#EAB308" : "#3B82F6";
-  const markerRadius = circuit.isSprint ? 0.03 : 0.02;
+  // All circuits have a race; sprint weekends get an accent ring
+  const color = "#3B82F6";
 
   const handlePointerOver = useCallback(() => setHovered(true), []);
   const handlePointerOut = useCallback(() => setHovered(false), []);
 
+  const formattedDate = new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+  }).format(new Date(`${circuit.raceDate}T00:00:00Z`));
+
   return (
     <group position={position}>
-      <mesh
-        onPointerOver={handlePointerOver}
-        onPointerOut={handlePointerOut}
-      >
-        <sphereGeometry args={[markerRadius, 16, 16]} />
+      {/* Clickable / hoverable sphere */}
+      <mesh onPointerOver={handlePointerOver} onPointerOut={handlePointerOut}>
+        <sphereGeometry args={[0.022, 16, 16]} />
         <meshStandardMaterial
           color={color}
           emissive={color}
-          emissiveIntensity={hovered ? 2 : 0.8}
+          emissiveIntensity={hovered ? 2.5 : 1}
         />
       </mesh>
-      {/* Glow ring around marker */}
+
+      {/* Outer glow */}
       <mesh>
-        <sphereGeometry args={[markerRadius * 2, 16, 16]} />
+        <sphereGeometry args={[0.04, 16, 16]} />
         <meshBasicMaterial
           color={color}
           transparent
-          opacity={hovered ? 0.3 : 0.15}
+          opacity={hovered ? 0.35 : 0.12}
         />
       </mesh>
+
+      {/* Sprint accent ring */}
+      {circuit.isSprint && (
+        <mesh>
+          <sphereGeometry args={[0.055, 16, 16]} />
+          <meshBasicMaterial
+            color="#EAB308"
+            transparent
+            opacity={hovered ? 0.25 : 0.1}
+          />
+        </mesh>
+      )}
+
+      {/* Tooltip */}
       {hovered && (
         <Html
-          distanceFactor={4}
-          style={{
-            pointerEvents: "none",
-            whiteSpace: "nowrap",
-          }}
+          distanceFactor={3.5}
+          style={{ pointerEvents: "none", whiteSpace: "nowrap" }}
         >
-          <div className="rounded-md border border-white/10 bg-[#0C0C0E]/90 px-3 py-1.5 text-xs text-[#F4F4F5] shadow-lg backdrop-blur-sm">
-            {circuit.name}
-            {circuit.isSprint && (
-              <span className="ml-1.5 text-[10px] font-semibold uppercase text-yellow-400">
-                Sprint
+          <div
+            className="rounded-lg border border-white/10 bg-[#0C0C0E]/95 px-4 py-3 shadow-xl backdrop-blur-md"
+            style={{ minWidth: 180 }}
+          >
+            {/* Round badge + name */}
+            <div className="flex items-center gap-2">
+              <span
+                className="flex h-6 w-6 items-center justify-center rounded-md text-[10px] font-bold text-white"
+                style={{ backgroundColor: color }}
+              >
+                R{circuit.round}
               </span>
-            )}
+              <span className="text-sm font-semibold text-white">
+                {circuit.fullName}
+              </span>
+            </div>
+
+            {/* Details row */}
+            <div className="mt-2 flex items-center gap-3 text-[11px] text-[#a1a1aa]">
+              <span>{circuit.country}</span>
+              <span className="opacity-30">|</span>
+              <span>{formattedDate}</span>
+              {circuit.isSprint && (
+                <>
+                  <span className="opacity-30">|</span>
+                  <span className="font-semibold text-yellow-400">Sprint Weekend</span>
+                </>
+              )}
+            </div>
+
+            {/* Circuit name */}
+            <div className="mt-1 text-[11px] text-[#71717a]">
+              {circuit.name}
+            </div>
           </div>
         </Html>
       )}
@@ -122,10 +169,8 @@ function CircuitMarker({
 }
 
 function GlobeAtmosphere() {
-  const meshRef = useRef<THREE.Mesh>(null);
-
   return (
-    <mesh ref={meshRef}>
+    <mesh>
       <sphereGeometry args={[1.08, 64, 64]} />
       <meshBasicMaterial
         color="#EF4444"
@@ -139,38 +184,29 @@ function GlobeAtmosphere() {
 
 function Globe({ circuits }: { circuits: GlobeCircuit[] }) {
   const groupRef = useRef<THREE.Group>(null);
-  const globeRadius = 1;
+  const R = 1;
 
   return (
     <group ref={groupRef}>
-      {/* Main globe sphere */}
-      <Sphere args={[globeRadius, 64, 64]}>
-        <meshStandardMaterial color="#1C1C22" roughness={0.8} metalness={0.2} />
+      {/* Dark globe surface */}
+      <Sphere args={[R, 64, 64]}>
+        <meshStandardMaterial color="#18181b" roughness={0.9} metalness={0.1} />
       </Sphere>
 
-      {/* Wireframe overlay */}
-      <Sphere args={[globeRadius + 0.002, 64, 64]}>
-        <meshBasicMaterial
-          color="#ffffff"
-          wireframe
-          transparent
-          opacity={0.06}
-        />
+      {/* Subtle wireframe grid */}
+      <Sphere args={[R + 0.001, 48, 48]}>
+        <meshBasicMaterial color="#ffffff" wireframe transparent opacity={0.03} />
       </Sphere>
 
       {/* Continent outlines */}
-      <ContinentOutlines radius={globeRadius + 0.003} />
+      <ContinentOutlines radius={R + 0.002} />
 
       {/* Atmosphere glow */}
       <GlobeAtmosphere />
 
       {/* Circuit markers */}
       {circuits.map((circuit) => (
-        <CircuitMarker
-          key={circuit.id}
-          circuit={circuit}
-          radius={globeRadius + 0.01}
-        />
+        <CircuitMarker key={circuit.id} circuit={circuit} radius={R + 0.008} />
       ))}
     </group>
   );
@@ -179,17 +215,17 @@ function Globe({ circuits }: { circuits: GlobeCircuit[] }) {
 function SceneContent({ circuits }: { circuits: GlobeCircuit[] }) {
   return (
     <>
-      <ambientLight intensity={0.3} />
-      <directionalLight position={[3, 4, 2]} intensity={0.8} />
-      <pointLight position={[-2, 1, -1]} color="#EF4444" intensity={0.3} />
+      <ambientLight intensity={0.4} />
+      <directionalLight position={[3, 4, 2]} intensity={0.6} />
+      <pointLight position={[-2, 1, -1]} color="#EF4444" intensity={0.2} />
 
       <Globe circuits={circuits} />
 
       <OrbitControls
-        enableZoom={true}
+        enableZoom
         enablePan={false}
-        autoRotate={true}
-        autoRotateSpeed={0.5}
+        autoRotate
+        autoRotateSpeed={0.4}
         minDistance={1.8}
         maxDistance={4}
       />

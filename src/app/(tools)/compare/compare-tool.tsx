@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { DRIVER_LIST, TEAM_LIST, TEAMS } from "@/lib/constants";
 import type { Driver, Team } from "@/lib/constants";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -12,9 +13,102 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-/* ------------------------------------------------------------------ */
-/*  Driver Comparison                                                  */
-/* ------------------------------------------------------------------ */
+interface DriverStat {
+  position: number | null;
+  points: number;
+  wins: number;
+  podiums: number;
+  races: number;
+  bestFinish: number | null;
+}
+
+interface ConstructorStat {
+  position: number | null;
+  points: number;
+  wins: number;
+}
+
+interface CompareToolProps {
+  driverStats: Record<string, DriverStat>;
+  constructorStats: Record<string, ConstructorStat>;
+}
+
+/* ── Comparison Bar ── */
+
+function CompareBar({
+  label,
+  valueA,
+  valueB,
+  colorA,
+  colorB,
+  format = "number",
+  lowerIsBetter = false,
+}: {
+  label: string;
+  valueA: number;
+  valueB: number;
+  colorA: string;
+  colorB: string;
+  format?: "number" | "position";
+  lowerIsBetter?: boolean;
+}) {
+  const max = Math.max(valueA, valueB, 1);
+  const pctA = (valueA / max) * 100;
+  const pctB = (valueB / max) * 100;
+
+  const aWins = lowerIsBetter
+    ? valueA > 0 && (valueB === 0 || valueA < valueB)
+    : valueA > valueB;
+  const bWins = lowerIsBetter
+    ? valueB > 0 && (valueA === 0 || valueB < valueA)
+    : valueB > valueA;
+
+  const displayA = format === "position" && valueA > 0 ? `P${valueA}` : valueA || "-";
+  const displayB = format === "position" && valueB > 0 ? `P${valueB}` : valueB || "-";
+
+  return (
+    <div className="py-3">
+      <p className="mb-2 text-center text-[10px] uppercase tracking-widest text-text-muted">{label}</p>
+      <div className="flex items-center gap-3">
+        {/* Left value */}
+        <span
+          className="w-12 text-right font-mono text-lg font-bold"
+          style={{ color: aWins ? colorA : "var(--color-text-muted)" }}
+        >
+          {displayA}
+        </span>
+
+        {/* Bars */}
+        <div className="flex flex-1 gap-1">
+          {/* Left bar (grows right-to-left) */}
+          <div className="flex h-6 flex-1 justify-end overflow-hidden rounded-l-md bg-bg-tertiary">
+            <div
+              className="h-full rounded-l-md transition-all duration-500"
+              style={{ width: `${pctA}%`, backgroundColor: colorA, opacity: aWins ? 1 : 0.4 }}
+            />
+          </div>
+          {/* Right bar (grows left-to-right) */}
+          <div className="flex h-6 flex-1 overflow-hidden rounded-r-md bg-bg-tertiary">
+            <div
+              className="h-full rounded-r-md transition-all duration-500"
+              style={{ width: `${pctB}%`, backgroundColor: colorB, opacity: bWins ? 1 : 0.4 }}
+            />
+          </div>
+        </div>
+
+        {/* Right value */}
+        <span
+          className="w-12 font-mono text-lg font-bold"
+          style={{ color: bWins ? colorB : "var(--color-text-muted)" }}
+        >
+          {displayB}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/* ── Driver Comparison ── */
 
 function DriverSelector({
   value,
@@ -33,7 +127,7 @@ function DriverSelector({
       <SelectContent className="border-border-subtle bg-bg-secondary">
         {DRIVER_LIST.map((d) => (
           <SelectItem key={d.id} value={d.id} disabled={d.id === exclude}>
-            {d.firstName} {d.lastName}
+            {d.firstName} {d.lastName} — {TEAMS[d.teamId].name}
           </SelectItem>
         ))}
       </SelectContent>
@@ -41,93 +135,141 @@ function DriverSelector({
   );
 }
 
-function DriverStatRow({
-  label,
-  value,
-}: {
-  label: string;
-  value: string | number;
-}) {
-  return (
-    <div className="flex items-center justify-between border-b border-border-subtle py-3 last:border-0">
-      <span className="text-xs uppercase tracking-widest text-text-muted">
-        {label}
-      </span>
-      <span className="font-mono text-sm text-text-primary">{value}</span>
-    </div>
-  );
-}
-
-function DriverCard({ driver }: { driver: Driver }) {
+function DriverHeader({ driver }: { driver: Driver }) {
   const team = TEAMS[driver.teamId];
-
   return (
-    <div
-      className="flex-1 rounded-xl border border-border-subtle bg-bg-secondary p-5"
-      style={{ borderLeftColor: team.color, borderLeftWidth: 3 }}
-    >
-      <div className="mb-4">
-        <p className="text-2xl font-bold tracking-tight text-text-primary">
-          {driver.firstName}{" "}
-          <span style={{ color: team.color }}>{driver.lastName}</span>
+    <div className="flex flex-col items-center gap-3">
+      <div className="relative h-20 w-20 overflow-hidden rounded-2xl border-2 bg-bg-primary" style={{ borderColor: team.color }}>
+        <Image src={driver.image} alt={driver.lastName} fill className="object-cover object-top" unoptimized />
+      </div>
+      <div className="text-center">
+        <p className="text-sm font-bold text-text-primary">
+          {driver.firstName} <span style={{ color: team.color }}>{driver.lastName}</span>
         </p>
-        <p className="text-xs uppercase tracking-widest text-text-muted">
-          {team.name}
+        <p className="flex items-center justify-center gap-1.5 text-xs text-text-muted">
+          <Image src={team.logo} alt={team.name} width={12} height={12} className="object-contain" unoptimized />
+          {team.name} · #{driver.number}
         </p>
       </div>
-
-      <DriverStatRow label="Number" value={`#${driver.number}`} />
-      <DriverStatRow label="Abbreviation" value={driver.abbreviation} />
-      <DriverStatRow label="Nationality" value={driver.nationality} />
-      <DriverStatRow label="Team" value={team.name} />
-      <DriverStatRow label="Date of Birth" value={driver.dateOfBirth} />
     </div>
   );
 }
 
-function DriverComparison() {
+function DriverComparison({ stats }: { stats: Record<string, DriverStat> }) {
   const [driverA, setDriverA] = useState(DRIVER_LIST[0].id);
   const [driverB, setDriverB] = useState(DRIVER_LIST[1].id);
 
   const selectedA = DRIVER_LIST.find((d) => d.id === driverA)!;
   const selectedB = DRIVER_LIST.find((d) => d.id === driverB)!;
+  const teamA = TEAMS[selectedA.teamId];
+  const teamB = TEAMS[selectedB.teamId];
+
+  const statA = stats[selectedA.abbreviation] ?? { position: null, points: 0, wins: 0, podiums: 0, races: 0, bestFinish: null };
+  const statB = stats[selectedB.abbreviation] ?? { position: null, points: 0, wins: 0, podiums: 0, races: 0, bestFinish: null };
 
   return (
     <div className="space-y-6">
-      {/* Selectors */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <DriverSelector
-          value={driverA}
-          onChange={setDriverA}
-          exclude={driverB}
-        />
-        <DriverSelector
-          value={driverB}
-          onChange={setDriverB}
-          exclude={driverA}
-        />
+        <DriverSelector value={driverA} onChange={setDriverA} exclude={driverB} />
+        <DriverSelector value={driverB} onChange={setDriverB} exclude={driverA} />
       </div>
 
-      {/* Comparison cards */}
-      <div className="flex flex-col items-stretch gap-4 md:flex-row">
-        <DriverCard driver={selectedA} />
-
-        {/* VS badge */}
-        <div className="flex items-center justify-center md:px-2">
-          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-status-red text-sm font-bold text-white">
-            VS
-          </span>
+      {/* Heads */}
+      <div className="rounded-2xl border border-border-subtle bg-bg-secondary p-6">
+        <div className="flex items-start justify-between">
+          <DriverHeader driver={selectedA} />
+          <div className="flex items-center self-center">
+            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-status-red text-sm font-bold text-white shadow-lg shadow-status-red/20">
+              VS
+            </span>
+          </div>
+          <DriverHeader driver={selectedB} />
         </div>
 
-        <DriverCard driver={selectedB} />
+        {/* Comparison bars */}
+        <div className="mt-6 divide-y divide-border-subtle">
+          <CompareBar
+            label="Championship Position"
+            valueA={statA.position ?? 0}
+            valueB={statB.position ?? 0}
+            colorA={teamA.color}
+            colorB={teamB.color}
+            format="position"
+            lowerIsBetter
+          />
+          <CompareBar
+            label="Points"
+            valueA={statA.points}
+            valueB={statB.points}
+            colorA={teamA.color}
+            colorB={teamB.color}
+          />
+          <CompareBar
+            label="Wins"
+            valueA={statA.wins}
+            valueB={statB.wins}
+            colorA={teamA.color}
+            colorB={teamB.color}
+          />
+          <CompareBar
+            label="Podiums"
+            valueA={statA.podiums}
+            valueB={statB.podiums}
+            colorA={teamA.color}
+            colorB={teamB.color}
+          />
+          <CompareBar
+            label="Races"
+            valueA={statA.races}
+            valueB={statB.races}
+            colorA={teamA.color}
+            colorB={teamB.color}
+          />
+          <CompareBar
+            label="Best Finish"
+            valueA={statA.bestFinish ?? 0}
+            valueB={statB.bestFinish ?? 0}
+            colorA={teamA.color}
+            colorB={teamB.color}
+            format="position"
+            lowerIsBetter
+          />
+        </div>
+      </div>
+
+      {/* Side-by-side profiles */}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {[
+          { driver: selectedA, stat: statA },
+          { driver: selectedB, stat: statB },
+        ].map(({ driver, stat }) => {
+          const team = TEAMS[driver.teamId];
+          return (
+            <div key={driver.id} className="rounded-xl border border-border-subtle bg-bg-secondary" style={{ borderTopColor: team.color, borderTopWidth: 3 }}>
+              <div className="space-y-0 divide-y divide-border-subtle">
+                {[
+                  { label: "Number", value: `#${driver.number}` },
+                  { label: "Nationality", value: driver.nationality },
+                  { label: "Date of Birth", value: driver.dateOfBirth },
+                  { label: "Team", value: team.name },
+                  { label: "Engine", value: team.engine },
+                  { label: "Points", value: stat.points },
+                ].map((row) => (
+                  <div key={row.label} className="flex items-center justify-between px-5 py-2.5">
+                    <span className="text-xs text-text-muted">{row.label}</span>
+                    <span className="font-mono text-sm text-text-primary">{row.value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
 }
 
-/* ------------------------------------------------------------------ */
-/*  Team Comparison                                                    */
-/* ------------------------------------------------------------------ */
+/* ── Team Comparison ── */
 
 function TeamSelector({
   value,
@@ -154,92 +296,148 @@ function TeamSelector({
   );
 }
 
-function TeamStatRow({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) {
+function TeamHeader({ team }: { team: Team }) {
   return (
-    <div className="flex items-center justify-between border-b border-border-subtle py-3 last:border-0">
-      <span className="text-xs uppercase tracking-widest text-text-muted">
-        {label}
-      </span>
-      <span className="font-mono text-sm text-text-primary">{value}</span>
-    </div>
-  );
-}
-
-function TeamCard({ team }: { team: Team }) {
-  const driverNames = team.drivers
-    .map((dId) => {
-      const d = DRIVER_LIST.find((dr) => dr.id === dId);
-      return d ? `${d.firstName} ${d.lastName}` : dId;
-    })
-    .join(", ");
-
-  return (
-    <div
-      className="flex-1 rounded-xl border border-border-subtle bg-bg-secondary p-5"
-      style={{
-        background: `linear-gradient(160deg, ${team.color}30 0%, transparent 70%), var(--color-bg-secondary)`,
-      }}
-    >
-      <div className="mb-4">
-        <p className="text-2xl font-bold tracking-tight text-text-primary">
-          {team.name}
-        </p>
-        <p className="text-xs uppercase tracking-widest text-text-muted">
-          {team.fullName}
-        </p>
+    <div className="flex flex-col items-center gap-3">
+      <div className="flex h-16 w-16 items-center justify-center rounded-2xl border-2 bg-bg-primary p-3" style={{ borderColor: team.color }}>
+        <Image src={team.logo} alt={team.name} width={40} height={40} className="object-contain" unoptimized />
       </div>
-
-      <TeamStatRow label="Engine" value={team.engine} />
-      <TeamStatRow label="Base" value={team.base} />
-      <TeamStatRow label="Principal" value={team.principal} />
-      <TeamStatRow label="Drivers" value={driverNames} />
+      <div className="text-center">
+        <p className="font-bold text-text-primary">{team.name}</p>
+        <p className="text-xs text-text-muted">{team.engine}</p>
+      </div>
     </div>
   );
 }
 
-function TeamComparison() {
+function normalize(name: string): string {
+  return name.toLowerCase().replace(/[^a-z]/g, "");
+}
+
+function getConstructorStat(team: Team, stats: Record<string, ConstructorStat>): ConstructorStat {
+  // Try matching by normalized name
+  for (const [key, stat] of Object.entries(stats)) {
+    if (
+      key.includes(normalize(team.name)) ||
+      normalize(team.name).includes(key) ||
+      (team.id === "red_bull" && key.includes("redbull")) ||
+      (team.id === "racing_bulls" && (key.includes("racingbulls") || key === "rb")) ||
+      (team.id === "audi" && key.includes("sauber"))
+    ) {
+      return stat;
+    }
+  }
+  return { position: null, points: 0, wins: 0 };
+}
+
+function TeamComparison({ stats }: { stats: Record<string, ConstructorStat> }) {
   const [teamA, setTeamA] = useState(TEAM_LIST[0].id);
   const [teamB, setTeamB] = useState(TEAM_LIST[1].id);
 
   const selectedA = TEAM_LIST.find((t) => t.id === teamA)!;
   const selectedB = TEAM_LIST.find((t) => t.id === teamB)!;
 
+  const statA = getConstructorStat(selectedA, stats);
+  const statB = getConstructorStat(selectedB, stats);
+
+  const driversA = selectedA.drivers.map((id) => DRIVER_LIST.find((d) => d.id === id)!).filter(Boolean);
+  const driversB = selectedB.drivers.map((id) => DRIVER_LIST.find((d) => d.id === id)!).filter(Boolean);
+
   return (
     <div className="space-y-6">
-      {/* Selectors */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <TeamSelector value={teamA} onChange={setTeamA} exclude={teamB} />
         <TeamSelector value={teamB} onChange={setTeamB} exclude={teamA} />
       </div>
 
-      {/* Comparison cards */}
-      <div className="flex flex-col items-stretch gap-4 md:flex-row">
-        <TeamCard team={selectedA} />
-
-        {/* VS badge */}
-        <div className="flex items-center justify-center md:px-2">
-          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-status-red text-sm font-bold text-white">
-            VS
-          </span>
+      <div className="rounded-2xl border border-border-subtle bg-bg-secondary p-6">
+        <div className="flex items-start justify-between">
+          <TeamHeader team={selectedA} />
+          <div className="flex items-center self-center">
+            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-status-red text-sm font-bold text-white shadow-lg shadow-status-red/20">
+              VS
+            </span>
+          </div>
+          <TeamHeader team={selectedB} />
         </div>
 
-        <TeamCard team={selectedB} />
+        <div className="mt-6 divide-y divide-border-subtle">
+          <CompareBar
+            label="Championship Position"
+            valueA={statA.position ?? 0}
+            valueB={statB.position ?? 0}
+            colorA={selectedA.color}
+            colorB={selectedB.color}
+            format="position"
+            lowerIsBetter
+          />
+          <CompareBar
+            label="Points"
+            valueA={statA.points}
+            valueB={statB.points}
+            colorA={selectedA.color}
+            colorB={selectedB.color}
+          />
+          <CompareBar
+            label="Wins"
+            valueA={statA.wins}
+            valueB={statB.wins}
+            colorA={selectedA.color}
+            colorB={selectedB.color}
+          />
+        </div>
+      </div>
+
+      {/* Side-by-side team cards with drivers */}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {[
+          { team: selectedA, stat: statA, drivers: driversA },
+          { team: selectedB, stat: statB, drivers: driversB },
+        ].map(({ team, stat, drivers }) => (
+          <div key={team.id} className="rounded-xl border border-border-subtle bg-bg-secondary" style={{ borderTopColor: team.color, borderTopWidth: 3 }}>
+            {/* Team details */}
+            <div className="divide-y divide-border-subtle">
+              {[
+                { label: "Full Name", value: team.fullName },
+                { label: "Engine", value: team.engine },
+                { label: "Base", value: team.base },
+                { label: "Principal", value: team.principal },
+                { label: "Points", value: stat.points },
+              ].map((row) => (
+                <div key={row.label} className="flex items-center justify-between px-5 py-2.5">
+                  <span className="text-xs text-text-muted">{row.label}</span>
+                  <span className="text-right text-xs font-medium text-text-primary">{row.value}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Drivers */}
+            <div className="border-t border-border-subtle p-4">
+              <p className="mb-3 text-[10px] uppercase tracking-widest text-text-muted">Drivers</p>
+              <div className="flex gap-3">
+                {drivers.map((d) => (
+                  <div key={d.id} className="flex flex-1 items-center gap-2 rounded-lg bg-bg-tertiary p-2.5">
+                    <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-full bg-bg-primary">
+                      <Image src={d.image} alt={d.lastName} fill className="object-cover object-top" unoptimized />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-xs font-bold text-text-primary">{d.lastName}</p>
+                      <p className="text-[10px] text-text-muted">#{d.number}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
 }
 
-/* ------------------------------------------------------------------ */
-/*  Main CompareTool                                                   */
-/* ------------------------------------------------------------------ */
+/* ── Main ── */
 
-export function CompareTool() {
+export function CompareTool({ driverStats, constructorStats }: CompareToolProps) {
   return (
     <Tabs defaultValue="drivers" className="w-full">
       <TabsList className="mb-6">
@@ -248,11 +446,11 @@ export function CompareTool() {
       </TabsList>
 
       <TabsContent value="drivers">
-        <DriverComparison />
+        <DriverComparison stats={driverStats} />
       </TabsContent>
 
       <TabsContent value="teams">
-        <TeamComparison />
+        <TeamComparison stats={constructorStats} />
       </TabsContent>
     </Tabs>
   );

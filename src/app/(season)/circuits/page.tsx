@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { CIRCUIT_LIST } from "@/lib/constants";
 import { PageTransition } from "@/components/layout/page-transition";
 import { SectionHeader } from "@/components/shared/section-header";
@@ -15,7 +16,6 @@ function formatRaceDate(date: string): string {
   return new Intl.DateTimeFormat("en-US", {
     month: "short",
     day: "numeric",
-    year: "numeric",
   }).format(new Date(`${date}T00:00:00Z`));
 }
 
@@ -34,6 +34,10 @@ export default function CircuitsPage() {
     lat: circuit.coordinates.lat,
     lng: circuit.coordinates.lng,
     name: circuit.name,
+    fullName: circuit.fullName,
+    country: circuit.country,
+    round: circuit.round,
+    raceDate: circuit.raceDate,
     isSprint: circuit.isSprint,
   }));
 
@@ -49,60 +53,48 @@ export default function CircuitsPage() {
       <CircuitsGrid>
         {CIRCUIT_LIST.map((circuit) => (
           <Link key={circuit.id} href={`/circuits/${circuit.slug}`}>
-            <article
-              data-animate="circuit-card"
-              className="h-full rounded-xl border border-border-subtle bg-bg-secondary p-5 transition-all duration-200 hover:-translate-y-1"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="font-mono text-xs uppercase tracking-widest text-text-muted">
-                    Round {circuit.round}
-                  </p>
-                  <h2 className="mt-1 text-xl font-semibold text-text-primary">
-                    {circuit.name}
-                  </h2>
-                  <p className="mt-1 text-sm text-text-secondary">
-                    {circuit.fullName}
-                  </p>
-                </div>
+            <article className="group h-full overflow-hidden rounded-xl border border-border-subtle bg-bg-secondary transition-colors duration-200 hover:bg-bg-tertiary">
+              {/* Track layout image */}
+              <div className="relative h-44 w-full bg-bg-primary">
+                <Image
+                  src={circuit.trackImage}
+                  alt={`${circuit.name} track layout`}
+                  fill
+                  className="object-contain p-4 opacity-80 transition-opacity duration-200 group-hover:opacity-100"
+                  sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                  unoptimized
+                />
+                {/* Round badge */}
+                <span className="absolute left-3 top-3 rounded-md bg-bg-secondary/80 px-2 py-1 font-mono text-[11px] font-bold text-text-secondary backdrop-blur-sm">
+                  R{circuit.round}
+                </span>
+                {/* Sprint badge */}
                 {circuit.isSprint && (
-                  <span className="inline-flex rounded-full bg-status-yellow/20 px-2 py-1 text-[10px] font-semibold uppercase tracking-widest text-status-yellow">
-                    Sprint
+                  <span className="absolute right-3 top-3 rounded-md bg-status-yellow/20 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-status-yellow backdrop-blur-sm">
+                    Sprint Weekend
                   </span>
                 )}
               </div>
 
-              <p className="mt-3 text-sm text-text-secondary">
-                {countryCodeToFlag(circuit.countryCode)} {circuit.city},{" "}
-                {circuit.country}
-              </p>
+              {/* Info */}
+              <div className="p-4">
+                <h2 className="text-base font-bold tracking-tight text-text-primary">
+                  {circuit.fullName}
+                </h2>
+                <p className="mt-1 text-sm text-text-muted">
+                  {countryCodeToFlag(circuit.countryCode)} {circuit.name} · {circuit.city}, {circuit.country}
+                </p>
 
-              <div className="mt-4 grid grid-cols-3 gap-2 text-sm">
-                <div className="rounded-lg border border-border-subtle bg-bg-tertiary p-2">
-                  <p className="text-[10px] uppercase tracking-widest text-text-muted">
-                    {circuit.isSprint ? "Sprint / Race" : "Race Date"}
-                  </p>
-                  <p className="mt-1 text-xs text-text-primary">
+                <div className="mt-3 flex items-center gap-3 text-xs text-text-muted">
+                  <span className="font-mono">{circuit.length.toFixed(1)} km</span>
+                  <span className="opacity-30">|</span>
+                  <span>{circuit.turns} turns</span>
+                  <span className="opacity-30">|</span>
+                  <span>
                     {circuit.isSprint && circuit.sprintDate
                       ? `${formatRaceDate(circuit.sprintDate)} / ${formatRaceDate(circuit.raceDate)}`
                       : formatRaceDate(circuit.raceDate)}
-                  </p>
-                </div>
-                <div className="rounded-lg border border-border-subtle bg-bg-tertiary p-2">
-                  <p className="text-[10px] uppercase tracking-widest text-text-muted">
-                    Length
-                  </p>
-                  <p className="mt-1 font-mono text-text-primary">
-                    {circuit.length.toFixed(3)} km
-                  </p>
-                </div>
-                <div className="rounded-lg border border-border-subtle bg-bg-tertiary p-2">
-                  <p className="text-[10px] uppercase tracking-widest text-text-muted">
-                    Turns
-                  </p>
-                  <p className="mt-1 font-mono text-text-primary">
-                    {circuit.turns}
-                  </p>
+                  </span>
                 </div>
               </div>
             </article>
