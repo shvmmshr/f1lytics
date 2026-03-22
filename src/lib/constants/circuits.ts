@@ -472,3 +472,27 @@ export function getNextRace(currentDate: Date = new Date()): Circuit | undefined
   const dateStr = currentDate.toISOString().split("T")[0];
   return CIRCUIT_LIST.find((circuit) => circuit.raceDate >= dateStr);
 }
+
+export interface NextEvent {
+  circuit: Circuit;
+  eventType: "sprint" | "race";
+  eventDate: string;
+}
+
+/**
+ * Returns the next upcoming event (sprint or race), whichever comes first.
+ * On sprint weekends, this will return the sprint on Saturday before the race on Sunday.
+ */
+export function getNextEvent(currentDate: Date = new Date()): NextEvent | undefined {
+  const dateStr = currentDate.toISOString().split("T")[0];
+  for (const circuit of CIRCUIT_LIST) {
+    // Check sprint first — it happens before the race on sprint weekends
+    if (circuit.isSprint && circuit.sprintDate && circuit.sprintDate >= dateStr) {
+      return { circuit, eventType: "sprint", eventDate: circuit.sprintDate };
+    }
+    if (circuit.raceDate >= dateStr) {
+      return { circuit, eventType: "race", eventDate: circuit.raceDate };
+    }
+  }
+  return undefined;
+}

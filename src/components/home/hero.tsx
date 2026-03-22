@@ -5,12 +5,7 @@ import { useGSAP } from "@gsap/react";
 import { gsap } from "@/lib/gsap";
 import Image from "next/image";
 import Link from "next/link";
-import { CIRCUIT_LIST } from "@/lib/constants";
-
-function getNextRace() {
-  const now = new Date();
-  return CIRCUIT_LIST.find((c) => new Date(`${c.raceDate}T00:00:00Z`) > now);
-}
+import { getNextEvent } from "@/lib/constants";
 
 function formatDate(date: string) {
   return new Intl.DateTimeFormat("en-US", {
@@ -29,7 +24,8 @@ export function Hero() {
   const imageRef = useRef<HTMLDivElement>(null);
   const infoRef = useRef<HTMLDivElement>(null);
 
-  const nextRace = getNextRace();
+  const event = getNextEvent();
+  const nextRace = event?.circuit;
 
   useGSAP(
     () => {
@@ -112,14 +108,14 @@ export function Hero() {
               className="inline-block"
               style={{ clipPath: "inset(0 100% 0 0)" }}
             >
-              GRID
+              F1
             </span>
             <span
               ref={lockRef}
               className="inline-block text-status-red"
               style={{ clipPath: "inset(0 100% 0 0)" }}
             >
-              LOCK
+              LYTICS
             </span>
           </h1>
 

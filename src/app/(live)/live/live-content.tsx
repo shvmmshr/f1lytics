@@ -2,10 +2,11 @@
 
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import { getNextRace } from "@/lib/constants/circuits";
+import { getNextEvent } from "@/lib/constants/circuits";
 import { CountdownTimer } from "@/components/shared/countdown-timer";
-import { DRIVER_LIST } from "@/lib/constants/drivers";
 import { TEAMS } from "@/lib/constants";
+import { useLiveSession } from "@/hooks/use-live-session";
+import type { OpenF1Position, OpenF1Interval, OpenF1Driver } from "@/lib/api/types";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -18,6 +19,38 @@ function formatRaceDate(dateStr: string): string {
     day: "numeric",
     year: "numeric",
   }).format(new Date(`${dateStr}T00:00:00Z`));
+}
+
+function formatGap(gap: number | null): string {
+  if (gap === null) return "---";
+  return `+${gap.toFixed(3)}`;
+}
+
+function formatTimeSince(date: Date): string {
+  const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+  if (seconds < 5) return "just now";
+  if (seconds < 60) return `${seconds}s ago`;
+  const minutes = Math.floor(seconds / 60);
+  return `${minutes}m ago`;
+}
+
+/** Map OpenF1 team_name to a TEAMS key for color lookup */
+function teamColorFromDriverTeam(teamName: string): string {
+  const normalized = teamName.toLowerCase().replace(/\s+/g, "_");
+  // Try direct match first
+  if (TEAMS[normalized]) return TEAMS[normalized].color;
+  // Fuzzy match against known team keys
+  for (const [key, team] of Object.entries(TEAMS)) {
+    if (
+      normalized.includes(key) ||
+      key.includes(normalized) ||
+      team.name.toLowerCase().includes(teamName.toLowerCase()) ||
+      teamName.toLowerCase().includes(team.name.toLowerCase())
+    ) {
+      return team.color;
+    }
+  }
+  return "#27272A";
 }
 
 const container = {
@@ -84,20 +117,91 @@ function InfoCard({ label, value }: InfoCardProps) {
 }
 
 // ---------------------------------------------------------------------------
-// Placeholder live table (future-ready)
+// Loading skeleton for the position table
 // ---------------------------------------------------------------------------
 
-function LivePositionTable() {
-  // Placeholder rows using driver constants so the UI can be previewed
-  const rows = DRIVER_LIST.slice(0, 10).map((driver, idx) => ({
-    pos: idx + 1,
-    name: `${driver.firstName.charAt(0)}. ${driver.lastName}`,
-    team: driver.teamId,
-    gap: idx === 0 ? "LEADER" : `+${(idx * 1.234).toFixed(3)}`,
-    lastLap: `1:${(30 + Math.random() * 2).toFixed(3)}`,
-    tire: ["S", "M", "H"][idx % 3],
-    teamColor: driver.teamId,
-  }));
+function PositionTableSkeleton() {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.3, duration: 0.5 }}
+      className="mt-10 overflow-hidden rounded-2xl border border-border-subtle"
+    >
+      {/* Table header */}
+      <div className="grid grid-cols-[3rem_1fr_1fr_6rem_6rem] gap-2 border-b border-border-subtle bg-bg-tertiary px-4 py-3 text-[11px] font-semibold uppercase tracking-widest text-text-muted">
+        <span>Pos</span>
+        <span>Driver</span>
+        <span>Team</span>
+        <span className="text-right">Gap</span>
+        <span className="text-right">Interval</span>
+      </div>
+
+      {/* Skeleton rows */}
+      {Array.from({ length: 10 }).map((_, i) => (
+        <div
+          key={i}
+          className="grid grid-cols-[3rem_1fr_1fr_6rem_6rem] items-center gap-2 border-b border-border-subtle/50 px-4 py-3"
+        >
+          <div className="h-4 w-6 animate-pulse rounded bg-bg-tertiary" />
+          <div className="h-4 w-32 animate-pulse rounded bg-bg-tertiary" />
+          <div className="h-4 w-24 animate-pulse rounded bg-bg-tertiary" />
+          <div className="ml-auto h-4 w-16 animate-pulse rounded bg-bg-tertiary" />
+          <div className="ml-auto h-4 w-16 animate-pulse rounded bg-bg-tertiary" />
+        </div>
+      ))}
+    </motion.div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Live position table with real data
+// ---------------------------------------------------------------------------
+
+interface LivePositionTableProps {
+  positions: OpenF1Position[];
+  intervals: OpenF1Interval[];
+  drivers: OpenF1Driver[];
+}
+
+function LivePositionTable({ positions, intervals, drivers }: LivePositionTableProps) {
+  // Build lookup maps
+  const driverMap = useMemo(() => {
+    const map = new Map<number, OpenF1Driver>();
+    for (const d of drivers) {
+      map.set(d.driver_number, d);
+    }
+    return map;
+  }, [drivers]);
+
+  const intervalMap = useMemo(() => {
+    const map = new Map<number, OpenF1Interval>();
+    for (const i of intervals) {
+      map.set(i.driver_number, i);
+    }
+    return map;
+  }, [intervals]);
+
+  // Sort positions by position number
+  const sortedPositions = useMemo(
+    () => [...positions].sort((a, b) => a.position - b.position),
+    [positions]
+  );
+
+  if (sortedPositions.length === 0) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3, duration: 0.5 }}
+        className="mt-10 rounded-2xl border border-border-subtle bg-bg-secondary p-8 text-center"
+      >
+        <p className="text-sm text-text-secondary">
+          Waiting for position data...
+        </p>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div
@@ -107,42 +211,50 @@ function LivePositionTable() {
       className="mt-10 overflow-hidden rounded-2xl border border-border-subtle"
     >
       {/* Table header */}
-      <div className="grid grid-cols-[3rem_1fr_1fr_6rem_6rem_4rem] gap-2 border-b border-border-subtle bg-bg-tertiary px-4 py-3 text-[11px] font-semibold uppercase tracking-widest text-text-muted">
+      <div className="grid grid-cols-[3rem_1fr_1fr_6rem_6rem] gap-2 border-b border-border-subtle bg-bg-tertiary px-4 py-3 text-[11px] font-semibold uppercase tracking-widest text-text-muted">
         <span>Pos</span>
         <span>Driver</span>
         <span>Team</span>
         <span className="text-right">Gap</span>
-        <span className="text-right">Last Lap</span>
-        <span className="text-center">Tire</span>
+        <span className="text-right">Interval</span>
       </div>
 
       {/* Table rows */}
-      {rows.map((row) => (
-        <div
-          key={row.pos}
-          className="grid grid-cols-[3rem_1fr_1fr_6rem_6rem_4rem] items-center gap-2 border-b border-border-subtle/50 border-l-[3px] px-4 py-3 transition-colors hover:bg-bg-tertiary/50"
-          style={{ borderLeftColor: TEAMS[row.teamColor]?.color ?? "#27272A" }}
-        >
-          <span className="font-mono text-sm font-bold text-text-primary">
-            {String(row.pos).padStart(2, "0")}
-          </span>
-          <span className="text-sm font-semibold text-text-primary">
-            {row.name}
-          </span>
-          <span className="text-sm text-text-secondary">
-            {row.team.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
-          </span>
-          <span className="text-right font-mono text-sm tabular-nums text-text-secondary">
-            {row.gap}
-          </span>
-          <span className="text-right font-mono text-sm tabular-nums text-text-secondary">
-            {row.lastLap}
-          </span>
-          <span className="text-center text-sm font-semibold text-text-primary">
-            {row.tire}
-          </span>
-        </div>
-      ))}
+      {sortedPositions.map((pos) => {
+        const driver = driverMap.get(pos.driver_number);
+        const interval = intervalMap.get(pos.driver_number);
+        const driverName = driver
+          ? `${driver.name_acronym} ${driver.full_name.split(" ").pop()}`
+          : `#${pos.driver_number}`;
+        const teamName = driver?.team_name ?? "Unknown";
+        const teamColor = driver
+          ? teamColorFromDriverTeam(driver.team_name)
+          : "#27272A";
+
+        return (
+          <div
+            key={pos.driver_number}
+            className="grid grid-cols-[3rem_1fr_1fr_6rem_6rem] items-center gap-2 border-b border-border-subtle/50 border-l-[3px] px-4 py-3 transition-colors hover:bg-bg-tertiary/50"
+            style={{ borderLeftColor: teamColor }}
+          >
+            <span className="font-mono text-sm font-bold text-text-primary">
+              {String(pos.position).padStart(2, "0")}
+            </span>
+            <span className="text-sm font-semibold text-text-primary">
+              {driverName}
+            </span>
+            <span className="text-sm text-text-secondary">
+              {teamName}
+            </span>
+            <span className="text-right font-mono text-sm tabular-nums text-text-secondary">
+              {pos.position === 1 ? "LEADER" : formatGap(interval?.gap_to_leader ?? null)}
+            </span>
+            <span className="text-right font-mono text-sm tabular-nums text-text-secondary">
+              {pos.position === 1 ? "---" : formatGap(interval?.interval ?? null)}
+            </span>
+          </div>
+        );
+      })}
     </motion.div>
   );
 }
@@ -152,8 +264,21 @@ function LivePositionTable() {
 // ---------------------------------------------------------------------------
 
 export function LiveContent() {
-  const nextRace = useMemo(() => getNextRace(), []);
-  const isLive = false; // Will be driven by real data in the future
+  const event = useMemo(() => getNextEvent(), []);
+  const nextRace = event?.circuit;
+
+  const {
+    isLive,
+    status,
+    session,
+    positions,
+    intervals,
+    drivers,
+    loading,
+    lastUpdated,
+  } = useLiveSession();
+
+  const showLiveData = status === "LIVE" || status === "FINISHED";
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
@@ -167,12 +292,12 @@ export function LiveContent() {
         className="flex flex-wrap items-center gap-4"
       >
         <div className="flex items-center gap-3">
-          <PulsingDot />
+          {isLive && <PulsingDot />}
           <h1 className="text-4xl font-bold tracking-[-0.05em] text-text-primary md:text-5xl">
             Live Session
           </h1>
         </div>
-        <StatusBadge status={isLive ? "LIVE" : "NO SESSION"} />
+        <StatusBadge status={status} />
       </motion.div>
 
       <motion.span
@@ -184,9 +309,69 @@ export function LiveContent() {
       />
 
       {/* ---------------------------------------------------------------- */}
-      {/* Next Race Info Card                                              */}
+      {/* Active / Recently Finished Session Info                          */}
       {/* ---------------------------------------------------------------- */}
-      {nextRace && (
+      {showLiveData && session && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15, duration: 0.5 }}
+          className="mt-10 rounded-2xl border border-border-subtle bg-bg-secondary p-6"
+        >
+          <p className="text-[11px] font-medium uppercase tracking-widest text-text-muted">
+            {status === "LIVE" ? "Live Now" : "Recently Finished"}
+          </p>
+          <h2 className="mt-2 text-2xl font-bold tracking-tight text-text-primary">
+            {session.name}
+          </h2>
+          <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-text-secondary">
+            <span className="flex items-center gap-2">
+              <span className="text-text-muted">Circuit</span>
+              {session.circuitShortName}
+            </span>
+            <span className="flex items-center gap-2">
+              <span className="text-text-muted">Location</span>
+              {session.countryName}
+            </span>
+            <span className="flex items-center gap-2">
+              <span className="text-text-muted">Type</span>
+              {session.type}
+            </span>
+          </div>
+        </motion.div>
+      )}
+
+      {/* ---------------------------------------------------------------- */}
+      {/* Live / Finished Position Table                                   */}
+      {/* ---------------------------------------------------------------- */}
+      {showLiveData && loading && <PositionTableSkeleton />}
+
+      {showLiveData && !loading && (
+        <>
+          <LivePositionTable
+            positions={positions}
+            intervals={intervals}
+            drivers={drivers}
+          />
+
+          {/* Last updated indicator */}
+          {lastUpdated && (
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="mt-3 text-right text-xs text-text-muted"
+            >
+              Last updated {formatTimeSince(lastUpdated)}
+            </motion.p>
+          )}
+        </>
+      )}
+
+      {/* ---------------------------------------------------------------- */}
+      {/* Next Race Info Card (when no live session)                       */}
+      {/* ---------------------------------------------------------------- */}
+      {!showLiveData && nextRace && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -210,16 +395,21 @@ export function LiveContent() {
             </span>
             <span className="flex items-center gap-2">
               <span className="text-text-muted">Date</span>
-              {formatRaceDate(nextRace.raceDate)}
+              {formatRaceDate(event!.eventDate)}
+              {event!.eventType === "sprint" && (
+                <span className="rounded-full bg-status-yellow/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-status-yellow">
+                  Sprint
+                </span>
+              )}
             </span>
           </div>
         </motion.div>
       )}
 
       {/* ---------------------------------------------------------------- */}
-      {/* No Session State (primary view for 2026)                        */}
+      {/* No Session State                                                 */}
       {/* ---------------------------------------------------------------- */}
-      {!isLive && (
+      {!showLiveData && (
         <div className="mt-16">
           {/* Animated glow card */}
           <motion.div
@@ -261,8 +451,8 @@ export function LiveContent() {
               {nextRace && (
                 <div className="mt-8 flex justify-center">
                   <CountdownTimer
-                    targetDate={new Date(`${nextRace.raceDate}T14:00:00Z`)}
-                    label="Coverage begins in"
+                    targetDate={new Date(`${event!.eventDate}T14:00:00Z`)}
+                    label={`${event!.eventType === "sprint" ? "Sprint" : "Race"} coverage begins in`}
                   />
                 </div>
               )}
@@ -291,11 +481,6 @@ export function LiveContent() {
           )}
         </div>
       )}
-
-      {/* ---------------------------------------------------------------- */}
-      {/* Live Session State (future-ready)                               */}
-      {/* ---------------------------------------------------------------- */}
-      {isLive && <LivePositionTable />}
     </div>
   );
 }

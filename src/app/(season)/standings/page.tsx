@@ -7,7 +7,7 @@ import { StandingsBar, type StandingsBarEntry } from "@/components/charts/standi
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export const metadata: Metadata = {
-  title: "Standings — GridLock F1 2026",
+  title: "Standings — F1lytics 2026",
   description: "Driver and constructor championship standings for the 2026 F1 season",
 };
 
@@ -125,14 +125,14 @@ export default async function StandingsPage() {
         <TabsContent value="drivers" className="mt-4">
           <StandingsBar
             entries={driverEntries}
-            emptyLabel="Driver standings are currently unavailable."
+            emptyLabel="Driver standings will appear once race results are available. Try refreshing the page."
           />
         </TabsContent>
 
         <TabsContent value="constructors" className="mt-4">
           <StandingsBar
             entries={constructorEntries}
-            emptyLabel="Constructor standings are currently unavailable."
+            emptyLabel="Constructor standings will appear once race results are available. Try refreshing the page."
           />
         </TabsContent>
       </Tabs>

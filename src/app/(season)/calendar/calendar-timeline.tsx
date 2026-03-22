@@ -22,7 +22,7 @@ export function CalendarTimeline({ children }: { children: React.ReactNode }) {
           scrollTrigger: {
             trigger: containerRef.current,
             start: "top 80%",
-            end: "bottom 20%",
+            end: "bottom 80%",
             scrub: true,
           },
         }

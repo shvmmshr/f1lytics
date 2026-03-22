@@ -49,9 +49,9 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: TeamPageProps): Promise<Metadata> {
   const { slug } = await params;
   const team = getTeamBySlug(slug);
-  if (!team) return { title: "Team Not Found — GridLock F1 2026" };
+  if (!team) return { title: "Team Not Found — F1lytics 2026" };
   return {
-    title: `${team.name} — GridLock F1 2026`,
+    title: `${team.name} — F1lytics 2026`,
     description: `${team.fullName} team profile, drivers, and season results`,
   };
 }

@@ -21,7 +21,7 @@ const BASE_URL = "https://api.jolpi.ca/ergast/f1";
  */
 async function fetchJolpica<T>(
   path: string,
-  revalidate: number = 86400
+  revalidate: number = 3600
 ): Promise<JolpicaResponse<T>> {
   const url = `${BASE_URL}${path}`;
 
@@ -78,7 +78,7 @@ export async function getDriverStandings(
 ): Promise<DriverStanding[]> {
   const data = await fetchJolpica<StandingsTable>(
     `/${season}/driverStandings.json`,
-    3600
+    300
   );
   const lists = data.MRData.StandingsTable.StandingsLists;
   return lists.length > 0 ? (lists[0].DriverStandings ?? []) : [];
@@ -94,7 +94,7 @@ export async function getConstructorStandings(
 ): Promise<ConstructorStanding[]> {
   const data = await fetchJolpica<StandingsTable>(
     `/${season}/constructorStandings.json`,
-    3600
+    300
   );
   const lists = data.MRData.StandingsTable.StandingsLists;
   return lists.length > 0 ? (lists[0].ConstructorStandings ?? []) : [];
@@ -115,6 +115,19 @@ export async function getQualifyingResults(
 }
 
 /**
+ * Fetch all qualifying results for a given season.
+ * Returns an array of QualifyingResult entries across all rounds.
+ */
+export async function getAllQualifyingResults(
+  season: string
+): Promise<QualifyingResult[]> {
+  const data = await fetchJolpica<QualifyingTable>(
+    `/${season}/qualifying.json?limit=500`
+  );
+  return data.MRData.RaceTable.Races;
+}
+
+/**
  * Fetch the most recent race result.
  * Revalidates every hour (3600s) to pick up new results promptly.
  * Returns the latest RaceResult or null if no results are available.
@@ -122,7 +135,7 @@ export async function getQualifyingResults(
 export async function getLastRaceResult(): Promise<RaceResult | null> {
   const data = await fetchJolpica<RaceTable>(
     "/current/last/results.json",
-    3600
+    300
   );
   const races = data.MRData.RaceTable.Races;
   return races.length > 0 ? races[0] : null;

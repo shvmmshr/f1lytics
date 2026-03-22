@@ -6,7 +6,7 @@ export function Footer() {
       <div className="mx-auto flex max-w-7xl flex-col items-center gap-4 px-4 py-8 text-center sm:flex-row sm:justify-between sm:text-left">
         <div>
           <Link href="/" className="text-sm font-bold tracking-tighter text-text-primary">
-            GRIDLOCK
+            F1LYTICS
           </Link>
           <p className="mt-1 text-xs text-text-muted">
             F1 2026 Season &mdash; Unofficial fan project

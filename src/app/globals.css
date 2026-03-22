@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 /* ============================================================
-   GridLock Design Tokens — Tailwind v4 @theme configuration
+   F1lytics Design Tokens — Tailwind v4 @theme configuration
    ============================================================ */
 
 @theme inline {
@@ -18,7 +18,7 @@
   --tracking-tight: -0.02em;
   --tracking-display: -0.05em;
 
-  /* --- GridLock custom colors --- */
+  /* --- F1lytics custom colors --- */
 
   /* Backgrounds */
   --color-bg-primary: #0C0C0E;
@@ -105,7 +105,7 @@
 
 /* ============================================================
    :root — light mode fallback (kept for shadcn compatibility)
-   GridLock is dark-first, so these are rarely used.
+   F1lytics is dark-first, so these are rarely used.
    ============================================================ */
 
 :root {
@@ -144,7 +144,7 @@
 }
 
 /* ============================================================
-   .dark — explicit dark class (same values since GridLock is
+   .dark — explicit dark class (same values since F1lytics is
    dark-first, but kept for shadcn components that toggle)
    ============================================================ */
 

@@ -8,7 +8,7 @@ import { CircuitGlobe } from "./circuit-globe";
 import { CircuitsGrid } from "./circuits-grid";
 
 export const metadata: Metadata = {
-  title: "Circuits — GridLock F1 2026",
+  title: "Circuits — F1lytics 2026",
   description: "All 24 circuits on the 2026 Formula 1 calendar",
 };
 
@@ -60,7 +60,9 @@ export default function CircuitsPage() {
                   src={circuit.trackImage}
                   alt={`${circuit.name} track layout`}
                   fill
-                  className="object-contain p-4 opacity-80 transition-opacity duration-200 group-hover:opacity-100"
+                  className={`object-contain p-4 opacity-80 transition-opacity duration-200 group-hover:opacity-100${
+                    circuit.id === "bahrain" ? " invert" : ""
+                  }`}
                   sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
                   unoptimized
                 />

@@ -121,7 +121,7 @@ export function Navbar() {
           {/* Wordmark with red accent line */}
           <Link href="/" className="flex items-center gap-2">
             <span className="relative text-lg font-bold tracking-tighter text-text-primary">
-              GRIDLOCK
+              F1LYTICS
               <span
                 className="absolute -bottom-1 left-0 h-[2px] w-full origin-left scale-x-100 bg-status-red transition-transform duration-300"
                 aria-hidden="true"

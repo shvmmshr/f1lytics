@@ -36,12 +36,12 @@ export async function generateMetadata({ params }: RacePageProps): Promise<Metad
 
   if (!circuit) {
     return {
-      title: "Race Not Found — GridLock F1 2026",
+      title: "Race Not Found — F1lytics 2026",
     };
   }
 
   return {
-    title: `${circuit.fullName} Results — GridLock F1 2026`,
+    title: `${circuit.fullName} Results — F1lytics 2026`,
     description: `Race results, podium, and telemetry overview for the ${circuit.fullName}`,
   };
 }

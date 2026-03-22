@@ -7,7 +7,7 @@ import { SectionHeader } from "@/components/shared/section-header";
 import { CalendarTimeline } from "./calendar-timeline";
 
 export const metadata: Metadata = {
-  title: "Calendar — GridLock F1 2026",
+  title: "Calendar — F1lytics 2026",
   description: "2026 Formula 1 calendar timeline with countdown to the next race",
 };
 
@@ -66,7 +66,7 @@ export default async function CalendarPage() {
           </p>
           <div className="mt-5">
             <CountdownTimer
-              targetDate={new Date(`${nextRace.raceDate}T00:00:00Z`)}
+              targetDate={new Date(`${nextRace.raceDate}T14:00:00Z`)}
               label="Countdown to race weekend"
             />
           </div>

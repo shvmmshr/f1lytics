@@ -3,7 +3,7 @@
 import { useRef, useState, useEffect } from "react";
 import { useGSAP } from "@gsap/react";
 import { gsap } from "@/lib/gsap";
-import { getNextRace } from "@/lib/constants";
+import { getNextEvent } from "@/lib/constants";
 import { format } from "date-fns";
 
 function getTimeRemaining(targetDate: Date) {
@@ -24,25 +24,26 @@ function getTimeRemaining(targetDate: Date) {
 
 export function NextRaceCountdown() {
   const sectionRef = useRef<HTMLElement>(null);
-  const nextRace = getNextRace();
+  const event = getNextEvent();
+  const nextRace = event?.circuit;
 
-  const raceDate = nextRace
-    ? new Date(`${nextRace.raceDate}T14:00:00`)
+  const targetDate = event
+    ? new Date(`${event.eventDate}T14:00:00`)
     : null;
 
-  const [time, setTime] = useState(() =>
-    raceDate ? getTimeRemaining(raceDate) : { days: 0, hours: 0, minutes: 0, seconds: 0 }
-  );
+  const [time, setTime] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
   useEffect(() => {
-    if (!raceDate) return;
+    if (!targetDate) return;
 
+    // Set immediately on mount, then tick every second
+    setTime(getTimeRemaining(targetDate));
     const interval = setInterval(() => {
-      setTime(getTimeRemaining(raceDate));
+      setTime(getTimeRemaining(targetDate));
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [raceDate?.getTime()]);
+  }, [targetDate?.getTime()]);
 
   useGSAP(
     () => {
@@ -64,7 +65,7 @@ export function NextRaceCountdown() {
     { scope: sectionRef }
   );
 
-  if (!nextRace) return null;
+  if (!event || !nextRace) return null;
 
   const units = [
     { value: time.days, label: "Days" },
@@ -95,14 +96,21 @@ export function NextRaceCountdown() {
           </div>
 
           <div className="mt-8 space-y-2">
-            <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-text-primary">
-              {nextRace.fullName}
-            </h2>
+            <div className="flex items-center justify-center gap-2">
+              <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-text-primary">
+                {nextRace.fullName}
+              </h2>
+              {event.eventType === "sprint" && (
+                <span className="rounded-full bg-status-yellow/20 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-status-yellow">
+                  Sprint
+                </span>
+              )}
+            </div>
             <p className="text-text-secondary">
               {nextRace.name} &mdash; {nextRace.city}, {nextRace.country}
             </p>
             <p className="text-sm text-text-muted">
-              {format(new Date(`${nextRace.raceDate}T12:00:00`), "MMMM d, yyyy")}
+              {format(new Date(`${event.eventDate}T12:00:00`), "MMMM d, yyyy")}
             </p>
           </div>
         </div>

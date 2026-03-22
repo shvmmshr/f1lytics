@@ -17,9 +17,9 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: DriverProfilePageProps): Promise<Metadata> {
   const { slug } = await params;
   const driver = getDriverBySlug(slug);
-  if (!driver) return { title: "Driver Not Found — GridLock F1 2026" };
+  if (!driver) return { title: "Driver Not Found — F1lytics 2026" };
   return {
-    title: `${driver.firstName} ${driver.lastName} — GridLock F1 2026`,
+    title: `${driver.firstName} ${driver.lastName} — F1lytics 2026`,
     description: `${driver.firstName} ${driver.lastName} driver profile, stats, and season results`,
   };
 }

@@ -6,7 +6,7 @@ import { PageTransition } from "@/components/layout/page-transition";
 import { SectionHeader } from "@/components/shared/section-header";
 
 export const metadata: Metadata = {
-  title: "Races — GridLock F1 2026",
+  title: "Races — F1lytics 2026",
   description: "All 24 rounds of the 2026 Formula 1 season with results",
 };
 

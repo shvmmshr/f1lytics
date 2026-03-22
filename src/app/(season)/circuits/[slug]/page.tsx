@@ -17,9 +17,9 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: CircuitPageProps): Promise<Metadata> {
   const { slug } = await params;
   const circuit = getCircuitBySlug(slug);
-  if (!circuit) return { title: "Circuit Not Found — GridLock F1 2026" };
+  if (!circuit) return { title: "Circuit Not Found — F1lytics 2026" };
   return {
-    title: `${circuit.name} — GridLock F1 2026`,
+    title: `${circuit.name} — F1lytics 2026`,
     description: `${circuit.fullName} circuit stats, schedule, and track information`,
   };
 }
@@ -84,7 +84,9 @@ export default async function CircuitPage({ params }: CircuitPageProps) {
               alt={`${circuit.name} track layout`}
               width={400}
               height={400}
-              className="h-full max-h-56 w-auto object-contain opacity-90 lg:max-h-72"
+              className={`h-full max-h-56 w-auto object-contain opacity-90 lg:max-h-72${
+                circuit.id === "bahrain" ? " invert" : ""
+              }`}
               unoptimized
             />
           </div>

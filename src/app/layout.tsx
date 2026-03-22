@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "GridLock - F1 2026",
+  title: "F1lytics - F1 2026",
   description:
     "Premium Formula 1 dashboard for the 2026 season. Live standings, race results, and team analytics.",
 };

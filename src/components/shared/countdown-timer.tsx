@@ -14,9 +14,11 @@ interface CountdownTimerProps {
 }
 
 export function CountdownTimer({ targetDate, label }: CountdownTimerProps) {
-  const [now, setNow] = useState(new Date());
+  // Initialize to targetDate so server renders all zeros; client corrects on mount
+  const [now, setNow] = useState(() => targetDate);
 
   useEffect(() => {
+    setNow(new Date());
     const interval = setInterval(() => {
       setNow(new Date());
     }, 1000);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Image from "next/image";
 import { DRIVER_LIST, TEAM_LIST, TEAMS } from "@/lib/constants";
 import type { Driver, Team } from "@/lib/constants";
@@ -12,21 +12,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-interface DriverStat {
-  position: number | null;
-  points: number;
-  wins: number;
-  podiums: number;
-  races: number;
-  bestFinish: number | null;
-}
-
-interface ConstructorStat {
-  position: number | null;
-  points: number;
-  wins: number;
-}
+import {
+  PieChart,
+  Pie,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
+import type {
+  DriverStat,
+  ConstructorStat,
+  PointsPerRound,
+  RecentFormEntry,
+} from "./page";
 
 interface CompareToolProps {
   driverStats: Record<string, DriverStat>;
@@ -52,9 +55,19 @@ function CompareBar({
   format?: "number" | "position";
   lowerIsBetter?: boolean;
 }) {
-  const max = Math.max(valueA, valueB, 1);
-  const pctA = (valueA / max) * 100;
-  const pctB = (valueB / max) * 100;
+  let pctA: number;
+  let pctB: number;
+  if (lowerIsBetter && valueA > 0 && valueB > 0) {
+    const invA = 1 / valueA;
+    const invB = 1 / valueB;
+    const maxInv = Math.max(invA, invB);
+    pctA = (invA / maxInv) * 100;
+    pctB = (invB / maxInv) * 100;
+  } else {
+    const max = Math.max(valueA, valueB, 1);
+    pctA = (valueA / max) * 100;
+    pctB = (valueB / max) * 100;
+  }
 
   const aWins = lowerIsBetter
     ? valueA > 0 && (valueB === 0 || valueA < valueB)
@@ -108,6 +121,207 @@ function CompareBar({
   );
 }
 
+/* ── Recent Form Chips ── */
+
+function RecentFormChips({
+  form,
+}: {
+  form: RecentFormEntry[];
+}) {
+  if (form.length === 0) {
+    return <p className="text-xs text-text-muted">No data</p>;
+  }
+
+  return (
+    <div className="flex items-center gap-1.5">
+      {form.map((entry) => {
+        let bgColor: string;
+        let label: string;
+
+        if (entry.position === null) {
+          bgColor = "var(--color-status-red)";
+          label = "DNF";
+        } else if (entry.position <= 3) {
+          bgColor = "var(--color-status-green)";
+          label = `P${entry.position}`;
+        } else if (entry.position <= 10) {
+          bgColor = "var(--color-status-yellow)";
+          label = `P${entry.position}`;
+        } else {
+          bgColor = "var(--color-text-muted)";
+          label = `P${entry.position}`;
+        }
+
+        return (
+          <span
+            key={entry.round}
+            className="inline-flex h-7 min-w-[36px] items-center justify-center rounded-md px-1.5 font-mono text-[10px] font-bold text-white"
+            style={{ backgroundColor: bgColor }}
+            title={entry.raceName}
+          >
+            {label}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ── Head-to-Head Donut ── */
+
+function HeadToHeadDonut({
+  winsA,
+  winsB,
+  colorA,
+  colorB,
+  nameA,
+  nameB,
+}: {
+  winsA: number;
+  winsB: number;
+  colorA: string;
+  colorB: string;
+  nameA: string;
+  nameB: string;
+}) {
+  const total = winsA + winsB;
+  const data =
+    total > 0
+      ? [
+          { name: nameA, value: winsA, fill: colorA },
+          { name: nameB, value: winsB, fill: colorB },
+        ]
+      : [{ name: "No data", value: 1, fill: "#333" }];
+
+  return (
+    <div className="flex flex-col items-center">
+      <div className="relative h-40 w-40">
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={data}
+              cx="50%"
+              cy="50%"
+              innerRadius={45}
+              outerRadius={65}
+              dataKey="value"
+              startAngle={90}
+              endAngle={-270}
+              stroke="none"
+            />
+          </PieChart>
+        </ResponsiveContainer>
+        {/* Centered text */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className="font-mono text-lg font-bold text-text-primary">
+            {total > 0 ? `${winsA}-${winsB}` : "—"}
+          </span>
+        </div>
+      </div>
+      <p className="mt-1 text-[10px] uppercase tracking-widest text-text-muted">
+        Head-to-Head Finishes
+      </p>
+    </div>
+  );
+}
+
+/* ── Points Progression Chart ── */
+
+function PointsProgressionChart({
+  dataA,
+  dataB,
+  colorA,
+  colorB,
+  nameA,
+  nameB,
+}: {
+  dataA: PointsPerRound[];
+  dataB: PointsPerRound[];
+  colorA: string;
+  colorB: string;
+  nameA: string;
+  nameB: string;
+}) {
+  // Merge both datasets by round
+  const allRounds = new Set<number>();
+  for (const d of dataA) allRounds.add(d.round);
+  for (const d of dataB) allRounds.add(d.round);
+  const rounds = Array.from(allRounds).sort((a, b) => a - b);
+
+  const mapA = new Map(dataA.map((d) => [d.round, d.cumulativePoints]));
+  const mapB = new Map(dataB.map((d) => [d.round, d.cumulativePoints]));
+
+  let lastA = 0;
+  let lastB = 0;
+  const chartData = rounds.map((round) => {
+    lastA = mapA.get(round) ?? lastA;
+    lastB = mapB.get(round) ?? lastB;
+    return {
+      round: `R${round}`,
+      [nameA]: lastA,
+      [nameB]: lastB,
+    };
+  });
+
+  if (chartData.length === 0) {
+    return (
+      <div className="flex h-48 items-center justify-center text-xs text-text-muted">
+        No race data available
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-56 w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+          <XAxis
+            dataKey="round"
+            tick={{ fill: "var(--color-text-muted)", fontSize: 10 }}
+            tickLine={false}
+            axisLine={{ stroke: "rgba(255,255,255,0.1)" }}
+          />
+          <YAxis
+            tick={{ fill: "var(--color-text-muted)", fontSize: 10 }}
+            tickLine={false}
+            axisLine={{ stroke: "rgba(255,255,255,0.1)" }}
+            width={35}
+          />
+          <Tooltip
+            contentStyle={{
+              backgroundColor: "var(--color-bg-secondary)",
+              border: "1px solid var(--color-border-subtle)",
+              borderRadius: "8px",
+              fontSize: "12px",
+            }}
+            labelStyle={{ color: "var(--color-text-muted)" }}
+          />
+          <Legend
+            wrapperStyle={{ fontSize: "10px", paddingTop: "8px" }}
+          />
+          <Line
+            type="monotone"
+            dataKey={nameA}
+            stroke={colorA}
+            strokeWidth={2}
+            dot={{ r: 3, fill: colorA }}
+            activeDot={{ r: 5 }}
+          />
+          <Line
+            type="monotone"
+            dataKey={nameB}
+            stroke={colorB}
+            strokeWidth={2}
+            dot={{ r: 3, fill: colorB }}
+            activeDot={{ r: 5 }}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
 /* ── Driver Comparison ── */
 
 function DriverSelector({
@@ -155,6 +369,20 @@ function DriverHeader({ driver }: { driver: Driver }) {
   );
 }
 
+const emptyDriverStat: DriverStat = {
+  position: null,
+  points: 0,
+  wins: 0,
+  podiums: 0,
+  races: 0,
+  bestFinish: null,
+  recentForm: [],
+  pointsPerRace: [],
+  raceHistory: [],
+  qualifyingHistory: [],
+  avgQualifying: null,
+};
+
 function DriverComparison({ stats }: { stats: Record<string, DriverStat> }) {
   const [driverA, setDriverA] = useState(DRIVER_LIST[0].id);
   const [driverB, setDriverB] = useState(DRIVER_LIST[1].id);
@@ -164,8 +392,24 @@ function DriverComparison({ stats }: { stats: Record<string, DriverStat> }) {
   const teamA = TEAMS[selectedA.teamId];
   const teamB = TEAMS[selectedB.teamId];
 
-  const statA = stats[selectedA.abbreviation] ?? { position: null, points: 0, wins: 0, podiums: 0, races: 0, bestFinish: null };
-  const statB = stats[selectedB.abbreviation] ?? { position: null, points: 0, wins: 0, podiums: 0, races: 0, bestFinish: null };
+  const statA = stats[selectedA.abbreviation] ?? emptyDriverStat;
+  const statB = stats[selectedB.abbreviation] ?? emptyDriverStat;
+
+  // Compute head-to-head: rounds where both finished
+  const h2h = useMemo(() => {
+    let winsA = 0;
+    let winsB = 0;
+    const historyA = new Map(statA.raceHistory.map((r) => [r.round, r.position]));
+    for (const entry of statB.raceHistory) {
+      const posA = historyA.get(entry.round);
+      const posB = entry.position;
+      if (posA !== undefined && posA !== null && posB !== null) {
+        if (posA < posB) winsA++;
+        else if (posB < posA) winsB++;
+      }
+    }
+    return { winsA, winsB };
+  }, [statA.raceHistory, statB.raceHistory]);
 
   return (
     <div className="space-y-6">
@@ -185,9 +429,12 @@ function DriverComparison({ stats }: { stats: Record<string, DriverStat> }) {
           </div>
           <DriverHeader driver={selectedB} />
         </div>
+      </div>
 
-        {/* Comparison bars */}
-        <div className="mt-6 divide-y divide-border-subtle">
+      {/* Season Overview */}
+      <div className="rounded-2xl border border-border-subtle bg-bg-secondary p-6">
+        <p className="mb-4 text-[10px] uppercase tracking-widest text-text-muted">Season Overview</p>
+        <div className="divide-y divide-border-subtle">
           <CompareBar
             label="Championship Position"
             valueA={statA.position ?? 0}
@@ -234,6 +481,65 @@ function DriverComparison({ stats }: { stats: Record<string, DriverStat> }) {
             format="position"
             lowerIsBetter
           />
+        </div>
+      </div>
+
+      {/* Form & Trends */}
+      <div className="rounded-2xl border border-border-subtle bg-bg-secondary p-6">
+        <p className="mb-4 text-[10px] uppercase tracking-widest text-text-muted">Form & Trends</p>
+
+        {/* Recent Form */}
+        <div className="mb-6">
+          <p className="mb-3 text-center text-[10px] uppercase tracking-widest text-text-muted">Last 5 Races</p>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col items-center gap-2">
+              <p className="text-xs font-bold text-text-secondary">{selectedA.lastName}</p>
+              <RecentFormChips form={statA.recentForm} />
+            </div>
+            <div className="flex flex-col items-center gap-2">
+              <p className="text-xs font-bold text-text-secondary">{selectedB.lastName}</p>
+              <RecentFormChips form={statB.recentForm} />
+            </div>
+          </div>
+        </div>
+
+        {/* Points Progression */}
+        <div>
+          <p className="mb-3 text-center text-[10px] uppercase tracking-widest text-text-muted">Points Progression</p>
+          <PointsProgressionChart
+            dataA={statA.pointsPerRace}
+            dataB={statB.pointsPerRace}
+            colorA={teamA.color}
+            colorB={teamB.color}
+            nameA={selectedA.lastName}
+            nameB={selectedB.lastName}
+          />
+        </div>
+      </div>
+
+      {/* Head-to-Head */}
+      <div className="rounded-2xl border border-border-subtle bg-bg-secondary p-6">
+        <p className="mb-4 text-[10px] uppercase tracking-widest text-text-muted">Head-to-Head</p>
+        <div className="grid grid-cols-1 items-center gap-6 sm:grid-cols-2">
+          <HeadToHeadDonut
+            winsA={h2h.winsA}
+            winsB={h2h.winsB}
+            colorA={teamA.color}
+            colorB={teamB.color}
+            nameA={selectedA.lastName}
+            nameB={selectedB.lastName}
+          />
+          <div>
+            <CompareBar
+              label="Avg. Qualifying Position"
+              valueA={statA.avgQualifying ?? 0}
+              valueB={statB.avgQualifying ?? 0}
+              colorA={teamA.color}
+              colorB={teamB.color}
+              format="position"
+              lowerIsBetter
+            />
+          </div>
         </div>
       </div>
 
@@ -315,7 +621,6 @@ function normalize(name: string): string {
 }
 
 function getConstructorStat(team: Team, stats: Record<string, ConstructorStat>): ConstructorStat {
-  // Try matching by normalized name
   for (const [key, stat] of Object.entries(stats)) {
     if (
       key.includes(normalize(team.name)) ||
@@ -327,7 +632,7 @@ function getConstructorStat(team: Team, stats: Record<string, ConstructorStat>):
       return stat;
     }
   }
-  return { position: null, points: 0, wins: 0 };
+  return { position: null, points: 0, wins: 0, pointsPerRound: [] };
 }
 
 function TeamComparison({ stats }: { stats: Record<string, ConstructorStat> }) {
@@ -386,6 +691,19 @@ function TeamComparison({ stats }: { stats: Record<string, ConstructorStat> }) {
             colorB={selectedB.color}
           />
         </div>
+      </div>
+
+      {/* Constructor Points Progression */}
+      <div className="rounded-2xl border border-border-subtle bg-bg-secondary p-6">
+        <p className="mb-4 text-[10px] uppercase tracking-widest text-text-muted">Points Progression</p>
+        <PointsProgressionChart
+          dataA={statA.pointsPerRound}
+          dataB={statB.pointsPerRound}
+          colorA={selectedA.color}
+          colorB={selectedB.color}
+          nameA={selectedA.name}
+          nameB={selectedB.name}
+        />
       </div>
 
       {/* Side-by-side team cards with drivers */}
