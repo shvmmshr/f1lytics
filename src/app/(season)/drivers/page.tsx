@@ -7,7 +7,7 @@ import { SectionHeader } from "@/components/shared/section-header";
 import { DriversGrid } from "./drivers-grid";
 
 export const metadata: Metadata = {
-  title: "Drivers — F1lytics 2026",
+  title: "Drivers",
   description: "All 22 drivers competing in the 2026 Formula 1 season",
 };
 

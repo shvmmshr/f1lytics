@@ -18,12 +18,18 @@ export function CountdownTimer({ targetDate, label }: CountdownTimerProps) {
   const [now, setNow] = useState(() => targetDate);
 
   useEffect(() => {
-    setNow(new Date());
     const interval = setInterval(() => {
       setNow(new Date());
     }, 1000);
 
-    return () => clearInterval(interval);
+    const raf = requestAnimationFrame(() => {
+      setNow(new Date());
+    });
+
+    return () => {
+      clearInterval(interval);
+      cancelAnimationFrame(raf);
+    };
   }, []);
 
   const days = differenceInDays(targetDate, now);

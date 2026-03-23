@@ -251,17 +251,16 @@ function PointsProgressionChart({
   const mapA = new Map(dataA.map((d) => [d.round, d.cumulativePoints]));
   const mapB = new Map(dataB.map((d) => [d.round, d.cumulativePoints]));
 
-  let lastA = 0;
-  let lastB = 0;
-  const chartData = rounds.map((round) => {
-    lastA = mapA.get(round) ?? lastA;
-    lastB = mapB.get(round) ?? lastB;
-    return {
+  const chartData = rounds.reduce<{ round: string; [key: string]: string | number }[]>((acc, round) => {
+    const prevA = acc.length > 0 ? (acc[acc.length - 1][nameA] as number) : 0;
+    const prevB = acc.length > 0 ? (acc[acc.length - 1][nameB] as number) : 0;
+    acc.push({
       round: `R${round}`,
-      [nameA]: lastA,
-      [nameB]: lastB,
-    };
-  });
+      [nameA]: mapA.get(round) ?? prevA,
+      [nameB]: mapB.get(round) ?? prevB,
+    });
+    return acc;
+  }, []);
 
   if (chartData.length === 0) {
     return (

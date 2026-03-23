@@ -1,7 +1,13 @@
 {
   "name": "f1lytics",
-  "version": "0.1.0",
-  "private": true,
+  "version": "1.0.0",
+  "license": "MIT",
+  "author": "shvmmshr",
+  "homepage": "https://f1lytics.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shvmmshr/f1lytics"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -13,6 +19,8 @@
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.5.0",
     "@tanstack/react-query": "^5.90.21",
+    "@vercel/analytics": "^2.0.1",
+    "@vercel/speed-insights": "^2.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",

@@ -7,7 +7,7 @@ import { StandingsBar, type StandingsBarEntry } from "@/components/charts/standi
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export const metadata: Metadata = {
-  title: "Standings — F1lytics 2026",
+  title: "Standings",
   description: "Driver and constructor championship standings for the 2026 F1 season",
 };
 

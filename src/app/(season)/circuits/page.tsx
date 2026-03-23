@@ -4,11 +4,11 @@ import Image from "next/image";
 import { CIRCUIT_LIST } from "@/lib/constants";
 import { PageTransition } from "@/components/layout/page-transition";
 import { SectionHeader } from "@/components/shared/section-header";
-import { CircuitGlobe } from "./circuit-globe";
+import { CircuitGlobeWrapper } from "./circuit-globe-wrapper";
 import { CircuitsGrid } from "./circuits-grid";
 
 export const metadata: Metadata = {
-  title: "Circuits — F1lytics 2026",
+  title: "Circuits",
   description: "All 24 circuits on the 2026 Formula 1 calendar",
 };
 
@@ -48,7 +48,7 @@ export default function CircuitsPage() {
         subtitle="Every track on the 2026 Formula 1 world tour"
       />
 
-      <CircuitGlobe circuits={globeCircuits} />
+      <CircuitGlobeWrapper circuits={globeCircuits} />
 
       <CircuitsGrid>
         {CIRCUIT_LIST.map((circuit) => (

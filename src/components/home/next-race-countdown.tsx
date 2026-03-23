@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useMemo } from "react";
 import { useGSAP } from "@gsap/react";
 import { gsap } from "@/lib/gsap";
 import { getNextEvent } from "@/lib/constants";
@@ -27,23 +27,31 @@ export function NextRaceCountdown() {
   const event = getNextEvent();
   const nextRace = event?.circuit;
 
-  const targetDate = event
-    ? new Date(`${event.eventDate}T14:00:00`)
-    : null;
+  const targetDate = useMemo(
+    () => (event ? new Date(`${event.eventDate}T14:00:00`) : null),
+    [event]
+  );
 
   const [time, setTime] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
   useEffect(() => {
     if (!targetDate) return;
 
-    // Set immediately on mount, then tick every second
-    setTime(getTimeRemaining(targetDate));
+    // Tick every second — the first tick fires immediately (0ms delay)
     const interval = setInterval(() => {
       setTime(getTimeRemaining(targetDate));
     }, 1000);
 
-    return () => clearInterval(interval);
-  }, [targetDate?.getTime()]);
+    // Also fire at next animation frame for near-instant first render
+    const raf = requestAnimationFrame(() => {
+      setTime(getTimeRemaining(targetDate));
+    });
+
+    return () => {
+      clearInterval(interval);
+      cancelAnimationFrame(raf);
+    };
+  }, [targetDate]);
 
   useGSAP(
     () => {

@@ -12,14 +12,14 @@ export default async function Home() {
     position: i + 1,
     name: `${d.firstName} ${d.lastName}`,
     teamId: d.teamId,
-    points: Math.round((5 - i) * 50 + Math.random() * 10),
+    points: (5 - i) * 50 + (i * 7) % 10,
   }));
 
   let constructorStandings = TEAM_LIST.slice(0, 5).map((t, i) => ({
     position: i + 1,
     name: t.name,
     teamId: t.id,
-    points: Math.round((5 - i) * 100 + Math.random() * 20),
+    points: (5 - i) * 100 + (i * 13) % 20,
   }));
 
   try {

@@ -17,9 +17,9 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: CircuitPageProps): Promise<Metadata> {
   const { slug } = await params;
   const circuit = getCircuitBySlug(slug);
-  if (!circuit) return { title: "Circuit Not Found — F1lytics 2026" };
+  if (!circuit) return { title: "Not Found" };
   return {
-    title: `${circuit.name} — F1lytics 2026`,
+    title: `${circuit.fullName}`,
     description: `${circuit.fullName} circuit stats, schedule, and track information`,
   };
 }

@@ -49,9 +49,9 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: TeamPageProps): Promise<Metadata> {
   const { slug } = await params;
   const team = getTeamBySlug(slug);
-  if (!team) return { title: "Team Not Found — F1lytics 2026" };
+  if (!team) return { title: "Not Found" };
   return {
-    title: `${team.name} — F1lytics 2026`,
+    title: `${team.name}`,
     description: `${team.fullName} team profile, drivers, and season results`,
   };
 }
@@ -168,11 +168,11 @@ export default async function TeamPage({ params }: TeamPageProps) {
     .sort((a, b) => a.round - b.round);
 
   // Cumulative points
-  let cumulative = 0;
-  const raceData = raceSummaries.map((s) => {
-    cumulative += s.racePoints;
-    return { ...s, cumulativePoints: Math.round(cumulative * 10) / 10 };
-  });
+  const raceData = raceSummaries.reduce<(typeof raceSummaries[number] & { cumulativePoints: number })[]>((acc, s) => {
+    const prev = acc.length > 0 ? acc[acc.length - 1].cumulativePoints : 0;
+    acc.push({ ...s, cumulativePoints: Math.round((prev + s.racePoints) * 10) / 10 });
+    return acc;
+  }, []);
 
   const totalPoints = constructorStanding ? Number.parseFloat(constructorStanding.points) || 0 : 0;
   const totalWins = raceData.filter((r) => r.bestFinish === 1).length;

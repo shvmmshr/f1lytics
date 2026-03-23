@@ -5,7 +5,7 @@ import { SectionHeader } from "@/components/shared/section-header";
 import { CompareTool } from "./compare-tool";
 
 export const metadata: Metadata = {
-  title: "Compare — F1lytics 2026",
+  title: "Compare",
   description: "Head-to-head comparison of F1 drivers and teams",
 };
 

@@ -9,7 +9,7 @@ import { SectionHeader } from "@/components/shared/section-header";
 import { TeamsGrid } from "./teams-grid";
 
 export const metadata: Metadata = {
-  title: "Teams — F1lytics 2026",
+  title: "Teams",
   description: "All 11 teams competing in the 2026 Formula 1 season",
 };
 

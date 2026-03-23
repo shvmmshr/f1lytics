@@ -7,7 +7,7 @@ import { SectionHeader } from "@/components/shared/section-header";
 import { CalendarTimeline } from "./calendar-timeline";
 
 export const metadata: Metadata = {
-  title: "Calendar — F1lytics 2026",
+  title: "Race Calendar",
   description: "2026 Formula 1 calendar timeline with countdown to the next race",
 };
 

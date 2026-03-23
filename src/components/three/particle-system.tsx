@@ -1,8 +1,35 @@
 "use client";
 
-import { useRef, useMemo, useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
+
+// Deterministic pseudo-random using a simple hash
+function seededRandom(seed: number): number {
+  const x = Math.sin(seed * 9301 + 49297) * 49297;
+  return x - Math.floor(x);
+}
+
+function generatePositions(count: number): Float32Array {
+  const positions = new Float32Array(count * 3);
+  for (let i = 0; i < count; i++) {
+    const spread = seededRandom(i);
+    positions[i * 3] = 1.8 + spread * 0.5;
+    positions[i * 3 + 1] = (seededRandom(i + count) - 0.5) * 0.4 * spread;
+    positions[i * 3 + 2] = (seededRandom(i + count * 2) - 0.5) * 0.6 * spread;
+  }
+  return positions;
+}
+
+function generateVelocities(count: number): Float32Array {
+  const vels = new Float32Array(count * 3);
+  for (let i = 0; i < count; i++) {
+    vels[i * 3] = 0.02 + seededRandom(i + count * 3) * 0.04;
+    vels[i * 3 + 1] = (seededRandom(i + count * 4) - 0.5) * 0.02;
+    vels[i * 3 + 2] = (seededRandom(i + count * 5) - 0.5) * 0.02;
+  }
+  return vels;
+}
 
 interface ParticleSystemProps {
   active: boolean;
@@ -15,29 +42,9 @@ export function ParticleSystem({ active, count = 200 }: ParticleSystemProps) {
   const frameCount = useRef(0);
   const wasActive = useRef(false);
 
-  // Base positions in a cone shape behind the rear of the car (positive X)
-  const basePositions = useMemo(() => {
-    const positions = new Float32Array(count * 3);
-    for (let i = 0; i < count; i++) {
-      const spread = Math.random();
-      // Cone expanding in +X direction (behind the car which faces -X)
-      positions[i * 3] = 1.8 + spread * 0.5; // x: behind rear
-      positions[i * 3 + 1] = (Math.random() - 0.5) * 0.4 * spread; // y
-      positions[i * 3 + 2] = (Math.random() - 0.5) * 0.6 * spread; // z
-    }
-    return positions;
-  }, [count]);
-
-  // Velocity vectors for each particle
-  const velocities = useMemo(() => {
-    const vels = new Float32Array(count * 3);
-    for (let i = 0; i < count; i++) {
-      vels[i * 3] = 0.02 + Math.random() * 0.04; // spread in +X
-      vels[i * 3 + 1] = (Math.random() - 0.5) * 0.02; // slight y drift
-      vels[i * 3 + 2] = (Math.random() - 0.5) * 0.02; // slight z drift
-    }
-    return vels;
-  }, [count]);
+  // Use lazy state initializer — pure and deterministic, runs once per mount
+  const [basePositions] = useState(() => generatePositions(count));
+  const [velocities] = useState(() => generateVelocities(count));
 
   // Reset particles when active becomes true
   useEffect(() => {
