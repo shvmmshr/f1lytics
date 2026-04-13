@@ -5,7 +5,7 @@ import { useGSAP } from "@gsap/react";
 import { animateCounter } from "@/lib/gsap";
 
 const stats = [
-  { value: 24, label: "Races" },
+  { value: 22, label: "Races" },
   { value: 11, label: "Teams" },
   { value: 22, label: "Drivers" },
   { value: 6, label: "Sprints" },

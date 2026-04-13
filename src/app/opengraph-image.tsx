@@ -16,106 +16,348 @@ export default function OGImage() {
           height: "100%",
           display: "flex",
           flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
           fontFamily: "system-ui, sans-serif",
           position: "relative",
           overflow: "hidden",
         }}
       >
-        {/* Subtle grid pattern */}
+        {/* === Background layers === */}
+
+        {/* Deep radial gradient base */}
         <div
           style={{
             position: "absolute",
             inset: 0,
-            backgroundImage:
-              "linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)",
-            backgroundSize: "40px 40px",
+            background:
+              "radial-gradient(ellipse 120% 80% at 30% 50%, rgba(225,6,0,0.08) 0%, transparent 60%), radial-gradient(ellipse 80% 120% at 80% 30%, rgba(225,6,0,0.05) 0%, transparent 50%)",
           }}
         />
 
-        {/* Red glow */}
+        {/* Perspective grid floor */}
         <div
           style={{
             position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            width: 600,
-            height: 300,
-            background: "radial-gradient(ellipse, rgba(225,6,0,0.15) 0%, transparent 70%)",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: 280,
+            background:
+              "linear-gradient(to top, rgba(225,6,0,0.06) 0%, transparent 100%)",
+            display: "flex",
           }}
         />
 
-        {/* Brand name */}
+        {/* Horizontal speed lines — left side */}
+        {[60, 140, 195, 310, 400, 470, 530].map((top, i) => (
+          <div
+            key={`line-l-${i}`}
+            style={{
+              position: "absolute",
+              top,
+              left: 0,
+              width: [280, 180, 320, 220, 160, 260, 200][i],
+              height: 1,
+              background: `linear-gradient(to right, rgba(225,6,0,${[0.3, 0.15, 0.25, 0.12, 0.2, 0.08, 0.18][i]}) 0%, transparent 100%)`,
+            }}
+          />
+        ))}
+
+        {/* Horizontal speed lines — right side */}
+        {[80, 160, 250, 350, 420, 500].map((top, i) => (
+          <div
+            key={`line-r-${i}`}
+            style={{
+              position: "absolute",
+              top,
+              right: 0,
+              width: [200, 260, 150, 300, 180, 220][i],
+              height: 1,
+              background: `linear-gradient(to left, rgba(225,6,0,${[0.2, 0.1, 0.25, 0.08, 0.15, 0.12][i]}) 0%, transparent 100%)`,
+            }}
+          />
+        ))}
+
+        {/* Diagonal racing stripe — top left */}
+        <div
+          style={{
+            position: "absolute",
+            top: -40,
+            left: -20,
+            width: 3,
+            height: 200,
+            background: "rgba(225,6,0,0.4)",
+            transform: "rotate(35deg)",
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            top: -30,
+            left: -5,
+            width: 1,
+            height: 160,
+            background: "rgba(225,6,0,0.2)",
+            transform: "rotate(35deg)",
+          }}
+        />
+
+        {/* Diagonal racing stripe — bottom right */}
+        <div
+          style={{
+            position: "absolute",
+            bottom: -40,
+            right: 40,
+            width: 3,
+            height: 200,
+            background: "rgba(225,6,0,0.3)",
+            transform: "rotate(35deg)",
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            bottom: -30,
+            right: 55,
+            width: 1,
+            height: 160,
+            background: "rgba(225,6,0,0.15)",
+            transform: "rotate(35deg)",
+          }}
+        />
+
+        {/* Checkered flag pattern — top right corner */}
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            right: 0,
+            width: 120,
+            height: 120,
+            display: "flex",
+            flexWrap: "wrap",
+            opacity: 0.04,
+          }}
+        >
+          {Array.from({ length: 36 }).map((_, i) => (
+            <div
+              key={`check-${i}`}
+              style={{
+                width: 20,
+                height: 20,
+                background:
+                  (Math.floor(i / 6) + (i % 6)) % 2 === 0
+                    ? "white"
+                    : "transparent",
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Central red glow — main */}
+        <div
+          style={{
+            position: "absolute",
+            top: "40%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: 700,
+            height: 400,
+            background:
+              "radial-gradient(ellipse, rgba(225,6,0,0.12) 0%, rgba(225,6,0,0.04) 40%, transparent 70%)",
+          }}
+        />
+
+        {/* === Content === */}
+
+        {/* Top bar — season badge */}
         <div
           style={{
             display: "flex",
-            alignItems: "baseline",
-            gap: 0,
-            position: "relative",
+            alignItems: "center",
+            padding: "48px 64px 0",
+            gap: 12,
           }}
         >
+          {/* Red dot */}
+          <div
+            style={{
+              width: 8,
+              height: 8,
+              borderRadius: "50%",
+              background: "#E10600",
+              boxShadow: "0 0 12px rgba(225,6,0,0.6)",
+            }}
+          />
           <span
             style={{
-              fontSize: 96,
-              fontWeight: 800,
-              color: "#FAFAFA",
-              letterSpacing: "-0.05em",
+              fontSize: 14,
+              fontWeight: 700,
+              color: "rgba(250,250,250,0.5)",
+              letterSpacing: "0.2em",
+              textTransform: "uppercase",
             }}
           >
-            F1
-          </span>
-          <span
-            style={{
-              fontSize: 96,
-              fontWeight: 800,
-              color: "#E10600",
-              letterSpacing: "-0.05em",
-            }}
-          >
-            LYTICS
+            2026 Season
           </span>
         </div>
 
-        {/* Red accent line */}
+        {/* Main title */}
         <div
           style={{
-            width: 80,
+            display: "flex",
+            flexDirection: "column",
+            padding: "32px 64px 0",
+            position: "relative",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "baseline",
+            }}
+          >
+            <span
+              style={{
+                fontSize: 120,
+                fontWeight: 900,
+                color: "#FAFAFA",
+                letterSpacing: "-0.04em",
+                lineHeight: 1,
+              }}
+            >
+              F1
+            </span>
+            <span
+              style={{
+                fontSize: 120,
+                fontWeight: 900,
+                color: "#E10600",
+                letterSpacing: "-0.04em",
+                lineHeight: 1,
+              }}
+            >
+              LYTICS
+            </span>
+          </div>
+
+          {/* Red accent bar under title */}
+          <div
+            style={{
+              width: 100,
+              height: 4,
+              background:
+                "linear-gradient(to right, #E10600, rgba(225,6,0,0.3))",
+              borderRadius: 2,
+              marginTop: 8,
+            }}
+          />
+
+          {/* Description */}
+          <p
+            style={{
+              fontSize: 22,
+              color: "rgba(250,250,250,0.55)",
+              marginTop: 24,
+              fontWeight: 400,
+              lineHeight: 1.5,
+              maxWidth: 500,
+            }}
+          >
+            Real-time standings, race results, driver stats, and live timing for
+            Formula 1.
+          </p>
+        </div>
+
+        {/* Bottom bar */}
+        <div
+          style={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "0 64px 40px",
+          }}
+        >
+          {/* Feature pills */}
+          <div style={{ display: "flex", gap: 16 }}>
+            {["Live Timing", "Standings", "Analytics", "Compare"].map(
+              (label) => (
+                <div
+                  key={label}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    padding: "6px 16px",
+                    borderRadius: 20,
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    background: "rgba(255,255,255,0.03)",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 4,
+                      height: 4,
+                      borderRadius: "50%",
+                      background: "#E10600",
+                    }}
+                  />
+                  <span
+                    style={{
+                      fontSize: 13,
+                      color: "rgba(250,250,250,0.45)",
+                      fontWeight: 500,
+                      letterSpacing: "0.02em",
+                    }}
+                  >
+                    {label}
+                  </span>
+                </div>
+              )
+            )}
+          </div>
+
+          {/* URL */}
+          <span
+            style={{
+              fontSize: 14,
+              color: "rgba(250,250,250,0.3)",
+              fontWeight: 500,
+              letterSpacing: "0.05em",
+            }}
+          >
+            f1lytics.com
+          </span>
+        </div>
+
+        {/* Top edge red line */}
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
             height: 3,
-            background: "#E10600",
-            marginTop: 16,
-            borderRadius: 2,
+            background:
+              "linear-gradient(to right, transparent, #E10600 30%, #E10600 70%, transparent)",
           }}
         />
 
-        {/* Subtitle */}
-        <p
-          style={{
-            fontSize: 24,
-            color: "rgba(250,250,250,0.6)",
-            marginTop: 24,
-            letterSpacing: "0.1em",
-            textTransform: "uppercase",
-            fontWeight: 500,
-          }}
-        >
-          Formula 1 · 2026 Season
-        </p>
-
-        {/* Bottom tagline */}
-        <p
+        {/* Bottom edge subtle line */}
+        <div
           style={{
             position: "absolute",
-            bottom: 40,
-            fontSize: 16,
-            color: "rgba(250,250,250,0.35)",
-            letterSpacing: "0.15em",
-            textTransform: "uppercase",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: 1,
+            background:
+              "linear-gradient(to right, transparent, rgba(225,6,0,0.3) 30%, rgba(225,6,0,0.3) 70%, transparent)",
           }}
-        >
-          Live Standings · Race Results · Driver Analytics
-        </p>
+        />
       </div>
     ),
     { ...size }

@@ -89,38 +89,40 @@ export default async function RacePage({ params }: RacePageProps) {
   let raceControl: Awaited<ReturnType<typeof getRaceControl>> = [];
   let matchedSession: OpenF1SessionCandidate | null = null;
 
-  try {
-    const raceResults = await getRaceResults("2026", String(circuit.round));
-    race = raceResults[0] ?? null;
-  } catch {
-    // Keep rendering static race shell if Jolpica is unavailable.
-  }
-
-  try {
-    const sessions = (await getSessions({
-      year: 2026,
-      session_name: "Race",
-    })) as OpenF1SessionCandidate[];
-
-    matchedSession =
-      sessions
-        .filter((session) => session.session_name.toLowerCase() === "race")
-        .sort((a, b) => {
-          const diffA = Math.abs(new Date(a.date_start).getTime() - raceDate.getTime());
-          const diffB = Math.abs(new Date(b.date_start).getTime() - raceDate.getTime());
-          return diffA - diffB;
-        })[0] ?? null;
-
-    if (matchedSession) {
-      [laps, stints, positions, raceControl] = await Promise.all([
-        getLaps({ session_key: matchedSession.session_key }),
-        getStints({ session_key: matchedSession.session_key }),
-        getPositions({ session_key: matchedSession.session_key }),
-        getRaceControl({ session_key: matchedSession.session_key }),
-      ]);
+  if (!circuit.cancelled) {
+    try {
+      const raceResults = await getRaceResults("2026", String(circuit.round));
+      race = raceResults[0] ?? null;
+    } catch {
+      // Keep rendering static race shell if Jolpica is unavailable.
     }
-  } catch {
-    // OpenF1 data is optional for the initial race page implementation.
+
+    try {
+      const sessions = (await getSessions({
+        year: 2026,
+        session_name: "Race",
+      })) as OpenF1SessionCandidate[];
+
+      matchedSession =
+        sessions
+          .filter((session) => session.session_name.toLowerCase() === "race")
+          .sort((a, b) => {
+            const diffA = Math.abs(new Date(a.date_start).getTime() - raceDate.getTime());
+            const diffB = Math.abs(new Date(b.date_start).getTime() - raceDate.getTime());
+            return diffA - diffB;
+          })[0] ?? null;
+
+      if (matchedSession) {
+        [laps, stints, positions, raceControl] = await Promise.all([
+          getLaps({ session_key: matchedSession.session_key }),
+          getStints({ session_key: matchedSession.session_key }),
+          getPositions({ session_key: matchedSession.session_key }),
+          getRaceControl({ session_key: matchedSession.session_key }),
+        ]);
+      }
+    } catch {
+      // OpenF1 data is optional for the initial race page implementation.
+    }
   }
 
   const results = race?.Results ?? [];
@@ -161,6 +163,12 @@ export default async function RacePage({ params }: RacePageProps) {
 
   return (
     <PageTransition>
+      {circuit.cancelled && (
+        <div className="mb-4 rounded-xl border border-status-red/30 bg-status-red/10 px-4 py-3 text-center text-sm font-medium text-status-red">
+          This Grand Prix has been cancelled for the 2026 season
+        </div>
+      )}
+
       <section className="mb-8 rounded-2xl border border-border-subtle bg-bg-secondary p-6">
         <p className="font-mono text-xs uppercase tracking-widest text-text-muted">Round {circuit.round}</p>
         <h1 className="mt-2 text-4xl font-bold tracking-display text-text-primary">{circuit.fullName}</h1>

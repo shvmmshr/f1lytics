@@ -17,6 +17,8 @@ export interface Circuit {
   isSprint: boolean;
   slug: string;
   trackImage: string;
+  /** Whether this race has been cancelled for the season */
+  cancelled?: boolean;
 }
 
 export const CIRCUITS: Record<string, Circuit> = {
@@ -92,6 +94,7 @@ export const CIRCUITS: Record<string, Circuit> = {
     isSprint: false,
     slug: "bahrain-gp",
     trackImage: "/circuits/bahrain.webp",
+    cancelled: true,
   },
   jeddah: {
     id: "jeddah",
@@ -110,6 +113,7 @@ export const CIRCUITS: Record<string, Circuit> = {
     isSprint: false,
     slug: "saudi-arabian-gp",
     trackImage: "/circuits/jeddah.webp",
+    cancelled: true,
   },
   miami: {
     id: "miami",
@@ -470,7 +474,7 @@ export function getCircuitBySlug(slug: string): Circuit | undefined {
 
 export function getNextRace(currentDate: Date = new Date()): Circuit | undefined {
   const dateStr = currentDate.toISOString().split("T")[0];
-  return CIRCUIT_LIST.find((circuit) => circuit.raceDate >= dateStr);
+  return CIRCUIT_LIST.find((circuit) => !circuit.cancelled && circuit.raceDate >= dateStr);
 }
 
 export interface NextEvent {
@@ -486,6 +490,7 @@ export interface NextEvent {
 export function getNextEvent(currentDate: Date = new Date()): NextEvent | undefined {
   const dateStr = currentDate.toISOString().split("T")[0];
   for (const circuit of CIRCUIT_LIST) {
+    if (circuit.cancelled) continue;
     // Check sprint first — it happens before the race on sprint weekends
     if (circuit.isSprint && circuit.sprintDate && circuit.sprintDate >= dateStr) {
       return { circuit, eventType: "sprint", eventDate: circuit.sprintDate };

@@ -53,7 +53,7 @@ export default function CircuitsPage() {
       <CircuitsGrid>
         {CIRCUIT_LIST.map((circuit) => (
           <Link key={circuit.id} href={`/circuits/${circuit.slug}`}>
-            <article className="group h-full overflow-hidden rounded-xl border border-border-subtle bg-bg-secondary transition-colors duration-200 hover:bg-bg-tertiary">
+            <article className={`group h-full overflow-hidden rounded-xl border border-border-subtle bg-bg-secondary transition-colors duration-200 hover:bg-bg-tertiary${circuit.cancelled ? " opacity-40" : ""}`}>
               {/* Track layout image */}
               <div className="relative h-44 w-full bg-bg-primary">
                 <Image
@@ -71,9 +71,15 @@ export default function CircuitsPage() {
                   R{circuit.round}
                 </span>
                 {/* Sprint badge */}
-                {circuit.isSprint && (
+                {circuit.isSprint && !circuit.cancelled && (
                   <span className="absolute right-3 top-3 rounded-md bg-status-yellow/20 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-status-yellow backdrop-blur-sm">
                     Sprint Weekend
+                  </span>
+                )}
+                {/* Cancelled badge */}
+                {circuit.cancelled && (
+                  <span className="absolute right-3 top-3 rounded-md bg-status-red/20 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-status-red backdrop-blur-sm">
+                    Cancelled
                   </span>
                 )}
               </div>

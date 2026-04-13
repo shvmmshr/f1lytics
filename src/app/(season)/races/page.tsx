@@ -51,41 +51,52 @@ export default async function RacesPage() {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {CIRCUIT_LIST.map((circuit) => {
-          const winner = winnerByRound.get(circuit.round);
+          const isCancelled = circuit.cancelled === true;
+          const winner = !isCancelled ? winnerByRound.get(circuit.round) : undefined;
 
           return (
             <Link key={circuit.id} href={`/races/${circuit.slug}`}>
               <article
                 data-animate="race-card"
-                className="h-full rounded-xl border border-border-subtle bg-bg-secondary p-5 transition-all duration-200 hover:-translate-y-1"
+                className={`h-full rounded-xl border border-border-subtle bg-bg-secondary p-5 transition-all duration-200 hover:-translate-y-1${isCancelled ? " opacity-40" : ""}`}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="font-mono text-xs uppercase tracking-widest text-text-muted">
                       Round {circuit.round}
                     </p>
-                    <h2 className="mt-1 text-xl font-semibold text-text-primary">
+                    <h2 className={`mt-1 text-xl font-semibold text-text-primary${isCancelled ? " line-through" : ""}`}>
                       {circuit.fullName}
                     </h2>
                     <p className="mt-1 text-sm text-text-secondary">
                       {circuit.name} · {circuit.city}, {circuit.country}
                     </p>
                   </div>
-                  {circuit.isSprint && (
+                  {isCancelled ? (
+                    <span className="inline-flex rounded-full bg-status-red/20 px-2 py-1 text-[10px] font-semibold uppercase tracking-widest text-status-red">
+                      Cancelled
+                    </span>
+                  ) : circuit.isSprint ? (
                     <span className="inline-flex rounded-full bg-status-yellow/20 px-2 py-1 text-[10px] font-semibold uppercase tracking-widest text-status-yellow">
                       Sprint Weekend
                     </span>
-                  )}
+                  ) : null}
                 </div>
 
-                <div className="mt-3 font-mono text-sm text-text-secondary">
-                  {circuit.isSprint && circuit.sprintDate && (
-                    <p className="text-xs text-status-yellow">
-                      Sprint: {formatRaceDate(circuit.sprintDate)}
-                    </p>
-                  )}
-                  <p>Race: {formatRaceDate(circuit.raceDate)}</p>
-                </div>
+                {isCancelled ? (
+                  <p className="mt-3 font-mono text-sm text-status-red">
+                    This race has been cancelled
+                  </p>
+                ) : (
+                  <div className="mt-3 font-mono text-sm text-text-secondary">
+                    {circuit.isSprint && circuit.sprintDate && (
+                      <p className="text-xs text-status-yellow">
+                        Sprint: {formatRaceDate(circuit.sprintDate)}
+                      </p>
+                    )}
+                    <p>Race: {formatRaceDate(circuit.raceDate)}</p>
+                  </div>
+                )}
 
                 {winner && (
                   <div className="mt-3 rounded-lg border border-border-subtle bg-bg-tertiary px-3 py-2">

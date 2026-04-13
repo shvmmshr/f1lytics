@@ -55,25 +55,33 @@ export default async function CircuitPage({ params }: CircuitPageProps) {
   let lastWinner: string | null = null;
   let topResults: { position: string; driver: string; team: string; time: string }[] = [];
 
-  try {
-    const raceResults = await getRaceResults("2026", String(circuit.round));
-    const race = raceResults[0];
-    if (race?.Results) {
-      const winner = race.Results.find((r) => r.position === "1");
-      if (winner) lastWinner = `${winner.Driver.givenName} ${winner.Driver.familyName}`;
-      topResults = race.Results.slice(0, 5).map((r) => ({
-        position: r.position,
-        driver: `${r.Driver.givenName} ${r.Driver.familyName}`,
-        team: r.Constructor?.name ?? "",
-        time: r.Time?.time ?? (r.status || ""),
-      }));
+  if (!circuit.cancelled) {
+    try {
+      const raceResults = await getRaceResults("2026", String(circuit.round));
+      const race = raceResults[0];
+      if (race?.Results) {
+        const winner = race.Results.find((r) => r.position === "1");
+        if (winner) lastWinner = `${winner.Driver.givenName} ${winner.Driver.familyName}`;
+        topResults = race.Results.slice(0, 5).map((r) => ({
+          position: r.position,
+          driver: `${r.Driver.givenName} ${r.Driver.familyName}`,
+          team: r.Constructor?.name ?? "",
+          time: r.Time?.time ?? (r.status || ""),
+        }));
+      }
+    } catch {
+      // No data yet
     }
-  } catch {
-    // No data yet
   }
 
   return (
     <PageTransition>
+      {circuit.cancelled && (
+        <div className="mb-4 rounded-xl border border-status-red/30 bg-status-red/10 px-4 py-3 text-center text-sm font-medium text-status-red">
+          This Grand Prix has been cancelled for the 2026 season
+        </div>
+      )}
+
       {/* ── Hero header with track image ── */}
       <section className="relative mb-8 overflow-hidden rounded-2xl border border-border-subtle bg-bg-secondary">
         <div className="flex flex-col lg:flex-row">
@@ -97,7 +105,12 @@ export default async function CircuitPage({ params }: CircuitPageProps) {
               <span className="rounded-md bg-status-red/20 px-2 py-1 font-mono text-xs font-bold text-status-red">
                 ROUND {circuit.round}
               </span>
-              {circuit.isSprint && (
+              {circuit.cancelled && (
+                <span className="rounded-md bg-status-red/20 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-status-red">
+                  Cancelled
+                </span>
+              )}
+              {circuit.isSprint && !circuit.cancelled && (
                 <span className="rounded-md bg-status-yellow/20 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-status-yellow">
                   Sprint Weekend
                 </span>

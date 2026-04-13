@@ -25,6 +25,7 @@ export function SeasonCalendarStrip() {
           className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
         >
           {CIRCUIT_LIST.map((circuit) => {
+            const isCancelled = circuit.cancelled === true;
             const isPast = circuit.raceDate < today;
             const isNext = nextRace?.id === circuit.id;
             const raceDate = parseISO(circuit.raceDate);
@@ -33,11 +34,13 @@ export function SeasonCalendarStrip() {
               <div
                 key={circuit.id}
                 className={`snap-start min-w-[200px] flex-shrink-0 rounded-xl border p-4 transition-all ${
-                  isNext
-                    ? "border-status-red shadow-[0_0_15px_var(--color-glow-red)] bg-bg-secondary"
-                    : isPast
-                      ? "border-border-subtle bg-bg-secondary opacity-50"
-                      : "border-border-subtle bg-bg-secondary"
+                  isCancelled
+                    ? "border-border-subtle bg-bg-secondary opacity-40"
+                    : isNext
+                      ? "border-status-red shadow-[0_0_15px_var(--color-glow-red)] bg-bg-secondary"
+                      : isPast
+                        ? "border-border-subtle bg-bg-secondary opacity-50"
+                        : "border-border-subtle bg-bg-secondary"
                 }`}
               >
                 <div className="flex items-center justify-between mb-2">
@@ -48,15 +51,21 @@ export function SeasonCalendarStrip() {
                     {countryCodeToFlag(circuit.countryCode)}
                   </span>
                 </div>
-                <p className="text-sm font-semibold text-text-primary truncate">
+                <p className={`text-sm font-semibold text-text-primary truncate${isCancelled ? " line-through" : ""}`}>
                   {circuit.fullName.replace(" Grand Prix", " GP")}
                 </p>
                 <p className="text-xs text-text-secondary mt-1">
                   {circuit.country}
                 </p>
-                <p className="text-xs text-text-muted mt-0.5">
-                  {format(raceDate, "MMM d")}
-                </p>
+                {isCancelled ? (
+                  <p className="text-xs font-semibold text-status-red mt-0.5">
+                    Cancelled
+                  </p>
+                ) : (
+                  <p className="text-xs text-text-muted mt-0.5">
+                    {format(raceDate, "MMM d")}
+                  </p>
+                )}
               </div>
             );
           })}

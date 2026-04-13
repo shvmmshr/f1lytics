@@ -35,7 +35,7 @@
 - **Race Results** — Detailed results for every Grand Prix including lap charts, tire strategies, and fastest laps
 - **Driver Profiles** — Career stats, recent form, and season performance for all 22 drivers
 - **Team Profiles** — Constructor details with driver lineups and historical performance
-- **Circuit Guide** — All 24 circuits with track maps, lap records, and key stats
+- **Circuit Guide** — All 2026 circuits with track maps, lap records, and key stats
 - **Race Calendar** — Interactive timeline of the full 2026 season with countdown to next event (sprint-aware)
 - **Head-to-Head Compare** — Compare any two drivers across stats, qualifying pace, points progression, and recent form
 - **Responsive Design** — Fully optimized for desktop and mobile with smooth GSAP scroll animations
@@ -128,8 +128,16 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 ---
 
 <p align="center">
-  If you found this useful, consider giving it a star!
-  <br />
+  If you found this useful, consider supporting the project!
+  <br /><br />
+  <a href="https://github.com/sponsors/shvmmshr">
+    <img src="https://img.shields.io/badge/Sponsor-GitHub-%23ea4aaa?logo=github-sponsors" alt="GitHub Sponsors" />
+  </a>
+  &nbsp;
+  <a href="https://buymeacoffee.com/shvmmshra">
+    <img src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?logo=buy-me-a-coffee&logoColor=black" alt="Buy Me a Coffee" />
+  </a>
+  &nbsp;
   <a href="https://github.com/shvmmshr/f1lytics">
     <img src="https://img.shields.io/github/stars/shvmmshr/f1lytics?style=social" alt="GitHub stars" />
   </a>

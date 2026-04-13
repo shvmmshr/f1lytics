@@ -48,7 +48,7 @@ export default async function CalendarPage() {
 
   const today = new Date();
   const todayStr = today.toISOString().split("T")[0];
-  const nextRace = CIRCUIT_LIST.find((circuit) => circuit.raceDate >= todayStr);
+  const nextRace = CIRCUIT_LIST.find((circuit) => !circuit.cancelled && circuit.raceDate >= todayStr);
 
   return (
     <PageTransition>
@@ -76,6 +76,7 @@ export default async function CalendarPage() {
       <section>
         <CalendarTimeline>
           {CIRCUIT_LIST.map((circuit, index) => {
+            const isCancelled = circuit.cancelled === true;
             const isPast = circuit.raceDate < todayStr;
             const isNext = nextRace?.id === circuit.id;
             const winner = winnerByRound.get(circuit.round);
@@ -94,7 +95,7 @@ export default async function CalendarPage() {
                   side === "left"
                     ? "md:mr-auto md:w-[calc(50%-1rem)] md:pr-8"
                     : "md:ml-auto md:w-[calc(50%-1rem)] md:pl-8",
-                  isPast ? "opacity-50" : "",
+                  isCancelled ? "opacity-40" : isPast ? "opacity-50" : "",
                   isNext
                     ? "border-status-red/40 opacity-100 shadow-[0_0_15px_var(--color-glow-red)]"
                     : "",
@@ -128,7 +129,7 @@ export default async function CalendarPage() {
                     <p className="font-mono text-xs uppercase tracking-widest text-text-muted">
                       Round {circuit.round}
                     </p>
-                    <h3 className="mt-1 text-lg font-semibold text-text-primary">
+                    <h3 className={`mt-1 text-lg font-semibold text-text-primary${isCancelled ? " line-through" : ""}`}>
                       {circuit.fullName}
                     </h3>
                     <p className="mt-1 text-sm text-text-secondary">
@@ -138,23 +139,31 @@ export default async function CalendarPage() {
                   </div>
 
                   <div className="text-right">
-                    {circuit.isSprint && circuit.sprintDate && (
-                      <p className="font-mono text-xs text-status-yellow">
-                        Sprint: {formatRaceDate(circuit.sprintDate)}
-                      </p>
-                    )}
-                    <p className="font-mono text-sm text-text-primary">
-                      Race: {formatRaceDate(circuit.raceDate)}
-                    </p>
-                    {circuit.isSprint && (
-                      <span className="mt-2 inline-flex rounded-full bg-status-yellow/20 px-2 py-1 text-[10px] font-semibold uppercase tracking-widest text-status-yellow">
-                        Sprint Weekend
+                    {isCancelled ? (
+                      <span className="inline-flex rounded-full bg-status-red/20 px-2 py-1 text-[10px] font-semibold uppercase tracking-widest text-status-red">
+                        Cancelled
                       </span>
-                    )}
-                    {isNext && (
-                      <span className="mt-2 ml-2 inline-flex rounded-full bg-status-red/20 px-2 py-1 text-[10px] font-semibold uppercase tracking-widest text-status-red">
-                        Next
-                      </span>
+                    ) : (
+                      <>
+                        {circuit.isSprint && circuit.sprintDate && (
+                          <p className="font-mono text-xs text-status-yellow">
+                            Sprint: {formatRaceDate(circuit.sprintDate)}
+                          </p>
+                        )}
+                        <p className="font-mono text-sm text-text-primary">
+                          Race: {formatRaceDate(circuit.raceDate)}
+                        </p>
+                        {circuit.isSprint && (
+                          <span className="mt-2 inline-flex rounded-full bg-status-yellow/20 px-2 py-1 text-[10px] font-semibold uppercase tracking-widest text-status-yellow">
+                            Sprint Weekend
+                          </span>
+                        )}
+                        {isNext && (
+                          <span className="mt-2 ml-2 inline-flex rounded-full bg-status-red/20 px-2 py-1 text-[10px] font-semibold uppercase tracking-widest text-status-red">
+                            Next
+                          </span>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
