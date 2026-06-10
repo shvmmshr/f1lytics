@@ -10,12 +10,16 @@ export const metadata: Metadata = {
   description: "Every round of the 2026 Formula 1 season with results",
 };
 
+/** Compact, scannable date: "SUN · MAR 8". Year is implied (whole page is 2026). */
 function formatRaceDate(date: string): string {
-  return new Intl.DateTimeFormat("en-US", {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    weekday: "short",
     month: "short",
     day: "numeric",
-    year: "numeric",
-  }).format(new Date(`${date}T00:00:00Z`));
+    timeZone: "UTC",
+  }).formatToParts(new Date(`${date}T00:00:00Z`));
+  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? "";
+  return `${get("weekday")} · ${get("month")} ${get("day")}`.toUpperCase();
 }
 
 export default async function RacesPage() {
@@ -38,13 +42,19 @@ export default async function RacesPage() {
     const winner = race.Results?.find((result) => result.position === "1");
     if (!winner) return;
 
+    // Abbreviate to "A. ANTONELLI" — punchier in the card footer than the full name.
+    const initial = winner.Driver.givenName.trim().charAt(0).toUpperCase();
     winnerByDate.set(race.date, {
-      name: `${winner.Driver.givenName} ${winner.Driver.familyName}`,
+      name: `${initial}. ${winner.Driver.familyName.toUpperCase()}`,
       constructor: winner.Constructor.name,
     });
   });
 
   const today = new Date().toISOString().split("T")[0];
+  // The single soonest race still to come — only this one gets the "UP NEXT" accent.
+  const nextRaceDate = CIRCUIT_LIST.find(
+    (c) => !c.cancelled && c.raceDate >= today
+  )?.raceDate;
 
   return (
     <PageTransition>
@@ -91,70 +101,82 @@ export default async function RacesPage() {
           {CIRCUIT_LIST.map((circuit) => {
             const isCancelled = circuit.cancelled === true;
             const isPast = circuit.raceDate < today;
+            const isNext = circuit.raceDate === nextRaceDate;
             const winner = !isCancelled ? winnerByDate.get(circuit.raceDate) : undefined;
-            const accent = isCancelled
+
+            // Only meaningful states earn a colored top edge — sprint (amber)
+            // and cancelled (red). Plain rounds get the neutral hairline so the
+            // grid reads calm instead of a rainbow of borders.
+            const topAccent = isCancelled
               ? F1.red
               : circuit.isSprint
                 ? F1.amber
-                : isPast
-                  ? F1.fg4
-                  : F1.fg2;
+                : "transparent";
 
             return (
               <Link
                 key={circuit.id}
                 href={`/races/${circuit.slug}`}
-                className="group block"
+                className="group flex flex-col transition-colors hover:bg-white/[0.025]"
                 style={{
                   background: F1.bg,
-                  borderTop: `2px solid ${accent}`,
-                  padding: "20px 22px",
-                  opacity: isCancelled ? 0.55 : 1,
+                  borderTop: `2px solid ${topAccent}`,
+                  padding: "18px 22px 16px",
+                  minHeight: 188,
+                  opacity: isCancelled ? 0.5 : 1,
                   position: "relative",
                 }}
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <Mono
-                      className="block"
-                      style={{
-                        fontSize: 10,
-                        color: F1.fg3,
-                        letterSpacing: "0.2em",
-                      }}
+                {/* Top row: round (left) · date + chevron (right) */}
+                <div className="flex items-center justify-between gap-3">
+                  <Mono style={{ fontSize: 10, color: F1.fg3, letterSpacing: "0.22em" }}>
+                    R{String(circuit.round).padStart(2, "0")}
+                  </Mono>
+                  <div className="flex items-center gap-2">
+                    {!isCancelled && (
+                      <Mono
+                        style={{
+                          fontSize: 10,
+                          color: isNext ? F1.amber : F1.fg3,
+                          letterSpacing: "0.16em",
+                        }}
+                      >
+                        {formatRaceDate(circuit.raceDate)}
+                      </Mono>
+                    )}
+                    <span
+                      className="text-[#5C5C66] transition-colors group-hover:text-white"
+                      style={{ fontSize: 13, lineHeight: 1 }}
+                      aria-hidden
                     >
-                      ROUND {String(circuit.round).padStart(2, "0")}
-                    </Mono>
-                    <h2
-                      className="font-display mt-1 truncate"
-                      style={{
-                        fontSize: 22,
-                        fontWeight: 600,
-                        color: isCancelled ? F1.fg2 : F1.fg,
-                        letterSpacing: "-0.02em",
-                      }}
-                    >
-                      {circuit.fullName.toUpperCase()}
-                    </h2>
-                    <Mono
-                      className="block mt-1.5"
-                      style={{
-                        fontSize: 11,
-                        color: F1.fg2,
-                        letterSpacing: "0.14em",
-                      }}
-                    >
-                      {circuit.city.toUpperCase()} · {circuit.country.toUpperCase()}
-                    </Mono>
+                      ›
+                    </span>
                   </div>
+                </div>
+
+                {/* Hero: GP name + status badge */}
+                <div className="mt-4 flex items-start justify-between gap-3">
+                  <h2
+                    className="font-display"
+                    style={{
+                      fontSize: 23,
+                      fontWeight: 600,
+                      lineHeight: 1.04,
+                      color: isCancelled ? F1.fg3 : F1.fg,
+                      letterSpacing: "-0.02em",
+                    }}
+                  >
+                    {circuit.fullName.toUpperCase()}
+                  </h2>
                   {isCancelled ? (
                     <Mono
+                      className="shrink-0"
                       style={{
                         fontSize: 9,
                         background: F1.red,
                         color: F1.fg,
                         padding: "3px 8px",
-                        letterSpacing: "0.2em",
+                        letterSpacing: "0.18em",
                         fontWeight: 700,
                       }}
                     >
@@ -162,12 +184,13 @@ export default async function RacesPage() {
                     </Mono>
                   ) : circuit.isSprint ? (
                     <Mono
+                      className="shrink-0"
                       style={{
                         fontSize: 9,
                         background: F1.amber,
                         color: F1.ink,
                         padding: "3px 8px",
-                        letterSpacing: "0.2em",
+                        letterSpacing: "0.18em",
                         fontWeight: 700,
                       }}
                     >
@@ -176,60 +199,65 @@ export default async function RacesPage() {
                   ) : null}
                 </div>
 
-                {!isCancelled && (
-                  <div
-                    className="mt-3"
-                    style={{ borderTop: `1px solid ${F1.line}`, paddingTop: 12 }}
-                  >
-                    {circuit.isSprint && circuit.sprintDate && (
-                      <Mono
-                        className="block"
-                        style={{ fontSize: 10, color: F1.amber, letterSpacing: "0.16em" }}
-                      >
-                        SPRINT · {formatRaceDate(circuit.sprintDate).toUpperCase()}
-                      </Mono>
-                    )}
-                    <Mono
-                      className="block"
-                      style={{ fontSize: 11, color: F1.fg2, letterSpacing: "0.14em", marginTop: 2 }}
-                    >
-                      RACE · {formatRaceDate(circuit.raceDate).toUpperCase()}
-                    </Mono>
-                  </div>
-                )}
+                {/* Location — sentence case, demoted, no caps wall */}
+                <div
+                  className="mt-1.5"
+                  style={{ fontSize: 13, color: F1.fg3, letterSpacing: "0.01em" }}
+                >
+                  {circuit.city} · {circuit.country}
+                </div>
 
-                {winner && (
-                  <div
-                    className="mt-3 flex items-center gap-2.5"
-                    style={{
-                      borderLeft: `2px solid ${F1.amber}`,
-                      paddingLeft: 10,
-                    }}
-                  >
-                    <Mono
-                      style={{ fontSize: 9, color: F1.amber, letterSpacing: "0.18em", fontWeight: 700 }}
-                    >
-                      P1
+                {/* Footer pinned to the bottom: the row's "result" line. */}
+                <div className="mt-auto pt-3" style={{ borderTop: `1px solid ${F1.line}` }}>
+                  {isCancelled ? (
+                    <Mono style={{ fontSize: 10, color: F1.fg4, letterSpacing: "0.16em" }}>
+                      NOT HELD IN 2026
                     </Mono>
-                    <span
-                      className="font-display truncate"
+                  ) : winner ? (
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <Mono
+                        style={{
+                          fontSize: 9,
+                          color: F1.amber,
+                          letterSpacing: "0.16em",
+                          fontWeight: 700,
+                        }}
+                      >
+                        P1
+                      </Mono>
+                      <span
+                        className="font-display truncate"
+                        style={{ fontSize: 14, fontWeight: 600, color: F1.fg }}
+                      >
+                        {winner.name}
+                      </span>
+                      <span
+                        className="truncate"
+                        style={{ fontSize: 11, color: F1.fg3, letterSpacing: "0.01em" }}
+                      >
+                        {winner.constructor}
+                      </span>
+                    </div>
+                  ) : isPast ? (
+                    <Mono style={{ fontSize: 10, color: F1.fg4, letterSpacing: "0.16em" }}>
+                      RESULT PENDING
+                    </Mono>
+                  ) : circuit.isSprint && circuit.sprintDate ? (
+                    <Mono style={{ fontSize: 10, color: F1.amber, letterSpacing: "0.14em" }}>
+                      SPRINT · {formatRaceDate(circuit.sprintDate)}
+                    </Mono>
+                  ) : (
+                    <Mono
                       style={{
-                        fontSize: 15,
-                        fontWeight: 600,
-                        color: F1.fg,
-                        letterSpacing: "-0.01em",
+                        fontSize: 10,
+                        color: isNext ? F1.amber : F1.fg4,
+                        letterSpacing: "0.16em",
                       }}
                     >
-                      {winner.name.toUpperCase()}
-                    </span>
-                    <Mono
-                      className="truncate"
-                      style={{ fontSize: 10, color: F1.fg3, letterSpacing: "0.12em" }}
-                    >
-                      {winner.constructor.toUpperCase()}
+                      {isNext ? "UP NEXT" : "UPCOMING"}
                     </Mono>
-                  </div>
-                )}
+                  )}
+                </div>
               </Link>
             );
           })}
