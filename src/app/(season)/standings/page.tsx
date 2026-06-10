@@ -110,14 +110,7 @@ export default async function StandingsPage() {
         </div>
 
         {/* MAIN — drivers table + constructors sidebar */}
-        <div
-          className="grid"
-          style={{
-            gridTemplateColumns: "minmax(0, 1fr) minmax(0, 380px)",
-            gap: 1,
-            background: F1.line,
-          }}
-        >
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,380px)] hairline-cells">
           {/* DRIVERS table */}
           <div style={{ background: F1.bg, padding: 0 }}>
             <div

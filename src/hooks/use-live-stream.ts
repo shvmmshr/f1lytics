@@ -286,8 +286,8 @@ export function useLiveStream(enabled = true): UseLiveStreamReturn {
 
   useEffect(() => {
     if (!enabled) {
-      setState("offline");
-      return;
+      const raf = requestAnimationFrame(() => setState("offline"));
+      return () => cancelAnimationFrame(raf);
     }
 
     feedRef.current = {};

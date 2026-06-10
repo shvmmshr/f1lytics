@@ -7,7 +7,7 @@ import { F1, Mono, Grid as BroadcastGrid } from "@/components/shared/broadcast";
 
 export const metadata: Metadata = {
   title: "Races",
-  description: "All 24 rounds of the 2026 Formula 1 season with results",
+  description: "Every round of the 2026 Formula 1 season with results",
 };
 
 function formatRaceDate(date: string): string {
@@ -80,11 +80,9 @@ export default async function RacesPage() {
         </div>
 
         <div
-          className="grid"
+          className="grid hairline-cells"
           style={{
             gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))",
-            gap: 1,
-            background: F1.line,
             borderTop: `1px solid ${F1.line}`,
             borderBottom: `1px solid ${F1.line}`,
           }}
@@ -131,9 +129,8 @@ export default async function RacesPage() {
                       style={{
                         fontSize: 22,
                         fontWeight: 600,
-                        color: F1.fg,
+                        color: isCancelled ? F1.fg2 : F1.fg,
                         letterSpacing: "-0.02em",
-                        textDecoration: isCancelled ? "line-through" : "none",
                       }}
                     >
                       {circuit.fullName.toUpperCase()}
@@ -202,33 +199,31 @@ export default async function RacesPage() {
 
                 {winner && (
                   <div
-                    className="mt-3"
+                    className="mt-3 flex items-center gap-2.5"
                     style={{
-                      background: F1.bg2,
-                      border: `1px solid ${F1.line}`,
-                      padding: "10px 12px",
+                      borderLeft: `2px solid ${F1.amber}`,
+                      paddingLeft: 10,
                     }}
                   >
                     <Mono
-                      className="block"
-                      style={{ fontSize: 9, color: F1.amber, letterSpacing: "0.2em", fontWeight: 700 }}
+                      style={{ fontSize: 9, color: F1.amber, letterSpacing: "0.18em", fontWeight: 700 }}
                     >
-                      WINNER
+                      P1
                     </Mono>
-                    <div
-                      className="font-display mt-1"
+                    <span
+                      className="font-display truncate"
                       style={{
-                        fontSize: 16,
+                        fontSize: 15,
                         fontWeight: 600,
                         color: F1.fg,
                         letterSpacing: "-0.01em",
                       }}
                     >
                       {winner.name.toUpperCase()}
-                    </div>
+                    </span>
                     <Mono
-                      className="block"
-                      style={{ fontSize: 10, color: F1.fg3, letterSpacing: "0.14em" }}
+                      className="truncate"
+                      style={{ fontSize: 10, color: F1.fg3, letterSpacing: "0.12em" }}
                     >
                       {winner.constructor.toUpperCase()}
                     </Mono>

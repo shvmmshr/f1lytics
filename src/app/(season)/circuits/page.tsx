@@ -105,9 +105,7 @@ export default function CircuitsPage() {
                   src={circuit.trackImage}
                   alt={`${circuit.name} track layout`}
                   fill
-                  className={`object-contain p-6 transition-opacity${
-                    circuit.id === "bahrain" ? " invert" : ""
-                  }`}
+                  className="object-contain p-6 transition-opacity"
                   style={{ filter: "brightness(0) invert(1)", opacity: 0.85 }}
                   sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
                   unoptimized

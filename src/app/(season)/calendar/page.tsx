@@ -4,6 +4,7 @@ import Link from "next/link";
 import { getRaceResults } from "@/lib/api/jolpica";
 import { CIRCUIT_LIST } from "@/lib/constants";
 import { PageTransition } from "@/components/layout/page-transition";
+import { CountdownTimer } from "@/components/shared/countdown-timer";
 import { CalendarGrid } from "./calendar-grid";
 import {
   F1,
@@ -35,17 +36,6 @@ function countryCodeToFlag(countryCode: string): string {
     .join("");
 }
 
-function getCountdownParts(target: Date) {
-  const diff = target.getTime() - Date.now();
-  if (diff <= 0) return null;
-  return {
-    d: Math.floor(diff / 86_400_000),
-    h: Math.floor((diff / 3_600_000) % 24),
-    m: Math.floor((diff / 60_000) % 60),
-    s: Math.floor((diff / 1000) % 60),
-  };
-}
-
 export default async function CalendarPage() {
   let raceResults: Awaited<ReturnType<typeof getRaceResults>> = [];
 
@@ -71,9 +61,6 @@ export default async function CalendarPage() {
   const nextRace = CIRCUIT_LIST.find(
     (c) => !c.cancelled && c.raceDate >= todayStr,
   );
-  const countdown = nextRace
-    ? getCountdownParts(new Date(`${nextRace.raceDate}T${nextRace.raceTime}`))
-    : null;
 
   return (
     <PageTransition>
@@ -215,41 +202,11 @@ export default async function CalendarPage() {
                 ))}
               </div>
 
-              {countdown && (
-                <div className="flex gap-6 mt-6">
-                  {[
-                    [String(countdown.d).padStart(2, "0"), "DAYS"],
-                    [String(countdown.h).padStart(2, "0"), "HOURS"],
-                    [String(countdown.m).padStart(2, "0"), "MIN"],
-                    [String(countdown.s).padStart(2, "0"), "SEC"],
-                  ].map(([v, l]) => (
-                    <div key={l}>
-                      <span
-                        className="font-display"
-                        style={{
-                          fontSize: 48,
-                          fontWeight: 700,
-                          lineHeight: 1,
-                          letterSpacing: "-0.04em",
-                        }}
-                      >
-                        {v}
-                      </span>
-                      <Mono
-                        style={{
-                          fontSize: 9,
-                          color: F1.fg3,
-                          letterSpacing: "0.2em",
-                          display: "block",
-                          marginTop: 4,
-                        }}
-                      >
-                        {l}
-                      </Mono>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <div className="mt-6" style={{ maxWidth: 420 }}>
+                <CountdownTimer
+                  targetDate={new Date(`${nextRace.raceDate}T${nextRace.raceTime}`)}
+                />
+              </div>
             </div>
 
             <div
@@ -420,7 +377,6 @@ export default async function CalendarPage() {
                         letterSpacing: "-0.01em",
                         lineHeight: 1,
                         color: isCancelled ? F1.fg3 : F1.fg,
-                        textDecoration: isCancelled ? "line-through" : "none",
                       }}
                     >
                       {c.city.toUpperCase()}

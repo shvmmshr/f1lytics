@@ -20,9 +20,12 @@ export function CountdownTimer({ targetDate, label }: CountdownTimerProps) {
   const [now, setNow] = useState<Date | null>(null);
 
   useEffect(() => {
-    setNow(new Date());
+    const raf = requestAnimationFrame(() => setNow(new Date()));
     const interval = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(interval);
+    return () => {
+      cancelAnimationFrame(raf);
+      clearInterval(interval);
+    };
   }, []);
 
   // diff > 0 means the event is still in the future

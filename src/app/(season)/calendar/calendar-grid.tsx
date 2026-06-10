@@ -19,11 +19,9 @@ export function CalendarGrid({ children }: { children: React.ReactNode }) {
   return (
     <div
       ref={ref}
-      className="grid"
+      className="grid hairline-cells"
       style={{
         gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
-        gap: 1,
-        background: F1.line,
         border: `1px solid ${F1.line}`,
       }}
     >

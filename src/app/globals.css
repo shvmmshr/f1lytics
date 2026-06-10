@@ -32,9 +32,9 @@
 
   /* Text */
   --color-text-primary: #F4F4F5;
-  --color-text-secondary: #A1A1AA;
-  --color-text-muted: #52525B;
-  --color-text-faint: #3F3F46;
+  --color-text-secondary: #B4B4BD;
+  --color-text-muted: #84848F;
+  --color-text-faint: #5C5C66;
 
   /* Borders */
   --color-border-subtle: #27272A;
@@ -283,6 +283,18 @@
 
 .animate-checkered-fade {
   animation: checkered-fade 3s ease-in-out infinite;
+}
+
+/* Hairline separation between grid/flex cells WITHOUT painting the container
+   background (the old gap+background trick showed a grey slab behind empty
+   trailing cells). Each cell casts a 1px shadow into the gap; overflow:hidden
+   clips the outermost shadows so frame borders don't double up. */
+.hairline-cells {
+  gap: 1px;
+  overflow: hidden;
+}
+.hairline-cells > * {
+  box-shadow: 0 0 0 1px var(--color-line);
 }
 
 /* Animated navbar hover underline (scaleX from left). */

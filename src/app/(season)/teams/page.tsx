@@ -16,7 +16,7 @@ import { TeamsGrid } from "./teams-grid";
 
 export const metadata: Metadata = {
   title: "Teams",
-  description: "All 11 teams competing in the 2026 Formula 1 season",
+  description: "Every team competing in the 2026 Formula 1 season",
 };
 
 export default async function TeamsPage() {

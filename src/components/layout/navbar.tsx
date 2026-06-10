@@ -10,7 +10,6 @@ import { F1, LiveDot, Mono } from "@/components/shared/broadcast";
 import { getNextEvent, CIRCUIT_LIST } from "@/lib/constants";
 
 const NAV_ITEMS = [
-  { label: "LIVE", href: "/live", live: true },
   { label: "STANDINGS", href: "/standings" },
   { label: "DRIVERS", href: "/drivers" },
   { label: "TEAMS", href: "/teams" },
@@ -19,6 +18,7 @@ const NAV_ITEMS = [
   { label: "CIRCUITS", href: "/circuits" },
   { label: "NEWS", href: "/news" },
   { label: "COMPARE", href: "/compare" },
+  { label: "LIVE", href: "/live", live: true },
 ];
 
 // Schedule size (max round number) for the "RD xx/NN" chip. Uses total scheduled
@@ -111,40 +111,6 @@ export function Navbar() {
           borderBottom: `1px solid ${F1.line}`,
         }}
       >
-        {/* Top status strip — desktop only */}
-        <div
-          className="hidden md:flex items-center justify-between font-mono"
-          style={{
-            padding: "6px 24px",
-            background: F1.bg,
-            borderBottom: `1px solid ${F1.line}`,
-            fontSize: 10,
-            color: F1.fg2,
-            letterSpacing: "0.1em",
-          }}
-        >
-          <div className="flex gap-6">
-            <span>
-              <span style={{ color: F1.fg3 }}>SEASON</span> · 2026
-            </span>
-            {nextRace && (
-              <span>
-                <span style={{ color: F1.fg3 }}>NEXT</span> ·{" "}
-                <span style={{ color: F1.red }}>
-                  {nextRace.country.toUpperCase()}
-                </span>{" "}
-                · RD {String(nextRace.round).padStart(2, "0")}/{TOTAL_ROUNDS}
-              </span>
-            )}
-          </div>
-          <div className="flex gap-6 items-center">
-            <span className="inline-flex items-center gap-2">
-              <LiveDot />
-              LIVE TIMING · OPENF1
-            </span>
-          </div>
-        </div>
-
         {/* Main nav row */}
         <nav
           className="flex items-stretch"
@@ -254,6 +220,25 @@ export function Navbar() {
 
           {/* Right utilities (desktop) */}
           <div className="hidden md:flex items-center">
+            {nextRace && (
+              <span
+                className="font-mono hidden lg:inline-flex items-center gap-2"
+                style={{
+                  padding: "0 16px",
+                  height: "100%",
+                  borderLeft: `1px solid ${F1.line}`,
+                  fontSize: 10,
+                  letterSpacing: "0.14em",
+                  color: F1.fg3,
+                }}
+              >
+                NEXT ·{" "}
+                <span style={{ color: F1.fg }}>
+                  {nextRace.country.toUpperCase()}
+                </span>{" "}
+                · RD {String(nextRace.round).padStart(2, "0")}/{TOTAL_ROUNDS}
+              </span>
+            )}
             <a
               href="https://github.com/shvmmshr/f1lytics"
               target="_blank"
@@ -273,23 +258,6 @@ export function Navbar() {
                 <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
               </svg>
             </a>
-            <Link
-              href="/live"
-              className="font-display inline-flex items-center gap-2 cursor-pointer transition-opacity hover:opacity-90"
-              style={{
-                padding: "0 18px",
-                height: "100%",
-                borderLeft: `1px solid ${F1.line}`,
-                background: F1.red,
-                color: F1.ink,
-                fontWeight: 700,
-                fontSize: 13,
-                letterSpacing: "0.06em",
-              }}
-            >
-              <LiveDot color={F1.ink} size={6} />
-              WATCH LIVE
-            </Link>
           </div>
 
           {/* Mobile hamburger */}

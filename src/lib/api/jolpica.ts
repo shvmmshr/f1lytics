@@ -17,7 +17,7 @@ const BASE_URL = "https://api.jolpi.ca/ergast/f1";
  * Generic fetch helper for the Jolpica-F1 API.
  *
  * Uses Next.js ISR via `next: { revalidate }` to cache responses.
- * Default cache duration is 24 hours (86400 seconds).
+ * Default cache duration is 1 hour (3600 seconds).
  */
 async function fetchJolpica<T>(
   path: string,

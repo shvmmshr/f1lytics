@@ -69,6 +69,21 @@ export default async function Home() {
         <SeasonCalendarStrip />
         <NewsStrip />
         <StatsRow />
+        {/* Single data-source attribution for the whole site (kept off the
+            navbar/footer/ticker on purpose — mentioned once, small, here). */}
+        <div
+          className="text-center font-mono"
+          style={{
+            padding: "18px 24px",
+            fontSize: 9,
+            letterSpacing: "0.18em",
+            color: "#5C5C66",
+            background: "#08080A",
+            borderTop: "1px solid #27272A",
+          }}
+        >
+          DATA · OPENF1 + JOLPICA-F1 + F1 LIVE TIMING — NOT AFFILIATED WITH FORMULA 1
+        </div>
       </div>
     </>
   );

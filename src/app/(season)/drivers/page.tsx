@@ -15,7 +15,7 @@ import { DriversGrid } from "./drivers-grid";
 
 export const metadata: Metadata = {
   title: "Drivers",
-  description: "All 22 drivers competing in the 2026 Formula 1 season",
+  description: "Every driver competing in the 2026 Formula 1 season",
 };
 
 export default async function DriversPage() {

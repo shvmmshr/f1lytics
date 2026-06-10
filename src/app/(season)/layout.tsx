@@ -1,7 +1,7 @@
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { ScrollProgress } from "@/components/shared/scroll-progress";
-import { AnimatedOutlet } from "@/components/layout/animated-outlet";
+import { F1 } from "@/components/shared/broadcast";
 
 export default function SeasonLayout({
   children,
@@ -9,14 +9,23 @@ export default function SeasonLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col" style={{ background: F1.ink }}>
       <ScrollProgress />
       <Navbar />
-      {/* Pages manage their own max-width/padding (most target ~1400px with their
-          own 32px inset); the previous max-w-7xl + px-* wrapper double-padded and
-          clipped them. */}
+      {/* Content sits in a centered, bordered frame so wide monitors don't get
+          edge-to-edge sprawl; the darker page background fills the margins. */}
       <main className="w-full flex-1">
-        <AnimatedOutlet>{children}</AnimatedOutlet>
+        <div
+          className="mx-auto w-full min-h-full"
+          style={{
+            maxWidth: 1480,
+            background: F1.bg,
+            borderLeft: `1px solid ${F1.line}`,
+            borderRight: `1px solid ${F1.line}`,
+          }}
+        >
+          {children}
+        </div>
       </main>
       <Footer />
     </div>

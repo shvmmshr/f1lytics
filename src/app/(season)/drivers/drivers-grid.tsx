@@ -3,7 +3,6 @@
 import { useRef } from "react";
 import { useGSAP } from "@gsap/react";
 import { staggerEntrance } from "@/lib/gsap";
-import { F1 } from "@/components/shared/broadcast";
 
 export function DriversGrid({ children }: { children: React.ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -19,11 +18,9 @@ export function DriversGrid({ children }: { children: React.ReactNode }) {
   return (
     <div
       ref={ref}
-      className="grid"
+      className="grid hairline-cells"
       style={{
         gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-        gap: 1,
-        background: F1.line,
       }}
     >
       {children}

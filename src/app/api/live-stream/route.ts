@@ -97,8 +97,10 @@ export async function GET(req: NextRequest) {
   const stream = new ReadableStream({
     start(controller) {
       let closed = false;
-      let heartbeat: ReturnType<typeof setInterval>;
-      let maxTimer: ReturnType<typeof setTimeout>;
+      // Assigned after the socket handlers are wired up; cleanup() may run
+      // before then (early ws close), so they start undefined.
+      let heartbeat: ReturnType<typeof setInterval> | undefined = undefined;
+      let maxTimer: ReturnType<typeof setTimeout> | undefined = undefined;
 
       const ws = new WebSocket(wsUrl, {
         headers: {

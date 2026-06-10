@@ -107,7 +107,7 @@ export const CIRCUITS: Record<string, Circuit> = {
     round: 4,
     isSprint: false,
     slug: "bahrain-gp",
-    trackImage: "/circuits/bahrain.webp",
+    trackImage: "/circuits/bahrain.png",
     cancelled: true,
   },
   jeddah: {
@@ -551,11 +551,21 @@ const DEFAULT_EVENT_TIME = "14:00:00Z";
  * On sprint weekends, this will return the sprint on Saturday before the race on Sunday.
  */
 export function getNextEvent(currentDate: Date = new Date()): NextEvent | undefined {
-  const dateStr = currentDate.toISOString().split("T")[0];
+  // An event stays "next" until ~2h after its start (covers the running
+  // session), then we roll over — datetime-based, not date-based, so a sprint
+  // that finished Saturday morning yields to Sunday's race the same day.
+  const GRACE_MS = 2 * 60 * 60 * 1000;
+  const stillUpcoming = (date: string, time: string) =>
+    new Date(`${date}T${time}`).getTime() + GRACE_MS > currentDate.getTime();
+
   for (const circuit of CIRCUIT_LIST) {
     if (circuit.cancelled) continue;
     // Check sprint first — it happens before the race on sprint weekends
-    if (circuit.isSprint && circuit.sprintDate && circuit.sprintDate >= dateStr) {
+    if (
+      circuit.isSprint &&
+      circuit.sprintDate &&
+      stillUpcoming(circuit.sprintDate, circuit.sprintTime ?? DEFAULT_EVENT_TIME)
+    ) {
       return {
         circuit,
         eventType: "sprint",
@@ -563,7 +573,7 @@ export function getNextEvent(currentDate: Date = new Date()): NextEvent | undefi
         eventTime: circuit.sprintTime ?? DEFAULT_EVENT_TIME,
       };
     }
-    if (circuit.raceDate >= dateStr) {
+    if (stillUpcoming(circuit.raceDate, circuit.raceTime ?? DEFAULT_EVENT_TIME)) {
       return {
         circuit,
         eventType: "race",

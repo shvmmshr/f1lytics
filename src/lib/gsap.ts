@@ -29,28 +29,59 @@ export function animateCounter(
     snap: { textContent: 1 },
     scrollTrigger: {
       trigger: element,
-      start: "top 85%",
+      start: "top 95%",
+      once: true,
     },
   });
 }
 
+/**
+ * Scroll-reveals cards with a short fade/rise. Per-element batching (not one
+ * container-level trigger) so above-fold items appear immediately, plus a
+ * safety pass that force-reveals anything a mis-measured trigger left hidden —
+ * content can never be stranded at opacity 0.
+ */
 export function staggerEntrance(selector: string, container: HTMLElement) {
-  return gsap.fromTo(
-    selector,
-    { x: -30, y: 20, opacity: 0 },
-    {
-      x: 0,
-      y: 0,
-      opacity: 1,
-      duration: 0.5,
-      stagger: 0.06,
-      ease: "power3.out",
-      scrollTrigger: {
-        trigger: container,
-        start: "top 85%",
-      },
-    }
+  const targets = gsap.utils.toArray<HTMLElement>(
+    container.querySelectorAll(selector)
   );
+  if (targets.length === 0) return;
+
+  gsap.set(targets, { opacity: 0, y: 14 });
+  ScrollTrigger.batch(targets, {
+    start: "top 97%",
+    once: true,
+    onEnter: (els) =>
+      gsap.to(els, {
+        opacity: 1,
+        y: 0,
+        duration: 0.45,
+        stagger: 0.04,
+        ease: "power2.out",
+        overwrite: true,
+        clearProps: "opacity,transform",
+      }),
+  });
+  ScrollTrigger.refresh();
+
+  gsap.delayedCall(1.2, () => {
+    const stranded = targets.filter(
+      (el) => Number(gsap.getProperty(el, "opacity")) < 1
+    );
+    // Only elements still in (or above) the viewport count as stranded —
+    // below-fold cards keep their scroll reveal.
+    const visible = stranded.filter(
+      (el) => el.getBoundingClientRect().top < window.innerHeight
+    );
+    if (visible.length > 0)
+      gsap.to(visible, {
+        opacity: 1,
+        y: 0,
+        duration: 0.3,
+        overwrite: true,
+        clearProps: "opacity,transform",
+      });
+  });
 }
 
 export function barFill(element: HTMLElement, targetWidthPercent: number) {
@@ -63,7 +94,8 @@ export function barFill(element: HTMLElement, targetWidthPercent: number) {
       ease: "power2.out",
       scrollTrigger: {
         trigger: element,
-        start: "top 85%",
+        start: "top 95%",
+        once: true,
       },
     }
   );

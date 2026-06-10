@@ -55,8 +55,10 @@ export function Hero({
 
   const event = getNextEvent();
   const nextRace = event?.circuit;
-  const targetTime = nextRace
-    ? new Date(`${nextRace.raceDate}T${nextRace.raceTime}`).getTime()
+  // Count down to the actual next event — on sprint weekends that's the
+  // sprint, not the Sunday race.
+  const targetTime = event
+    ? new Date(`${event.eventDate}T${event.eventTime}`).getTime()
     : null;
   const [tick, setTick] = useState<ReturnType<typeof getCountdown> | null>(null);
 
@@ -113,28 +115,6 @@ export function Hero({
       />
       <RacingStripes color={F1.red} opacity={0.04} size={20} />
 
-      {/* Top status strip */}
-      <div
-        className="relative flex items-center justify-between font-mono"
-        style={{
-          padding: "10px 32px",
-          borderBottom: `1px solid ${F1.line}`,
-          background: "rgba(8,8,10,0.85)",
-          backdropFilter: "blur(10px)",
-          fontSize: 10,
-          color: F1.fg2,
-          letterSpacing: "0.16em",
-        }}
-      >
-        <span>F1LYTICS · 2026 SEASON</span>
-        {nextRace && (
-          <span className="inline-flex items-center gap-2">
-            <LiveDot />
-            UP NEXT · {nextRace.country.toUpperCase()} GP
-          </span>
-        )}
-      </div>
-
       {/* Hero content — flex-grows to fill the viewport so the ticker pins to the
           bottom (no dead black space below it). Single column on mobile. */}
       <div
@@ -152,7 +132,7 @@ export function Hero({
           <div className="flex items-center gap-4 mb-7">
             <span style={{ width: 56, height: 1, background: F1.red, display: "inline-block" }} />
             <Mono style={{ fontSize: 11, color: F1.red, letterSpacing: "0.24em" }}>
-              GRAND PRIX TELEMETRY · LIVE
+              2026 SEASON · TELEMETRY & ANALYSIS
             </Mono>
           </div>
 
@@ -184,41 +164,38 @@ export function Hero({
             className="mt-8"
             style={{ maxWidth: 520, fontSize: 18, lineHeight: 1.5, color: F1.fg2, opacity: 0 }}
           >
-            Live timing, telemetry and the full 2026 season — in one place.
+            Standings, race analysis, telemetry and the full 2026 season — in one place.
           </div>
 
           {/* CTAs */}
-          <div ref={ctaRef} className="mt-9 flex items-center flex-wrap" style={{ gap: 0, opacity: 0 }}>
+          <div ref={ctaRef} className="mt-9 flex items-center flex-wrap" style={{ gap: 14, opacity: 0 }}>
             <Link
-              href="/live"
-              className="font-display inline-flex items-center gap-3 cursor-pointer transition-opacity hover:opacity-90"
+              href="/standings"
+              className="font-display inline-flex items-center cursor-pointer transition-opacity hover:opacity-90"
               style={{
                 background: F1.red,
                 color: F1.ink,
                 fontWeight: 700,
-                fontSize: 18,
+                fontSize: 16,
                 letterSpacing: "0.06em",
-                padding: "18px 44px 18px 28px",
-                clipPath: "polygon(0 0, 100% 0, 95% 100%, 0 100%)",
+                padding: "16px 32px",
               }}
             >
-              <LiveDot color={F1.ink} size={6} />
-              ENTER LIVE SESSION
+              VIEW STANDINGS
             </Link>
             <Link
-              href="/standings"
-              className="font-mono cursor-pointer hover:bg-white/5 transition-colors"
+              href="/races"
+              className="font-mono inline-flex items-center cursor-pointer hover:bg-white/5 transition-colors"
               style={{
-                padding: "18px 24px",
+                padding: "17px 26px",
                 background: "transparent",
                 color: F1.fg,
                 border: `1px solid ${F1.lineHi}`,
                 fontSize: 12,
                 letterSpacing: "0.18em",
-                marginLeft: -8,
               }}
             >
-              VIEW STANDINGS →
+              EXPLORE RACES →
             </Link>
           </div>
 
@@ -496,9 +473,16 @@ export function Hero({
           {[0, 1].map((copy) => (
             <div key={copy} className="flex shrink-0" style={{ gap: 32, paddingRight: 32 }} aria-hidden={copy === 1}>
               <span>● 2026 SEASON · {CIRCUIT_LIST.filter((c) => !c.cancelled).length} ROUNDS · {TEAM_LIST.length} TEAMS · {DRIVER_LIST.length} DRIVERS</span>
-              <span>● LIVE TIMING POWERED BY OPENF1 + F1 SIGNALR</span>
-              <span>● HISTORICAL DATA · JOLPICA F1</span>
-              <span>● BUILT FOR SPEED</span>
+              {nextRace && (
+                <span>
+                  ● UP NEXT · {nextRace.fullName.toUpperCase()} ·{" "}
+                  {new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", timeZone: "UTC" })
+                    .format(new Date(`${nextRace.raceDate}T00:00:00Z`))
+                    .toUpperCase()}
+                </span>
+              )}
+              <span>● STANDINGS · TELEMETRY · STRATEGY</span>
+              <span>● FORMULA 1, DECODED</span>
             </div>
           ))}
         </div>

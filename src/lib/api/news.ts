@@ -10,6 +10,8 @@ export interface NewsItem {
   imageUrl: string | null;
   source: string;
   sourceUrl: string;
+  /** How many OTHER sources ran a near-identical headline (set by fetchAllNews). */
+  corroboration?: number;
 }
 
 interface Feed {
@@ -125,9 +127,54 @@ function parseFeed(xml: string, feed: Feed): NewsItem[] {
   return items;
 }
 
+/** Tokenize a headline for near-duplicate comparison. */
+function titleTokens(title: string): Set<string> {
+  return new Set(
+    title
+      .toLowerCase()
+      .replace(/[^a-z0-9 ]/g, " ")
+      .split(/\s+/)
+      .filter((w) => w.length > 3),
+  );
+}
+
+/** Jaccard similarity of two token sets. */
+function similarity(a: Set<string>, b: Set<string>): number {
+  if (a.size === 0 || b.size === 0) return 0;
+  let inter = 0;
+  for (const t of a) if (b.has(t)) inter++;
+  return inter / (a.size + b.size - inter);
+}
+
+const IMPORTANT_KEYWORDS = [
+  "fia", "steward", "penalty", "penalt", "ban", "disqualif", "protest",
+  "confirm", "official", "announce", "statement", "ruling", "verdict",
+  "sign", "contract", "deal", "exit", "leave", "join", "replace", "sack",
+  "retire", "champion", "title", "win", "victory", "pole", "crash",
+  "injur", "cancel", "postpone", "investigat", "breach", "appeal",
+];
+
+/**
+ * Heuristic importance score for surfacing "big" stories: decision/announcement
+ * keywords + corroboration (how many sources ran a near-identical headline).
+ */
+export function scoreImportance(item: NewsItem, corroboration = 0): number {
+  const t = item.title.toLowerCase();
+  let score = corroboration * 3;
+  for (const kw of IMPORTANT_KEYWORDS) if (t.includes(kw)) score += 1;
+  const ageHours =
+    (Date.now() - new Date(item.publishedAt).getTime()) / 3_600_000;
+  if (ageHours < 6) score += 2;
+  else if (ageHours < 24) score += 1;
+  return score;
+}
+
 /**
  * Fetch and merge all F1 news feeds. Failed feeds are logged and skipped — the
- * result is never empty because of one bad source. Deduped by URL, newest first.
+ * result is never empty because of one bad source. Deduped by URL AND by
+ * near-identical headline across sources (outlets often run the same story);
+ * newest first. Items deduped by headline get `corroboration` bumped so the
+ * importance score can reward multi-source stories.
  */
 export async function fetchAllNews(maxItems = 40): Promise<NewsItem[]> {
   const settled = await Promise.allSettled(
@@ -152,7 +199,7 @@ export async function fetchAllNews(maxItems = 40): Promise<NewsItem[]> {
   }
 
   const seen = new Set<string>();
-  return all
+  const byUrl = all
     .filter((item) => {
       if (seen.has(item.url)) return false;
       seen.add(item.url);
@@ -161,6 +208,24 @@ export async function fetchAllNews(maxItems = 40): Promise<NewsItem[]> {
     .sort(
       (a, b) =>
         new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime(),
-    )
-    .slice(0, maxItems);
+    );
+
+  // Near-duplicate headline collapse: keep the earliest-seen (newest) copy,
+  // prefer one with an image, and count the duplicates as corroboration.
+  const kept: { item: NewsItem; tokens: Set<string>; corroboration: number }[] = [];
+  for (const item of byUrl) {
+    const tokens = titleTokens(item.title);
+    const dup = kept.find((k) => similarity(k.tokens, tokens) >= 0.55);
+    if (dup) {
+      dup.corroboration += 1;
+      if (!dup.item.imageUrl && item.imageUrl) dup.item.imageUrl = item.imageUrl;
+      continue;
+    }
+    kept.push({ item, tokens, corroboration: 0 });
+  }
+
+  return kept.slice(0, maxItems).map((k) => ({
+    ...k.item,
+    corroboration: k.corroboration,
+  }));
 }

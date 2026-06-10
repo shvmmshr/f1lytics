@@ -14,9 +14,9 @@ export const F1 = {
   bg3: "#1C1C22",
   bg4: "#26262E",
   fg: "#F4F4F5",
-  fg2: "#A1A1AA",
-  fg3: "#52525B",
-  fg4: "#3F3F46",
+  fg2: "#B4B4BD",
+  fg3: "#84848F",
+  fg4: "#5C5C66",
   line: "#27272A",
   lineHi: "#3F3F46",
   red: "#FF1801",
@@ -217,24 +217,6 @@ export function PosPill({ pos, size = "md" }: { pos: number; size?: "sm" | "md" 
   );
 }
 
-/* Team-color side bar */
-export function TeamBar({
-  color,
-  width = 4,
-  height = "100%",
-}: {
-  color: string;
-  width?: number;
-  height?: number | string;
-}) {
-  return (
-    <span
-      aria-hidden
-      style={{ display: "inline-block", width, height, background: color, flexShrink: 0 }}
-    />
-  );
-}
-
 /* Tire compound dot (S/M/H/I/W) */
 export function Tire({ compound = "M", size = 16 }: { compound?: string; size?: number }) {
   const map: Record<string, string> = {
@@ -268,28 +250,6 @@ export function Tire({ compound = "M", size = 16 }: { compound?: string; size?: 
 export function SectorBar({ color }: { color: "p" | "g" | "y" | "n" }) {
   const map = { p: F1.purple, g: F1.green, y: F1.yellow, n: F1.line };
   return <span aria-hidden style={{ display: "inline-block", width: 18, height: 4, background: map[color] }} />;
-}
-
-/* Sparkline bar chart for "last 5" results */
-export function Last5Spark({ vals, max = 20 }: { vals: number[]; max?: number }) {
-  return (
-    <div className="inline-flex items-end gap-[2px]" style={{ height: 18 }}>
-      {vals.map((v, i) => {
-        const h = Math.max(2, ((max - v + 1) / max) * 18);
-        const isWin = v === 1;
-        return (
-          <span
-            key={i}
-            style={{
-              width: 4,
-              height: h,
-              background: isWin ? F1.amber : F1.fg3,
-            }}
-          />
-        );
-      })}
-    </div>
-  );
 }
 
 /* Section header — "01 / SECTION TITLE" */
@@ -345,77 +305,3 @@ export function Trend({ dir }: { dir: "up" | "down" | "flat" }) {
   return <span style={{ color: F1.fg3 }}>—</span>;
 }
 
-/* Driver code tag — abbreviation + team color stripe */
-export function DriverTag({
-  code,
-  teamColor,
-  size = "md",
-}: {
-  code: string;
-  teamColor: string;
-  size?: "sm" | "md";
-}) {
-  const dim = size === "sm" ? { px: 6, py: 2, f: 10 } : { px: 8, py: 3, f: 11 };
-  return (
-    <span className="inline-flex items-center gap-1.5">
-      <span style={{ width: 3, height: dim.f + dim.py * 2, background: teamColor }} />
-      <span
-        className="font-mono"
-        style={{
-          fontSize: dim.f,
-          fontWeight: 600,
-          letterSpacing: "0.06em",
-          color: F1.fg,
-        }}
-      >
-        {code}
-      </span>
-    </span>
-  );
-}
-
-/* A red-clipped wedge button — used for "ENTER LIVE SESSION" / "WATCH LIVE" CTAs */
-export function WedgeButton({
-  children,
-  onClick,
-  href,
-  className,
-}: {
-  children: React.ReactNode;
-  onClick?: () => void;
-  href?: string;
-  className?: string;
-}) {
-  const content = (
-    <span
-      className={cn(
-        "inline-flex items-center gap-3 font-display uppercase cursor-pointer transition-opacity hover:opacity-90",
-        className,
-      )}
-      style={{
-        background: F1.red,
-        color: F1.ink,
-        fontWeight: 700,
-        fontSize: 16,
-        letterSpacing: "0.06em",
-        padding: "16px 40px 16px 24px",
-        clipPath: "polygon(0 0, 100% 0, 95% 100%, 0 100%)",
-        border: "none",
-      }}
-    >
-      {children}
-    </span>
-  );
-  if (href) {
-    return (
-      <a href={href} className="inline-block">
-        {content}
-      </a>
-    );
-  }
-  return (
-    <button onClick={onClick} className="bg-transparent border-0 p-0">
-      {content}
-    </button>
-  );
-}

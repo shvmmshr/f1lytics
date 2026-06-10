@@ -23,11 +23,9 @@ export function TeamsGrid({ children }: TeamsGridProps) {
   return (
     <div
       ref={ref}
-      className="grid"
+      className="grid hairline-cells"
       style={{
         gridTemplateColumns: "minmax(0, 1fr)",
-        gap: 1,
-        background: F1.line,
         borderTop: `1px solid ${F1.line}`,
         borderBottom: `1px solid ${F1.line}`,
       }}

@@ -1,6 +1,7 @@
 import { CIRCUIT_LIST, getNextRace } from "@/lib/constants";
 import { format, parseISO } from "date-fns";
 import { F1, Mono, LiveDot } from "@/components/shared/broadcast";
+import { ScrollRow } from "@/components/shared/scroll-row";
 
 function countryCodeToFlag(countryCode: string): string {
   return String.fromCodePoint(
@@ -35,9 +36,10 @@ export function SeasonCalendarStrip() {
           </Mono>
         </div>
 
-        <div
-          className="flex overflow-x-auto pb-4 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
-          style={{ gap: 1, background: F1.line, border: `1px solid ${F1.line}` }}
+        <ScrollRow
+          ariaLabel="2026 season calendar"
+          className="hairline-cells snap-x snap-mandatory"
+          style={{ border: `1px solid ${F1.line}` }}
         >
           {CIRCUIT_LIST.map((circuit) => {
             const isCancelled = circuit.cancelled === true;
@@ -82,7 +84,6 @@ export function SeasonCalendarStrip() {
                     fontWeight: 600,
                     color: F1.fg,
                     letterSpacing: "-0.01em",
-                    textDecoration: isCancelled ? "line-through" : "none",
                   }}
                 >
                   {circuit.fullName.replace(" Grand Prix", " GP").toUpperCase()}
@@ -109,7 +110,7 @@ export function SeasonCalendarStrip() {
               </div>
             );
           })}
-        </div>
+        </ScrollRow>
       </div>
     </section>
   );

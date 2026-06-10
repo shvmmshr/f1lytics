@@ -225,9 +225,8 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
 
           {/* Identity */}
           <div
-            className="relative grid"
+            className="relative grid grid-cols-1 sm:grid-cols-[minmax(220px,300px)_minmax(0,1fr)]"
             style={{
-              gridTemplateColumns: "minmax(260px, 320px) minmax(0, 1fr)",
               gap: 32,
               padding: "32px 32px 40px",
               alignItems: "end",
@@ -355,11 +354,8 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
 
         {/* STAT TILES — 3×2 grid with corner brackets */}
         <div
-          className="grid"
+          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 hairline-cells"
           style={{
-            gridTemplateColumns: "repeat(6, minmax(0, 1fr))",
-            gap: 1,
-            background: F1.line,
             borderBottom: `1px solid ${F1.line}`,
           }}
         >
@@ -396,14 +392,7 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
         </div>
 
         {/* MAIN CONTENT — season results + side panel */}
-        <div
-          className="grid"
-          style={{
-            gridTemplateColumns: "minmax(0, 1fr) minmax(0, 380px)",
-            gap: 1,
-            background: F1.line,
-          }}
-        >
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,380px)] hairline-cells">
           {/* SEASON FORM (race results) */}
           <div style={{ background: F1.bg, padding: "28px 32px" }}>
             <SectionHeader

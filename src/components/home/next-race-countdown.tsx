@@ -2,7 +2,7 @@
 
 import { useRef, useState, useEffect } from "react";
 import { useGSAP } from "@gsap/react";
-import { gsap } from "@/lib/gsap";
+import { staggerEntrance } from "@/lib/gsap";
 import { getNextEvent } from "@/lib/constants";
 import { format } from "date-fns";
 import { F1, Mono, LiveDot, Brackets } from "@/components/shared/broadcast";
@@ -35,7 +35,8 @@ export function NextRaceCountdown() {
     ? new Date(`${event.eventDate}T${event.eventTime}`).getTime()
     : null;
 
-  const [time, setTime] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  // null until mounted — server HTML shows "--" placeholders, no zero-flash.
+  const [time, setTime] = useState<ReturnType<typeof getTimeRemaining> | null>(null);
 
   useEffect(() => {
     if (targetTime === null) return;
@@ -53,26 +54,22 @@ export function NextRaceCountdown() {
   useGSAP(
     () => {
       if (!sectionRef.current) return;
-      const boxes = sectionRef.current.querySelectorAll("[data-countdown-unit]");
-      gsap.from(boxes, {
-        y: 24,
-        opacity: 0,
-        duration: 0.7,
-        stagger: 0.08,
-        ease: "power3.out",
-        scrollTrigger: { trigger: sectionRef.current, start: "top 80%" },
-      });
+      staggerEntrance("[data-countdown-unit]", sectionRef.current);
     },
     { scope: sectionRef }
   );
 
   if (!event || !nextRace) return null;
 
+  const inProgress =
+    time !== null &&
+    time.days + time.hours + time.minutes + time.seconds === 0;
+
   const units = [
-    { value: time.days, label: "DAYS" },
-    { value: time.hours, label: "HOURS" },
-    { value: time.minutes, label: "MINS" },
-    { value: time.seconds, label: "SECS" },
+    { value: time?.days ?? null, label: "DAYS" },
+    { value: time?.hours ?? null, label: "HOURS" },
+    { value: time?.minutes ?? null, label: "MINS" },
+    { value: time?.seconds ?? null, label: "SECS" },
   ];
 
   return (
@@ -144,6 +141,21 @@ export function NextRaceCountdown() {
         </Mono>
 
         {/* Countdown — sharp-edged broadcast frames */}
+        {inProgress ? (
+          <div className="flex items-center gap-3 mt-10">
+            <LiveDot size={8} />
+            <Mono
+              style={{
+                fontSize: 14,
+                color: F1.red,
+                letterSpacing: "0.22em",
+                fontWeight: 700,
+              }}
+            >
+              SESSION IN PROGRESS
+            </Mono>
+          </div>
+        ) : (
         <div
           className="grid mt-10"
           style={{
@@ -176,7 +188,7 @@ export function NextRaceCountdown() {
                   color: F1.fg,
                 }}
               >
-                {String(unit.value).padStart(2, "0")}
+                {unit.value === null ? "--" : String(unit.value).padStart(2, "0")}
               </span>
               <Mono
                 style={{
@@ -192,6 +204,7 @@ export function NextRaceCountdown() {
             </div>
           ))}
         </div>
+        )}
       </div>
     </section>
   );

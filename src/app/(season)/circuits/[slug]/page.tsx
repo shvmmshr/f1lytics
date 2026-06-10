@@ -274,7 +274,15 @@ export default async function CircuitPage({ params }: CircuitPageProps) {
           style={{ padding: "40px 32px", borderBottom: `1px solid ${F1.line}` }}
         >
           <div className="mx-auto" style={{ maxWidth: 1400 }}>
-            <SectionHeader label={lastWinner ? "RACE RESULTS" : "RACE PREVIEW"} />
+            <SectionHeader
+              label={
+                lastWinner
+                  ? "RACE RESULTS"
+                  : circuit.cancelled
+                    ? "RACE STATUS"
+                    : "RACE PREVIEW"
+              }
+            />
             {topResults.length > 0 ? (
               <div
                 style={{
@@ -360,7 +368,9 @@ export default async function CircuitPage({ params }: CircuitPageProps) {
                   className="block"
                   style={{ fontSize: 12, color: F1.fg3, letterSpacing: "0.16em" }}
                 >
-                  RACE RESULTS WILL APPEAR AFTER {formatDate(circuit.raceDate).toUpperCase()}.
+                  {circuit.cancelled
+                    ? "THIS ROUND WAS CANCELLED — NO RESULTS FOR 2026."
+                    : `RACE RESULTS WILL APPEAR AFTER ${formatDate(circuit.raceDate).toUpperCase()}.`}
                 </Mono>
                 {lastWinner && (
                   <div

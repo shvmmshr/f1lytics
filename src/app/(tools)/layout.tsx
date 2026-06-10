@@ -1,6 +1,6 @@
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
-import { AnimatedOutlet } from "@/components/layout/animated-outlet";
+import { F1 } from "@/components/shared/broadcast";
 
 export default function ToolsLayout({
   children,
@@ -8,11 +8,21 @@ export default function ToolsLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col" style={{ background: F1.ink }}>
       <Navbar />
-      {/* Pages manage their own max-width/padding — see (season)/layout note. */}
+      {/* Same centered frame as the season layout — see note there. */}
       <main className="w-full flex-1">
-        <AnimatedOutlet>{children}</AnimatedOutlet>
+        <div
+          className="mx-auto w-full min-h-full"
+          style={{
+            maxWidth: 1480,
+            background: F1.bg,
+            borderLeft: `1px solid ${F1.line}`,
+            borderRight: `1px solid ${F1.line}`,
+          }}
+        >
+          {children}
+        </div>
       </main>
       <Footer />
     </div>

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { F1, Mono, LiveDot } from "@/components/shared/broadcast";
+import { F1, Mono } from "@/components/shared/broadcast";
 
 export function Footer() {
   const year = new Date().getFullYear();
@@ -39,12 +39,6 @@ export function Footer() {
           </Mono>
         </div>
         <div className="flex items-center gap-4">
-          <span className="inline-flex items-center gap-2">
-            <LiveDot size={6} />
-            <Mono style={{ color: F1.fg3 }}>
-              FEED · OPENF1 · JOLPICA‑F1
-            </Mono>
-          </span>
           <a
             href="https://github.com/shvmmshr/f1lytics"
             target="_blank"

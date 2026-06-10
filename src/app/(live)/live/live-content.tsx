@@ -284,7 +284,9 @@ function TimingTower({
   }
 
   return (
-    <div>
+    // Horizontal scroll on narrow screens — the column set needs ~700px.
+    <div className="overflow-x-auto">
+    <div style={{ minWidth: 700 }}>
       {/* Header row */}
       <div
         className="grid items-center"
@@ -460,6 +462,7 @@ function TimingTower({
           </button>
         );
       })}
+    </div>
     </div>
   );
 }

@@ -46,8 +46,8 @@ export async function NewsStrip() {
         </div>
 
         <div
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
-          style={{ gap: 1, background: F1.line, border: `1px solid ${F1.line}` }}
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 hairline-cells"
+          style={{ border: `1px solid ${F1.line}` }}
         >
           {items.slice(0, 3).map((item) => (
             <a
