@@ -318,3 +318,17 @@ export interface OpenF1Driver {
   headshot_url: string | null;
   country_code: string;
 }
+
+/** Weather reading from OpenF1 (one row per ~minute during a session) */
+export interface OpenF1Weather {
+  session_key: number;
+  meeting_key: number;
+  date: string;
+  air_temperature: number;
+  track_temperature: number;
+  humidity: number;
+  pressure: number;
+  rainfall: number;
+  wind_direction: number;
+  wind_speed: number;
+}

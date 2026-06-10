@@ -29,6 +29,13 @@ export interface LapStats {
   lapNumber: number;
 }
 
+export interface LiveWeather {
+  air_temperature: number;
+  track_temperature: number;
+  humidity: number;
+  rainfall: number;
+}
+
 interface LiveApiResponse {
   isLive: boolean;
   status: "NO SESSION" | "LIVE" | "FINISHED";
@@ -42,6 +49,7 @@ interface LiveApiResponse {
   teamRadio?: OpenF1TeamRadio[];
   focusedCarData?: OpenF1CarData | null;
   focusedDriverNumber?: number | null;
+  weather?: LiveWeather | null;
   error?: string;
 }
 
@@ -59,6 +67,7 @@ export interface UseLiveSessionReturn {
   focusedCarData: OpenF1CarData | null;
   focusedDriverNumber: number | null;
   setFocusedDriverNumber: (n: number | null) => void;
+  weather: LiveWeather | null;
   loading: boolean;
   error: string | null;
   lastUpdated: Date | null;
@@ -152,6 +161,7 @@ export function useLiveSession(): UseLiveSessionReturn {
     focusedCarData: data.focusedCarData ?? null,
     focusedDriverNumber,
     setFocusedDriverNumber,
+    weather: data.weather ?? null,
     loading,
     error,
     lastUpdated,

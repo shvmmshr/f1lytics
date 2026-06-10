@@ -10,6 +10,7 @@ import type {
   OpenF1Pit,
   OpenF1Driver,
   OpenF1TeamRadio,
+  OpenF1Weather,
 } from "./types";
 
 const BASE_URL = "https://api.openf1.org/v1";
@@ -25,11 +26,16 @@ type QueryParams = Record<string, string | number | undefined>;
  *
  * When `revalidate` is omitted the request uses `cache: "no-store"`,
  * which is appropriate for live/real-time endpoints.
+ *
+ * `noStore` forces `cache: "no-store"` even when a `revalidate` value is
+ * provided — used when an otherwise-cacheable endpoint is called from the
+ * live route, where stale data (up to an hour) would break live timing.
  */
 async function fetchOpenF1<T>(
   endpoint: string,
   params: QueryParams = {},
-  revalidate?: number
+  revalidate?: number,
+  noStore = false
 ): Promise<T[]> {
   const url = new URL(`${BASE_URL}${endpoint}`);
 
@@ -41,7 +47,9 @@ async function fetchOpenF1<T>(
 
   const fetchOptions: RequestInit = {};
 
-  if (revalidate !== undefined) {
+  if (noStore) {
+    fetchOptions.cache = "no-store";
+  } else if (revalidate !== undefined) {
     fetchOptions.next = { revalidate };
   } else {
     fetchOptions.cache = "no-store";
@@ -62,11 +70,14 @@ async function fetchOpenF1<T>(
 // Session endpoints
 // =============================================================================
 
-/** Fetch sessions, optionally filtered by year, session_type, etc. */
+/** Fetch sessions, optionally filtered by year, session_type, etc.
+ *  Pass `noStore` when called from the live route so a new/active session is
+ *  detected immediately rather than up to an hour late. */
 export async function getSessions(
-  params: QueryParams = {}
+  params: QueryParams = {},
+  noStore = false
 ): Promise<OpenF1Session[]> {
-  return fetchOpenF1<OpenF1Session>("/sessions", params, 3600);
+  return fetchOpenF1<OpenF1Session>("/sessions", params, 3600, noStore);
 }
 
 /** Get the most recent session of a given type (defaults to "Race"). */
@@ -87,11 +98,14 @@ export async function getLatestSession(
 // =============================================================================
 
 /** Fetch lap timing data for a session (optionally for a single driver). */
-export async function getLaps(params: {
-  session_key: number;
-  driver_number?: number;
-}): Promise<OpenF1Lap[]> {
-  return fetchOpenF1<OpenF1Lap>("/laps", params, 3600);
+export async function getLaps(
+  params: {
+    session_key: number;
+    driver_number?: number;
+  },
+  noStore = false
+): Promise<OpenF1Lap[]> {
+  return fetchOpenF1<OpenF1Lap>("/laps", params, 3600, noStore);
 }
 
 // =============================================================================
@@ -99,11 +113,14 @@ export async function getLaps(params: {
 // =============================================================================
 
 /** Fetch tyre stint data for a session (optionally for a single driver). */
-export async function getStints(params: {
-  session_key: number;
-  driver_number?: number;
-}): Promise<OpenF1Stint[]> {
-  return fetchOpenF1<OpenF1Stint>("/stints", params, 3600);
+export async function getStints(
+  params: {
+    session_key: number;
+    driver_number?: number;
+  },
+  noStore = false
+): Promise<OpenF1Stint[]> {
+  return fetchOpenF1<OpenF1Stint>("/stints", params, 3600, noStore);
 }
 
 // =============================================================================
@@ -136,10 +153,13 @@ export async function getLocations(params: {
 // =============================================================================
 
 /** Fetch race control messages (flags, safety car, penalties, etc.). */
-export async function getRaceControl(params: {
-  session_key: number;
-}): Promise<OpenF1RaceControl[]> {
-  return fetchOpenF1<OpenF1RaceControl>("/race_control", params, 3600);
+export async function getRaceControl(
+  params: {
+    session_key: number;
+  },
+  noStore = false
+): Promise<OpenF1RaceControl[]> {
+  return fetchOpenF1<OpenF1RaceControl>("/race_control", params, 3600, noStore);
 }
 
 // =============================================================================
@@ -159,10 +179,13 @@ export async function getPits(params: {
 // =============================================================================
 
 /** Fetch driver information for a given session. */
-export async function getDrivers(params: {
-  session_key: number;
-}): Promise<OpenF1Driver[]> {
-  return fetchOpenF1<OpenF1Driver>("/drivers", params, 3600);
+export async function getDrivers(
+  params: {
+    session_key: number;
+  },
+  noStore = false
+): Promise<OpenF1Driver[]> {
+  return fetchOpenF1<OpenF1Driver>("/drivers", params, 3600, noStore);
 }
 
 // =============================================================================
@@ -200,4 +223,15 @@ export async function getTeamRadio(params: {
   driver_number?: number;
 }): Promise<OpenF1TeamRadio[]> {
   return fetchOpenF1<OpenF1TeamRadio>("/team_radio", params);
+}
+
+// =============================================================================
+// Weather (live — no cache)
+// =============================================================================
+
+/** Fetch weather readings for a session (air/track temp, humidity, rainfall, wind). */
+export async function getWeather(params: {
+  session_key: number;
+}): Promise<OpenF1Weather[]> {
+  return fetchOpenF1<OpenF1Weather>("/weather", params);
 }

@@ -9,6 +9,7 @@ import {
   getRaceControl,
   getTeamRadio,
   getCarData,
+  getWeather,
 } from "@/lib/api/openf1";
 
 export const dynamic = "force-dynamic";
@@ -24,7 +25,9 @@ export async function GET(req: Request) {
     const now = new Date();
     const year = now.getFullYear();
 
-    const sessions = await getSessions({ year });
+    // no-store: the session list must be fresh so a newly-started session is
+    // detected immediately rather than up to an hour later (ISR cache).
+    const sessions = await getSessions({ year }, true);
 
     const activeSession = sessions.find((s) => {
       const start = new Date(s.date_start);
@@ -32,13 +35,21 @@ export async function GET(req: Request) {
       return start <= now && (!end || end >= now);
     });
 
+    // Pick the MOST RECENT session that ended in the last 2h (sort by end desc —
+    // OpenF1 does not guarantee chronological order, so `find` could grab FP2
+    // instead of the race).
     const recentSession = !activeSession
-      ? sessions.find((s) => {
-          if (!s.date_end) return false;
-          const end = new Date(s.date_end);
-          const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);
-          return end >= twoHoursAgo && end <= now;
-        })
+      ? [...sessions]
+          .filter((s) => {
+            if (!s.date_end) return false;
+            const end = new Date(s.date_end);
+            const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);
+            return end >= twoHoursAgo && end <= now;
+          })
+          .sort(
+            (a, b) =>
+              new Date(b.date_end!).getTime() - new Date(a.date_end!).getTime()
+          )[0]
       : null;
 
     const session = activeSession || recentSession;
@@ -57,15 +68,20 @@ export async function GET(req: Request) {
       stints,
       raceControl,
       teamRadio,
+      weather,
     ] = await Promise.all([
       getPositions({ session_key: sessionKey }),
       getIntervals({ session_key: sessionKey }),
-      getDrivers({ session_key: sessionKey }),
-      getLaps({ session_key: sessionKey }).catch(() => []),
-      getStints({ session_key: sessionKey }).catch(() => []),
-      getRaceControl({ session_key: sessionKey }).catch(() => []),
+      getDrivers({ session_key: sessionKey }, true),
+      getLaps({ session_key: sessionKey }, true).catch(() => []),
+      getStints({ session_key: sessionKey }, true).catch(() => []),
+      getRaceControl({ session_key: sessionKey }, true).catch(() => []),
       getTeamRadio({ session_key: sessionKey }).catch(() => []),
+      getWeather({ session_key: sessionKey }).catch(() => []),
     ]);
+
+    // Latest weather reading (rows are chronological; take the last one)
+    const latestWeather = weather.length > 0 ? weather[weather.length - 1] : null;
 
     // Latest position per driver
     const latestPositions = new Map<number, (typeof positions)[number]>();
@@ -167,6 +183,14 @@ export async function GET(req: Request) {
       teamRadio: recentTeamRadio,
       focusedCarData,
       focusedDriverNumber,
+      weather: latestWeather
+        ? {
+            air_temperature: latestWeather.air_temperature,
+            track_temperature: latestWeather.track_temperature,
+            humidity: latestWeather.humidity,
+            rainfall: latestWeather.rainfall,
+          }
+        : null,
     });
   } catch (error) {
     console.error("Live API error:", error);

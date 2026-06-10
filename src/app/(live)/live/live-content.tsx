@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useEffect, useRef } from "react";
 import { getNextEvent } from "@/lib/constants/circuits";
 import { CountdownTimer } from "@/components/shared/countdown-timer";
 import { TEAMS } from "@/lib/constants";
@@ -39,11 +39,6 @@ function formatLapTime(seconds: number | null | undefined): string {
   const min = Math.floor(seconds / 60);
   const sec = (seconds - min * 60).toFixed(3);
   return `${min}:${sec.padStart(6, "0")}`;
-}
-
-function formatSector(sec: number | null | undefined): string {
-  if (sec === null || sec === undefined) return "—";
-  return sec.toFixed(3);
 }
 
 function formatTimeSince(date: Date): string {
@@ -88,6 +83,8 @@ function TopBroadcastBar({
   countryName,
   circuit,
   currentLap,
+  airTemp,
+  trackTemp,
 }: {
   isLive: boolean;
   sessionName: string;
@@ -95,6 +92,8 @@ function TopBroadcastBar({
   countryName: string;
   circuit: string;
   currentLap: number | null;
+  airTemp: number | null;
+  trackTemp: number | null;
 }) {
   return (
     <div
@@ -159,9 +158,15 @@ function TopBroadcastBar({
       {/* Circuit */}
       <TopTile label="CIRCUIT" value={circuit.toUpperCase()} small />
       {/* Air */}
-      <TopTile label="AIR" value="—°C" />
+      <TopTile
+        label="AIR"
+        value={airTemp !== null ? `${airTemp.toFixed(0)}°C` : "—°C"}
+      />
       {/* Track */}
-      <TopTile label="TRACK" value="—°C" />
+      <TopTile
+        label="TRACK"
+        value={trackTemp !== null ? `${trackTemp.toFixed(0)}°C` : "—°C"}
+      />
     </div>
   );
 }
@@ -424,7 +429,13 @@ function TimingTower({
               <div className="flex items-center gap-1.5">
                 <Tire compound={compoundShort(stint.compound)} />
                 <Mono style={{ fontSize: 10, color: F1.fg3 }}>
-                  L{lap?.lapNumber ?? "—"}
+                  {(() => {
+                    // Laps run on the CURRENT tyre set, not the absolute race lap.
+                    if (lap?.lapNumber == null) return "—";
+                    const lapsOnTyre =
+                      lap.lapNumber - stint.lap_start + 1 + stint.tyre_age_at_start;
+                    return `L${Math.max(0, lapsOnTyre)}`;
+                  })()}
                 </Mono>
               </div>
             ) : (
@@ -537,7 +548,7 @@ function TelemetryBlock({
             RPM
           </Mono>
           <StatValue size={36} style={{ display: "block", marginTop: 4 }}>
-            {rpm.toLocaleString()}
+            {rpm.toLocaleString("en-US")}
           </StatValue>
           <Mono style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.18em" }}>
             REV/MIN
@@ -686,15 +697,16 @@ function RaceControlFeed({
             NO MESSAGES
           </Mono>
         )}
-        {raceControl.map((m, i) => {
+        {raceControl.map((m) => {
           const time = new Date(m.date).toLocaleTimeString("en-GB", {
             hour: "2-digit",
             minute: "2-digit",
             second: "2-digit",
+            timeZone: "UTC",
           });
           return (
             <div
-              key={i}
+              key={`${m.date}-${m.message}`}
               style={{
                 padding: "8px 12px",
                 background: F1.bg2,
@@ -734,17 +746,18 @@ function RaceControlFeed({
               NO RADIO TRANSMISSIONS
             </Mono>
           )}
-          {teamRadio.map((r, i) => {
+          {teamRadio.map((r) => {
             const d = driverMap.get(r.driver_number);
             const time = new Date(r.date).toLocaleTimeString("en-GB", {
               hour: "2-digit",
               minute: "2-digit",
               second: "2-digit",
+              timeZone: "UTC",
             });
             const teamColor = d ? teamColorFromDriverTeam(d.team_name) : F1.fg4;
             return (
               <a
-                key={i}
+                key={`${r.date}-${r.driver_number}`}
                 href={r.recording_url}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -842,7 +855,7 @@ function IdleView() {
             </div>
             <div className="flex justify-center" style={{ marginTop: 24 }}>
               <CountdownTimer
-                targetDate={new Date(`${event!.eventDate}T14:00:00Z`)}
+                targetDate={new Date(`${event!.eventDate}T${event!.eventTime}`)}
                 label={`${event!.eventType === "sprint" ? "SPRINT" : "RACE"} COVERAGE BEGINS IN`}
               />
             </div>
@@ -870,6 +883,7 @@ export function LiveContent() {
     focusedCarData,
     focusedDriverNumber,
     setFocusedDriverNumber,
+    weather,
     loading,
     lastUpdated,
   } = useLiveSession();
@@ -893,18 +907,20 @@ export function LiveContent() {
     return Math.max(...lapStats.map((l) => l.lapNumber));
   }, [lapStats]);
 
-  // Auto-focus the leader once data arrives
-  const leader = positions
-    .slice()
-    .sort((a, b) => a.position - b.position)[0];
-  if (
-    showLiveData &&
-    !focusedDriverNumber &&
-    leader &&
-    typeof window !== "undefined"
-  ) {
-    queueMicrotask(() => setFocusedDriverNumber(leader.driver_number));
-  }
+  // Auto-focus the leader ONCE, after data first arrives. A ref guard means the
+  // user can later deselect/select a different driver without it snapping back to
+  // the leader on every poll.
+  const autoFocusedRef = useRef(false);
+  useEffect(() => {
+    if (!showLiveData) return;
+    if (autoFocusedRef.current) return;
+    if (focusedDriverNumber !== null) return;
+    const leader = [...positions].sort((a, b) => a.position - b.position)[0];
+    if (leader) {
+      autoFocusedRef.current = true;
+      setFocusedDriverNumber(leader.driver_number);
+    }
+  }, [showLiveData, positions, focusedDriverNumber, setFocusedDriverNumber]);
 
   return (
     <div style={{ background: F1.bg, color: F1.fg, position: "relative" }}>
@@ -919,13 +935,14 @@ export function LiveContent() {
             countryName={session.countryName}
             circuit={session.circuitShortName}
             currentLap={currentLap}
+            airTemp={weather?.air_temperature ?? null}
+            trackTemp={weather?.track_temperature ?? null}
           />
 
-          {/* Main grid */}
+          {/* Main grid — single column on mobile, tower + side panel on desktop */}
           <div
-            className="grid"
+            className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(360px,440px)]"
             style={{
-              gridTemplateColumns: "minmax(0, 1fr) minmax(380px, 440px)",
               gap: 1,
               background: F1.line,
             }}
@@ -990,6 +1007,3 @@ export function LiveContent() {
     </div>
   );
 }
-
-// Suppress unused warning — kept for future inline timing displays
-void formatSector;
