@@ -102,7 +102,8 @@ export default async function RacePage({ params }: RacePageProps) {
     try {
       const raceResults = await getRaceResults("2026", String(circuit.round));
       race = raceResults[0] ?? null;
-    } catch {
+    } catch (err) {
+      console.error("[f1lytics] race result fetch failed:", err);
       // Keep rendering static race shell if Jolpica is unavailable.
     }
 
@@ -129,7 +130,8 @@ export default async function RacePage({ params }: RacePageProps) {
           getRaceControl({ session_key: matchedSession.session_key }),
         ]);
       }
-    } catch {
+    } catch (err) {
+      console.error("[f1lytics] race OpenF1 data fetch failed:", err);
       // OpenF1 data is optional for the initial race page implementation.
     }
   }
@@ -371,9 +373,12 @@ export default async function RacePage({ params }: RacePageProps) {
                       {sortedResults.map((result) => {
                         const position = Number.parseInt(result.position, 10);
                         const grid = Number.parseInt(result.grid, 10);
-                        const change = Number.isNaN(grid)
-                          ? undefined
-                          : positionChange(grid, position);
+                        // grid === 0 means pit-lane start; only compute delta for grid >= 1
+                        const isPitLane = !Number.isNaN(grid) && grid === 0;
+                        const change =
+                          Number.isNaN(grid) || isPitLane
+                            ? undefined
+                            : positionChange(grid, position);
                         const isLeader = position === 1;
                         const teamColor = mapConstructorToTeamColor(result.Constructor.name);
 
@@ -418,13 +423,34 @@ export default async function RacePage({ params }: RacePageProps) {
                               className="font-mono tabular-nums"
                               style={{ padding: "12px 16px", color: F1.fg3, fontSize: 13 }}
                             >
-                              {Number.isNaN(grid) ? "—" : grid}
+                              {Number.isNaN(grid) ? "—" : grid === 0 ? "PL" : grid}
                             </td>
                             <td style={{ padding: "12px 16px" }}>
-                              {change !== undefined ? (
-                                <PositionBadge position={position} change={change} />
+                              {isPitLane ? (
+                                <Mono
+                                  style={{
+                                    fontSize: 11,
+                                    color: F1.fg3,
+                                    fontVariantNumeric: "tabular-nums",
+                                  }}
+                                >
+                                  PL
+                                </Mono>
+                              ) : change === undefined ? (
+                                <Mono style={{ fontSize: 11, color: F1.fg3 }}>—</Mono>
+                              ) : change === 0 ? (
+                                <Mono style={{ fontSize: 11, color: F1.fg3 }}>{"="}</Mono>
                               ) : (
-                                <Mono style={{ color: F1.fg3 }}>—</Mono>
+                                <Mono
+                                  style={{
+                                    fontSize: 11,
+                                    fontWeight: 600,
+                                    color: change > 0 ? F1.green : F1.red,
+                                    fontVariantNumeric: "tabular-nums",
+                                  }}
+                                >
+                                  {change > 0 ? `+${change}` : change}
+                                </Mono>
                               )}
                             </td>
                             <td

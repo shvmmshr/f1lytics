@@ -38,7 +38,7 @@ function ContinentOutlines({ radius }: { radius: number }) {
     fetch("/land.json")
       .then((res) => res.json())
       .then((data: [number, number][][]) => setPolygons(data))
-      .catch(() => {});
+      .catch((err) => { console.error("[f1lytics] land.json failed to load:", err); });
   }, []);
 
   const lines = useMemo(() => {

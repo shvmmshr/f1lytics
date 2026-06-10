@@ -23,7 +23,8 @@ export default async function RacesPage() {
 
   try {
     raceResults = await getRaceResults("2026");
-  } catch {
+  } catch (err) {
+    console.error("[f1lytics] races index results fetch failed:", err);
     // Continue with static data if API is unavailable.
   }
 

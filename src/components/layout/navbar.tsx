@@ -7,17 +7,24 @@ import { useGSAP } from "@gsap/react";
 import { gsap } from "@/lib/gsap";
 import { cn } from "@/lib/utils";
 import { F1, LiveDot, Mono } from "@/components/shared/broadcast";
-import { getNextEvent } from "@/lib/constants";
+import { getNextEvent, CIRCUIT_LIST } from "@/lib/constants";
 
 const NAV_ITEMS = [
   { label: "LIVE", href: "/live", live: true },
   { label: "STANDINGS", href: "/standings" },
   { label: "DRIVERS", href: "/drivers" },
   { label: "TEAMS", href: "/teams" },
+  { label: "RACES", href: "/races" },
   { label: "CALENDAR", href: "/calendar" },
   { label: "CIRCUITS", href: "/circuits" },
+  { label: "NEWS", href: "/news" },
   { label: "COMPARE", href: "/compare" },
 ];
+
+// Schedule size (max round number) for the "RD xx/NN" chip. Uses total scheduled
+// rounds so it stays consistent with the raw round numbers shown elsewhere
+// (round numbers run 1..N including the cancelled slots).
+const TOTAL_ROUNDS = CIRCUIT_LIST.length;
 
 export function Navbar() {
   const pathname = usePathname();
@@ -126,7 +133,7 @@ export function Navbar() {
                 <span style={{ color: F1.red }}>
                   {nextRace.country.toUpperCase()}
                 </span>{" "}
-                · RD {String(nextRace.round).padStart(2, "0")}/22
+                · RD {String(nextRace.round).padStart(2, "0")}/{TOTAL_ROUNDS}
               </span>
             )}
           </div>

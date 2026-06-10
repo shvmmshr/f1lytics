@@ -27,7 +27,8 @@ export default async function StandingsPage() {
       getDriverStandings("2026"),
       getConstructorStandings("2026"),
     ]);
-  } catch {
+  } catch (err) {
+    console.error("[f1lytics] standings fetch failed:", err);
     // Empty arrays render the empty-state row.
   }
 

@@ -65,8 +65,8 @@ async function getHistoricalStandings(teamName: string) {
         });
       }
     }
-  } catch {
-    // ignore
+  } catch (err) {
+    console.error("[f1lytics] historical constructor standings fetch failed:", err);
   }
 
   return results;
@@ -90,7 +90,8 @@ export default async function TeamPage({ params }: TeamPageProps) {
       getDriverStandings("2026"),
       getRaceResults("2026"),
     ]);
-  } catch {
+  } catch (err) {
+    console.error("[f1lytics] team page data fetch failed:", err);
     // API unavailable
   }
 

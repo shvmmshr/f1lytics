@@ -22,7 +22,9 @@ export default async function TeamsPage() {
   let constructorStandings: Awaited<ReturnType<typeof getConstructorStandings>> = [];
   try {
     constructorStandings = await getConstructorStandings("2026");
-  } catch {}
+  } catch (err) {
+    console.error("[f1lytics] teams constructor standings fetch failed:", err);
+  }
 
   const standingsByTeam = new Map<string, { position: number; points: number; wins: number }>();
 

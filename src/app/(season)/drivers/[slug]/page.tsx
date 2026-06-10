@@ -76,7 +76,9 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
       getRaceResults("2026"),
       getDriverStandings("2026"),
     ]);
-  } catch {}
+  } catch (err) {
+    console.error("[f1lytics] driver page data fetch failed:", err);
+  }
 
   const historyYears = ["2022", "2023", "2024", "2025"];
   const historicalStandings: { year: string; position: number | null; points: number; wins: number }[] = [];
@@ -100,7 +102,9 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
         });
       }
     }
-  } catch {}
+  } catch (err) {
+    console.error("[f1lytics] driver historical standings fetch failed:", err);
+  }
 
   const driverStanding = standings.find(
     (s) => s.Driver.code?.toUpperCase() === driver.abbreviation
@@ -125,7 +129,7 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
         raceName: race.raceName,
         position: Number.isNaN(pos) ? null : pos,
         points: Number.parseFloat(result.points) || 0,
-        grid: Number.parseInt(result.grid, 10) || null,
+        grid: (() => { const g = Number.parseInt(result.grid, 10); return Number.isNaN(g) ? null : g; })(),
       };
     })
     .filter((r): r is NonNullable<typeof r> => r !== null);
@@ -137,12 +141,11 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
   const bestFinish = driverRaceResults.length
     ? Math.min(...driverRaceResults.filter((r) => r.position !== null).map((r) => r.position!))
     : null;
-  const avgFinish = driverRaceResults.length
-    ? (
-        driverRaceResults.reduce((sum, r) => sum + (r.position ?? 0), 0) /
-        driverRaceResults.filter((r) => r.position !== null).length
-      ).toFixed(1)
-    : null;
+  const finishedRaces = driverRaceResults.filter((r) => r.position !== null);
+  const avgFinish =
+    finishedRaces.length > 0
+      ? (finishedRaces.reduce((sum, r) => sum + r.position!, 0) / finishedRaces.length).toFixed(1)
+      : null;
 
   const driverPts = driverStanding ? Number.parseFloat(driverStanding.points) || 0 : 0;
   const teammatePts = teammateStanding ? Number.parseFloat(teammateStanding.points) || 0 : 0;
@@ -447,7 +450,12 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
                 </div>
 
                 {driverRaceResults.map((r, i) => {
-                  const gained = r.grid && r.position ? r.grid - r.position : null;
+                  // grid === 0 means pit-lane start — valid but delta is meaningless
+                  const isPitLane = r.grid === 0;
+                  const gained =
+                    r.grid !== null && !isPitLane && r.position !== null
+                      ? r.grid - r.position
+                      : null;
                   return (
                     <div
                       key={r.round}
@@ -481,7 +489,7 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
                           fontVariantNumeric: "tabular-nums",
                         }}
                       >
-                        {r.grid ?? "—"}
+                        {r.grid === null ? "—" : r.grid === 0 ? "PL" : r.grid}
                       </Mono>
                       <div style={{ textAlign: "right" }}>
                         {r.position !== null ? (
@@ -494,18 +502,20 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
                         style={{
                           fontSize: 11,
                           color:
-                            gained === null
+                            isPitLane
                               ? F1.fg3
-                              : gained > 0
-                                ? F1.green
-                                : gained < 0
-                                  ? F1.red
-                                  : F1.fg3,
+                              : gained === null
+                                ? F1.fg3
+                                : gained > 0
+                                  ? F1.green
+                                  : gained < 0
+                                    ? F1.red
+                                    : F1.fg3,
                           textAlign: "right",
                           fontVariantNumeric: "tabular-nums",
                         }}
                       >
-                        {gained === null ? "—" : gained > 0 ? `+${gained}` : gained === 0 ? "0" : gained}
+                        {isPitLane ? "PL" : gained === null ? "—" : gained > 0 ? `+${gained}` : gained === 0 ? "=" : gained}
                       </Mono>
                       <Mono
                         style={{

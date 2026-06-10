@@ -50,7 +50,8 @@ export default async function CalendarPage() {
 
   try {
     raceResults = await getRaceResults("2026");
-  } catch {
+  } catch (err) {
+    console.error("[f1lytics] calendar race results fetch failed:", err);
     // Continue with static calendar.
   }
 

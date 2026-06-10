@@ -59,7 +59,7 @@ export default async function CircuitPage({ params }: CircuitPageProps) {
   const next = idx < CIRCUIT_LIST.length - 1 ? CIRCUIT_LIST[idx + 1] : null;
 
   let lastWinner: string | null = null;
-  let topResults: { position: string; driver: string; team: string; time: string }[] = [];
+  let topResults: { position: string; driverId: string; driver: string; team: string; time: string }[] = [];
 
   if (!circuit.cancelled) {
     try {
@@ -68,14 +68,16 @@ export default async function CircuitPage({ params }: CircuitPageProps) {
       if (race?.Results) {
         const winner = race.Results.find((r) => r.position === "1");
         if (winner) lastWinner = `${winner.Driver.givenName} ${winner.Driver.familyName}`;
-        topResults = race.Results.slice(0, 5).map((r) => ({
+        topResults = [...race.Results].sort((a, b) => Number.parseInt(a.position, 10) - Number.parseInt(b.position, 10)).slice(0, 5).map((r) => ({
           position: r.position,
+          driverId: r.Driver.driverId,
           driver: `${r.Driver.givenName} ${r.Driver.familyName}`,
           team: r.Constructor?.name ?? "",
           time: r.Time?.time ?? (r.status || ""),
         }));
       }
-    } catch {
+    } catch (err) {
+      console.error("[f1lytics] circuit race results fetch failed:", err);
       // No data yet
     }
   }
@@ -156,9 +158,7 @@ export default async function CircuitPage({ params }: CircuitPageProps) {
                   alt={`${circuit.name} track layout`}
                   width={400}
                   height={400}
-                  className={`h-full max-h-72 w-auto object-contain${
-                    circuit.id === "bahrain" ? " invert" : ""
-                  }`}
+                  className="h-full max-h-72 w-auto object-contain"
                   style={{ filter: "brightness(0) invert(1)", opacity: 0.9 }}
                   unoptimized
                 />
@@ -307,7 +307,7 @@ export default async function CircuitPage({ params }: CircuitPageProps) {
                   </thead>
                   <tbody>
                     {topResults.map((r) => (
-                      <tr key={r.position} style={{ borderBottom: `1px solid ${F1.line}` }}>
+                      <tr key={r.driverId} style={{ borderBottom: `1px solid ${F1.line}` }}>
                         <td
                           className="font-mono"
                           style={{

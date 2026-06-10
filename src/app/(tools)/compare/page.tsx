@@ -75,7 +75,8 @@ export default async function ComparePage() {
       getRaceResults("2026"),
       getAllQualifyingResults("2026"),
     ]);
-  } catch {
+  } catch (err) {
+    console.error("[f1lytics] compare data fetch failed:", err);
     // API unavailable
   }
 

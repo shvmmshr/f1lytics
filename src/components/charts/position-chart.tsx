@@ -71,14 +71,27 @@ function getSeries(positions: OpenF1Position[], drivers: PositionChartDriver[]):
 }
 
 function buildChartData(series: ChartSeries[]): ChartRow[] {
-  const maxLapSamples = Math.max(...series.map((item) => item.values.length), 0);
+  // Build a sorted union of all unique timestamps across all drivers.
+  // OpenF1Position has no lap number field — only a `date` string — so we align
+  // by timestamp index (Nth sample in the shared sorted union), carrying forward
+  // each driver's last known position for timestamps where they have no sample.
+  const allTimestamps = Array.from(
+    new Set(series.flatMap((s) => s.values.map((v) => v.date)))
+  ).sort();
 
-  return Array.from({ length: maxLapSamples }, (_, index) => {
+  if (allTimestamps.length === 0) return [];
+
+  return allTimestamps.map((ts, index) => {
     const row: ChartRow = { lap: index + 1 };
 
     series.forEach((item) => {
-      const position = item.values[index]?.position;
-      row[item.key] = position ?? null;
+      // Find the most recent sample at or before this timestamp (carry-forward).
+      let carry: number | null = null;
+      for (const v of item.values) {
+        if (v.date <= ts) carry = v.position;
+        else break; // values are already sorted ascending by date via getSeries
+      }
+      row[item.key] = carry;
     });
 
     return row;

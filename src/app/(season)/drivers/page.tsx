@@ -21,7 +21,9 @@ export default async function DriversPage() {
   let standings: Awaited<ReturnType<typeof getDriverStandings>> = [];
   try {
     standings = await getDriverStandings("2026");
-  } catch {}
+  } catch (err) {
+    console.error("[f1lytics] drivers standings fetch failed:", err);
+  }
 
   const pointsMap = new Map<string, { points: number; position: number; wins: number }>();
   standings.forEach((s) => {

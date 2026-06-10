@@ -56,16 +56,51 @@ export async function getRaceSchedule(
 /**
  * Fetch race results for a given season, optionally filtered by round.
  * Returns an array of RaceResult entries (each containing a Results array).
+ *
+ * For a whole season, Jolpica returns at most 30 result *rows* per page by
+ * default (max 100), far fewer than a season's ~440 rows — so the full season
+ * MUST be paginated by offset, merging rows that straddle a page boundary back
+ * into their race by round. A single round is small enough to fetch directly.
  */
 export async function getRaceResults(
   season: string,
   round?: string
 ): Promise<RaceResult[]> {
-  const path = round
-    ? `/${season}/${round}/results.json`
-    : `/${season}/results.json`;
-  const data = await fetchJolpica<RaceTable>(path);
-  return data.MRData.RaceTable.Races;
+  if (round) {
+    const data = await fetchJolpica<RaceTable>(`/${season}/${round}/results.json`);
+    return data.MRData.RaceTable.Races;
+  }
+
+  const LIMIT = 100;
+  const byRound = new Map<string, RaceResult>();
+  let offset = 0;
+  let total = Infinity;
+
+  while (offset < total) {
+    const data = await fetchJolpica<RaceTable>(
+      `/${season}/results.json?limit=${LIMIT}&offset=${offset}`
+    );
+    total = Number.parseInt(data.MRData.total, 10) || 0;
+    const races = data.MRData.RaceTable.Races;
+    if (races.length === 0) break;
+
+    for (const race of races) {
+      const existing = byRound.get(race.round);
+      if (existing) {
+        existing.Results = [
+          ...(existing.Results ?? []),
+          ...(race.Results ?? []),
+        ];
+      } else {
+        byRound.set(race.round, { ...race });
+      }
+    }
+    offset += LIMIT;
+  }
+
+  return Array.from(byRound.values()).sort(
+    (a, b) => Number.parseInt(a.round, 10) - Number.parseInt(b.round, 10)
+  );
 }
 
 /**
@@ -115,16 +150,46 @@ export async function getQualifyingResults(
 }
 
 /**
- * Fetch all qualifying results for a given season.
- * Returns an array of QualifyingResult entries across all rounds.
+ * Fetch all qualifying results for a given season, across all rounds.
+ *
+ * Jolpica/Ergast caps `limit` at 100 *rows* (one row per driver per session), so
+ * a full season (>100 rows) MUST be paginated by offset — otherwise the most
+ * recent rounds are silently dropped. A single race's results can also straddle a
+ * page boundary, so rows are merged back together by round.
  */
 export async function getAllQualifyingResults(
   season: string
 ): Promise<QualifyingResult[]> {
-  const data = await fetchJolpica<QualifyingTable>(
-    `/${season}/qualifying.json?limit=500`
+  const LIMIT = 100;
+  const byRound = new Map<string, QualifyingResult>();
+  let offset = 0;
+  let total = Infinity;
+
+  while (offset < total) {
+    const data = await fetchJolpica<QualifyingTable>(
+      `/${season}/qualifying.json?limit=${LIMIT}&offset=${offset}`
+    );
+    total = Number.parseInt(data.MRData.total, 10) || 0;
+    const races = data.MRData.RaceTable.Races;
+    if (races.length === 0) break;
+
+    for (const race of races) {
+      const existing = byRound.get(race.round);
+      if (existing) {
+        existing.QualifyingResults = [
+          ...(existing.QualifyingResults ?? []),
+          ...(race.QualifyingResults ?? []),
+        ];
+      } else {
+        byRound.set(race.round, { ...race });
+      }
+    }
+    offset += LIMIT;
+  }
+
+  return Array.from(byRound.values()).sort(
+    (a, b) => Number.parseInt(a.round, 10) - Number.parseInt(b.round, 10)
   );
-  return data.MRData.RaceTable.Races;
 }
 
 /**

@@ -4,12 +4,15 @@ import { useRef } from "react";
 import { useGSAP } from "@gsap/react";
 import { animateCounter } from "@/lib/gsap";
 import { F1, Mono } from "@/components/shared/broadcast";
+import { CIRCUIT_LIST, DRIVER_LIST, TEAM_LIST } from "@/lib/constants";
 
+// Derived from constants so cancelled rounds (Bahrain, Saudi) are excluded.
+const activeRaces = CIRCUIT_LIST.filter((c) => !c.cancelled);
 const stats = [
-  { value: 22, label: "RACES" },
-  { value: 11, label: "TEAMS" },
-  { value: 22, label: "DRIVERS" },
-  { value: 6, label: "SPRINTS" },
+  { value: activeRaces.length, label: "RACES" },
+  { value: TEAM_LIST.length, label: "TEAMS" },
+  { value: DRIVER_LIST.length, label: "DRIVERS" },
+  { value: activeRaces.filter((c) => c.isSprint).length, label: "SPRINTS" },
 ];
 
 export function StatsRow() {
