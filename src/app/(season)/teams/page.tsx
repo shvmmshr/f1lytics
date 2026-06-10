@@ -113,79 +113,56 @@ export default async function TeamsPage() {
                   }}
                 />
 
-                <div className="relative flex items-center gap-4">
-                  {/* Position pill */}
-                  <div
-                    className="flex items-center justify-center"
-                    style={{
-                      width: 44,
-                      height: 44,
-                      background: standing ? `${team.color}22` : F1.bg2,
-                      border: `1px solid ${team.color}55`,
-                    }}
-                  >
-                    <Mono
+                {/* Top row: rank + logo (left) · points (right) */}
+                <div className="relative flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    {/* Position pill */}
+                    <div
+                      className="flex items-center justify-center shrink-0"
                       style={{
-                        fontSize: 16,
-                        fontWeight: 700,
-                        color: team.color,
-                        letterSpacing: "0.04em",
+                        width: 40,
+                        height: 40,
+                        background: standing ? `${team.color}22` : F1.bg2,
+                        border: `1px solid ${team.color}55`,
                       }}
                     >
-                      {standing ? String(standing.position).padStart(2, "0") : "—"}
-                    </Mono>
-                  </div>
+                      <Mono
+                        style={{
+                          fontSize: 15,
+                          fontWeight: 700,
+                          color: team.color,
+                          letterSpacing: "0.04em",
+                        }}
+                      >
+                        {standing ? String(standing.position).padStart(2, "0") : "—"}
+                      </Mono>
+                    </div>
 
-                  {/* Logo */}
-                  <div
-                    className="flex items-center justify-center shrink-0"
-                    style={{
-                      width: 44,
-                      height: 44,
-                      background: F1.bg2,
-                      border: `1px solid ${F1.line}`,
-                      padding: 8,
-                    }}
-                  >
-                    <Image
-                      src={team.logo}
-                      alt={team.name}
-                      width={28}
-                      height={28}
-                      className="object-contain"
-                      unoptimized
-                    />
-                  </div>
-
-                  {/* Name */}
-                  <div className="min-w-0 flex-1">
-                    <h2
-                      className="font-display truncate"
+                    {/* Logo */}
+                    <div
+                      className="flex items-center justify-center shrink-0"
                       style={{
-                        fontSize: 20,
-                        fontWeight: 600,
-                        letterSpacing: "-0.02em",
-                        lineHeight: 1,
+                        width: 40,
+                        height: 40,
+                        background: F1.bg2,
+                        border: `1px solid ${F1.line}`,
+                        padding: 7,
                       }}
                     >
-                      {team.name.toUpperCase()}
-                    </h2>
-                    <Mono
-                      style={{
-                        fontSize: 9,
-                        color: F1.fg3,
-                        letterSpacing: "0.18em",
-                        marginTop: 4,
-                        display: "block",
-                      }}
-                    >
-                      {team.engine.toUpperCase()}
-                    </Mono>
+                      <Image
+                        src={team.logo}
+                        alt={team.name}
+                        width={26}
+                        height={26}
+                        className="object-contain"
+                        unoptimized
+                      />
+                    </div>
                   </div>
 
                   {/* Points */}
                   <div style={{ textAlign: "right" }}>
-                    <StatValue size={28} color={F1.fg}>
+                    <StatValue size={30} color={F1.fg}>
                       {standing
                         ? standing.points % 1 === 0
                           ? standing.points
@@ -206,8 +183,34 @@ export default async function TeamsPage() {
                   </div>
                 </div>
 
-                {/* Points bar */}
-                <div className="relative mt-4" style={{ height: 3, background: F1.bg3 }}>
+                {/* Name + engine — spans the full card width below the icons */}
+                <div className="relative mt-3.5 min-w-0">
+                  <h2
+                    className="font-display truncate"
+                    style={{
+                      fontSize: 22,
+                      fontWeight: 600,
+                      letterSpacing: "-0.02em",
+                      lineHeight: 1,
+                    }}
+                  >
+                    {team.name.toUpperCase()}
+                  </h2>
+                  <Mono
+                    style={{
+                      fontSize: 9,
+                      color: F1.fg3,
+                      letterSpacing: "0.18em",
+                      marginTop: 5,
+                      display: "block",
+                    }}
+                  >
+                    {team.engine.toUpperCase()}
+                  </Mono>
+                </div>
+
+                {/* Points bar — relative to the championship leader */}
+                <div className="relative mt-3.5" style={{ height: 3, background: F1.bg3 }}>
                   <div
                     style={{
                       height: "100%",
@@ -217,23 +220,23 @@ export default async function TeamsPage() {
                   />
                 </div>
 
-                {/* Drivers */}
-                <div className="relative flex gap-1 mt-4" style={{ maxWidth: 520 }}>
+                {/* Drivers — two chips filling the full card width */}
+                <div className="relative flex gap-1 mt-3.5">
                   {teamDrivers.map((d) => (
                     <div
                       key={d.id}
-                      className="flex flex-1 items-center gap-2"
+                      className="flex flex-1 items-center gap-2 min-w-0"
                       style={{
                         background: F1.bg2,
                         border: `1px solid ${F1.line}`,
-                        padding: "6px 8px",
+                        padding: "7px 9px",
                       }}
                     >
                       <div
                         className="relative shrink-0 overflow-hidden"
                         style={{
-                          width: 26,
-                          height: 26,
+                          width: 28,
+                          height: 28,
                           background: F1.bg,
                           border: `1px solid ${F1.line}`,
                         }}
@@ -255,6 +258,7 @@ export default async function TeamsPage() {
                             letterSpacing: "0.04em",
                             display: "block",
                           }}
+                          className="truncate"
                         >
                           {d.lastName.toUpperCase()}
                         </Mono>
