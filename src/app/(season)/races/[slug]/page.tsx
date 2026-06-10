@@ -5,6 +5,15 @@ import { getLaps, getPositions, getRaceControl, getSessions, getStints } from "@
 import { CIRCUIT_LIST, TEAMS, getCircuitBySlug } from "@/lib/constants";
 import { PageTransition } from "@/components/layout/page-transition";
 import { PositionBadge } from "@/components/shared/position-badge";
+import {
+  F1,
+  Mono,
+  Brackets,
+  Grid as BroadcastGrid,
+  SectionHeader,
+  StatValue,
+} from "@/components/shared/broadcast";
+import Link from "next/link";
 import { formatLapTime, positionChange } from "@/lib/utils";
 import { PositionChart } from "@/components/charts/position-chart";
 import { TireStrategyViz } from "@/components/charts/tire-strategy-viz";
@@ -163,164 +172,387 @@ export default async function RacePage({ params }: RacePageProps) {
 
   return (
     <PageTransition>
-      {circuit.cancelled && (
-        <div className="mb-4 rounded-xl border border-status-red/30 bg-status-red/10 px-4 py-3 text-center text-sm font-medium text-status-red">
-          This Grand Prix has been cancelled for the 2026 season
-        </div>
-      )}
+      <div style={{ background: F1.bg, color: F1.fg, position: "relative" }}>
+        <BroadcastGrid color={F1.line} size={64} opacity={0.18} />
 
-      <section className="mb-8 rounded-2xl border border-border-subtle bg-bg-secondary p-6">
-        <p className="font-mono text-xs uppercase tracking-widest text-text-muted">Round {circuit.round}</p>
-        <h1 className="mt-2 text-4xl font-bold tracking-display text-text-primary">{circuit.fullName}</h1>
-        <p className="mt-2 text-text-secondary">
-          {circuit.name} · {circuit.city}, {circuit.country}
-        </p>
-        <p className="mt-1 text-sm text-text-muted">{formatRaceDate(circuit.raceDate)}</p>
-      </section>
-
-      <section className="mb-8">
-        <h2 className="text-2xl font-semibold tracking-tight text-text-primary">Podium</h2>
-        {podium.length > 0 ? (
-          <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
-            {podium.map((result, index) => {
-              const color = mapConstructorToTeamColor(result.Constructor.name);
-              const position = Number.parseInt(result.position, 10);
-              return (
-                <article
-                  key={result.Driver.driverId}
-                  className="animate-in fade-in slide-in-from-bottom-2 rounded-xl border border-border-subtle bg-bg-secondary p-5 duration-300"
-                  style={{
-                    animationDelay: `${index * 120}ms`,
-                    boxShadow: `inset 4px 0 0 0 ${color}`,
-                  }}
-                >
-                  <p className="font-mono text-xs uppercase tracking-widest text-text-muted">
-                    Position {position}
-                  </p>
-                  <h3 className="mt-2 text-xl font-semibold text-text-primary">
-                    {result.Driver.givenName} {result.Driver.familyName}
-                  </h3>
-                  <p className="mt-1 text-sm text-text-secondary">{result.Constructor.name}</p>
-                  <p className="mt-3 font-mono text-lg font-bold text-text-primary">
-                    {Number.parseFloat(result.points).toFixed(1)} PTS
-                  </p>
-                </article>
-              );
-            })}
+        {circuit.cancelled && (
+          <div
+            style={{
+              padding: "10px 32px",
+              background: F1.red,
+              color: F1.fg,
+              textAlign: "center",
+            }}
+          >
+            <Mono style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.2em" }}>
+              THIS GRAND PRIX HAS BEEN CANCELLED FOR 2026
+            </Mono>
           </div>
-        ) : (
-          <p className="mt-4 text-sm text-text-muted">Podium data will appear when race results are available.</p>
         )}
-      </section>
 
-      <section className="mb-8 rounded-2xl border border-border-subtle bg-bg-secondary p-6">
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-2xl font-semibold tracking-tight text-text-primary">Full Results</h2>
-          <p className="text-xs uppercase tracking-widest text-text-muted">
-            {results.length > 0 ? `${results.length} classified drivers` : "No race results yet"}
-          </p>
-        </div>
+        {/* HERO */}
+        <section
+          className="relative overflow-hidden"
+          style={{
+            borderBottom: `1px solid ${F1.line}`,
+            padding: "44px 32px 36px",
+            background: `linear-gradient(135deg, ${F1.red}1a 0%, transparent 60%)`,
+          }}
+        >
+          <div className="relative mx-auto" style={{ maxWidth: 1400 }}>
+            <div className="flex items-center gap-3.5 mb-5">
+              <Mono style={{ color: F1.red, fontSize: 11, letterSpacing: "0.24em", fontWeight: 700 }}>
+                ROUND {String(circuit.round).padStart(2, "0")}
+              </Mono>
+              <span style={{ width: 40, height: 1, background: F1.line }} />
+              <Mono style={{ color: F1.fg3, fontSize: 11, letterSpacing: "0.18em" }}>
+                <Link href="/races" style={{ color: F1.fg3 }}>SEASON / RACES</Link> /{" "}
+                {circuit.country.toUpperCase()}
+              </Mono>
+            </div>
+            <h1
+              className="font-display uppercase m-0"
+              style={{
+                fontWeight: 700,
+                fontSize: "clamp(48px, 7vw, 96px)",
+                lineHeight: 0.9,
+                letterSpacing: "-0.04em",
+                color: F1.fg,
+              }}
+            >
+              {circuit.fullName}
+              <span style={{ color: F1.red }}>.</span>
+            </h1>
+            <Mono
+              className="block mt-3"
+              style={{ fontSize: 13, color: F1.fg2, letterSpacing: "0.16em" }}
+            >
+              {circuit.name.toUpperCase()} · {circuit.city.toUpperCase()},{" "}
+              {circuit.country.toUpperCase()} · {formatRaceDate(circuit.raceDate).toUpperCase()}
+            </Mono>
+          </div>
+        </section>
 
-        {results.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[860px] border-collapse text-left">
-              <thead>
-                <tr className="border-b border-border-subtle text-xs uppercase tracking-widest text-text-muted">
-                  <th className="px-3 py-2">Pos</th>
-                  <th className="px-3 py-2">Driver</th>
-                  <th className="px-3 py-2">Team</th>
-                  <th className="px-3 py-2">Grid</th>
-                  <th className="px-3 py-2">Change</th>
-                  <th className="px-3 py-2">Gap / Time</th>
-                  <th className="px-3 py-2">Points</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sortedResults.map((result) => {
+        {/* PODIUM */}
+        <section
+          className="relative"
+          style={{ padding: "40px 32px", borderBottom: `1px solid ${F1.line}` }}
+        >
+          <div className="mx-auto" style={{ maxWidth: 1400 }}>
+            <SectionHeader label="PODIUM" />
+            {podium.length > 0 ? (
+              <div
+                className="grid"
+                style={{
+                  gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+                  gap: 1,
+                  background: F1.line,
+                  border: `1px solid ${F1.line}`,
+                }}
+              >
+                {podium.map((result) => {
+                  const color = mapConstructorToTeamColor(result.Constructor.name);
                   const position = Number.parseInt(result.position, 10);
-                  const grid = Number.parseInt(result.grid, 10);
-                  const change = Number.isNaN(grid) ? undefined : positionChange(grid, position);
-                  const isLeader = position === 1;
-
+                  const podiumColor =
+                    position === 1 ? F1.amber : position === 2 ? "#C0C0C0" : "#CD7F32";
                   return (
-                    <tr
-                      key={`${result.Driver.driverId}-${result.position}`}
-                      className="border-b border-border-subtle text-sm text-text-secondary"
+                    <div
+                      key={result.Driver.driverId}
+                      className="relative"
+                      style={{
+                        background: F1.bg,
+                        borderTop: `2px solid ${color}`,
+                        padding: "24px 22px",
+                      }}
                     >
-                      <td className="px-3 py-3">
-                        <PositionBadge position={position} />
-                      </td>
-                      <td className="px-3 py-3 text-text-primary">
-                        {result.Driver.givenName} {result.Driver.familyName}
-                      </td>
-                      <td className="px-3 py-3">{result.Constructor.name}</td>
-                      <td className="px-3 py-3 font-mono">{Number.isNaN(grid) ? "—" : grid}</td>
-                      <td className="px-3 py-3">
-                        {change !== undefined ? (
-                          <PositionBadge position={position} change={change} />
-                        ) : (
-                          "—"
-                        )}
-                      </td>
-                      <td className="px-3 py-3 font-mono">
-                        {isLeader ? "LEADER" : result.Time?.time ?? result.status}
-                      </td>
-                      <td className="px-3 py-3 font-mono text-text-primary">
-                        {Number.parseFloat(result.points).toFixed(1)}
-                      </td>
-                    </tr>
+                      <Brackets color={F1.fg4} size={8} />
+                      <div
+                        className="font-display"
+                        style={{
+                          fontSize: 56,
+                          fontWeight: 700,
+                          color: podiumColor,
+                          letterSpacing: "-0.04em",
+                          lineHeight: 1,
+                        }}
+                      >
+                        P{position}
+                      </div>
+                      <div
+                        className="font-display mt-3"
+                        style={{
+                          fontSize: 24,
+                          fontWeight: 600,
+                          color: F1.fg,
+                          letterSpacing: "-0.02em",
+                          lineHeight: 1.05,
+                        }}
+                      >
+                        {result.Driver.givenName.toUpperCase()}{" "}
+                        <span style={{ color }}>{result.Driver.familyName.toUpperCase()}</span>
+                      </div>
+                      <Mono
+                        className="block mt-1.5"
+                        style={{ fontSize: 11, color: F1.fg3, letterSpacing: "0.16em" }}
+                      >
+                        {result.Constructor.name.toUpperCase()}
+                      </Mono>
+                      <div className="mt-4 flex items-baseline gap-2">
+                        <StatValue size={28} color={F1.fg}>
+                          {Number.parseFloat(result.points).toFixed(0)}
+                        </StatValue>
+                        <Mono
+                          style={{ fontSize: 10, color: F1.fg3, letterSpacing: "0.2em" }}
+                        >
+                          PTS
+                        </Mono>
+                      </div>
+                    </div>
                   );
                 })}
-              </tbody>
-            </table>
+              </div>
+            ) : (
+              <Mono style={{ color: F1.fg3, fontSize: 12, letterSpacing: "0.14em" }}>
+                PODIUM DATA WILL APPEAR WHEN RACE RESULTS ARE AVAILABLE.
+              </Mono>
+            )}
           </div>
-        ) : (
-          <p className="text-sm text-text-muted">Results table will populate after this race is completed.</p>
-        )}
-      </section>
+        </section>
 
-      <section className="mb-8 grid gap-4 sm:grid-cols-3">
-        <article className="rounded-xl border border-border-subtle bg-bg-secondary p-4">
-          <p className="text-xs uppercase tracking-widest text-text-muted">OpenF1 Session</p>
-          <p className="mt-2 font-mono text-lg text-text-primary">
-            {matchedSession ? matchedSession.session_key : "Not matched"}
-          </p>
-          <p className="mt-1 text-xs text-text-muted">
-            {matchedSession
-              ? `${matchedSession.country_name} · ${matchedSession.circuit_short_name}`
-              : "Waiting for synchronized session metadata"}
-          </p>
-        </article>
-        <article className="rounded-xl border border-border-subtle bg-bg-secondary p-4">
-          <p className="text-xs uppercase tracking-widest text-text-muted">Lap Samples</p>
-          <p className="mt-2 font-mono text-lg text-text-primary">{laps.length}</p>
-          <p className="mt-1 text-xs text-text-muted">
-            {openF1Drivers > 0 ? `${openF1Drivers} drivers with lap data` : "No lap telemetry yet"}
-          </p>
-        </article>
-        <article className="rounded-xl border border-border-subtle bg-bg-secondary p-4">
-          <p className="text-xs uppercase tracking-widest text-text-muted">Tyre Stints</p>
-          <p className="mt-2 font-mono text-lg text-text-primary">{stints.length}</p>
-          <p className="mt-1 text-xs text-text-muted">
-            Fastest lap from OpenF1: {formatLapTime(fastestLapDuration)}
-          </p>
-        </article>
-      </section>
+        {/* FULL RESULTS */}
+        <section
+          className="relative"
+          style={{ padding: "40px 32px", borderBottom: `1px solid ${F1.line}` }}
+        >
+          <div className="mx-auto" style={{ maxWidth: 1400 }}>
+            <SectionHeader
+              label="FULL RESULTS"
+              right={
+                <Mono style={{ fontSize: 10, color: F1.fg3, letterSpacing: "0.18em" }}>
+                  {results.length > 0
+                    ? `${results.length} CLASSIFIED`
+                    : "NO RACE RESULTS YET"}
+                </Mono>
+              }
+            />
+            {results.length > 0 ? (
+              <div
+                style={{
+                  background: F1.bg2,
+                  border: `1px solid ${F1.line}`,
+                  overflow: "hidden",
+                }}
+              >
+                <div className="overflow-x-auto">
+                  <table
+                    className="w-full"
+                    style={{ borderCollapse: "collapse", minWidth: 860 }}
+                  >
+                    <thead>
+                      <tr style={{ background: F1.bg, borderBottom: `1px solid ${F1.line}` }}>
+                        {["POS", "DRIVER", "TEAM", "GRID", "Δ", "GAP / TIME", "PTS"].map((h) => (
+                          <th
+                            key={h}
+                            className="font-mono text-left"
+                            style={{
+                              padding: "12px 16px",
+                              fontSize: 10,
+                              color: F1.fg3,
+                              letterSpacing: "0.2em",
+                              fontWeight: 600,
+                            }}
+                          >
+                            {h}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sortedResults.map((result) => {
+                        const position = Number.parseInt(result.position, 10);
+                        const grid = Number.parseInt(result.grid, 10);
+                        const change = Number.isNaN(grid)
+                          ? undefined
+                          : positionChange(grid, position);
+                        const isLeader = position === 1;
+                        const teamColor = mapConstructorToTeamColor(result.Constructor.name);
 
-      <section className="space-y-8">
-        <div>
-          <h3 className="mb-4 text-lg font-semibold text-text-primary">Position Changes</h3>
-          <PositionChart positions={positions} drivers={chartDrivers} />
-        </div>
-        <div>
-          <h3 className="mb-4 text-lg font-semibold text-text-primary">Tire Strategy</h3>
-          <TireStrategyViz stints={stints} drivers={chartDrivers} />
-        </div>
-        <div>
-          <h3 className="mb-4 text-lg font-semibold text-text-primary">Lap Times</h3>
-          <LapTimeChart laps={laps} drivers={chartDrivers} raceControl={raceControl} />
-        </div>
-      </section>
+                        return (
+                          <tr
+                            key={`${result.Driver.driverId}-${result.position}`}
+                            style={{ borderBottom: `1px solid ${F1.line}` }}
+                          >
+                            <td style={{ padding: "12px 16px" }}>
+                              <PositionBadge position={position} />
+                            </td>
+                            <td
+                              className="font-display"
+                              style={{
+                                padding: "12px 16px",
+                                color: F1.fg,
+                                fontSize: 14,
+                                fontWeight: 500,
+                                letterSpacing: "-0.01em",
+                              }}
+                            >
+                              <span
+                                aria-hidden
+                                style={{
+                                  display: "inline-block",
+                                  width: 3,
+                                  height: 16,
+                                  background: teamColor,
+                                  marginRight: 10,
+                                  verticalAlign: "middle",
+                                }}
+                              />
+                              {result.Driver.givenName} {result.Driver.familyName}
+                            </td>
+                            <td
+                              className="font-mono"
+                              style={{ padding: "12px 16px", color: F1.fg2, fontSize: 12 }}
+                            >
+                              {result.Constructor.name}
+                            </td>
+                            <td
+                              className="font-mono tabular-nums"
+                              style={{ padding: "12px 16px", color: F1.fg3, fontSize: 13 }}
+                            >
+                              {Number.isNaN(grid) ? "—" : grid}
+                            </td>
+                            <td style={{ padding: "12px 16px" }}>
+                              {change !== undefined ? (
+                                <PositionBadge position={position} change={change} />
+                              ) : (
+                                <Mono style={{ color: F1.fg3 }}>—</Mono>
+                              )}
+                            </td>
+                            <td
+                              className="font-mono tabular-nums"
+                              style={{
+                                padding: "12px 16px",
+                                color: isLeader ? F1.amber : F1.fg2,
+                                fontSize: 12,
+                                fontWeight: isLeader ? 700 : 400,
+                              }}
+                            >
+                              {isLeader ? "LEADER" : result.Time?.time ?? result.status}
+                            </td>
+                            <td
+                              className="font-mono tabular-nums"
+                              style={{
+                                padding: "12px 16px",
+                                color: F1.fg,
+                                fontSize: 13,
+                                fontWeight: 700,
+                              }}
+                            >
+                              {Number.parseFloat(result.points).toFixed(1)}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ) : (
+              <Mono style={{ color: F1.fg3, fontSize: 12, letterSpacing: "0.14em" }}>
+                RESULTS TABLE WILL POPULATE AFTER THIS RACE IS COMPLETED.
+              </Mono>
+            )}
+          </div>
+        </section>
+
+        {/* TELEMETRY META */}
+        <section
+          className="relative"
+          style={{ padding: "40px 32px", borderBottom: `1px solid ${F1.line}` }}
+        >
+          <div className="mx-auto" style={{ maxWidth: 1400 }}>
+            <SectionHeader label="OPENF1 TELEMETRY" />
+            <div
+              className="grid"
+              style={{
+                gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+                gap: 1,
+                background: F1.line,
+                border: `1px solid ${F1.line}`,
+              }}
+            >
+              {[
+                {
+                  label: "SESSION",
+                  value: matchedSession ? String(matchedSession.session_key) : "—",
+                  sub: matchedSession
+                    ? `${matchedSession.country_name} · ${matchedSession.circuit_short_name}`
+                    : "Waiting for synchronized metadata",
+                },
+                {
+                  label: "LAP SAMPLES",
+                  value: String(laps.length),
+                  sub:
+                    openF1Drivers > 0
+                      ? `${openF1Drivers} drivers with lap data`
+                      : "No lap telemetry yet",
+                },
+                {
+                  label: "TYRE STINTS",
+                  value: String(stints.length),
+                  sub: `Fastest lap: ${formatLapTime(fastestLapDuration)}`,
+                },
+              ].map((tile) => (
+                <div
+                  key={tile.label}
+                  style={{ background: F1.bg, padding: "18px 22px" }}
+                >
+                  <Mono
+                    style={{ fontSize: 10, color: F1.fg3, letterSpacing: "0.2em" }}
+                  >
+                    {tile.label}
+                  </Mono>
+                  <div style={{ marginTop: 8 }}>
+                    <StatValue size={32} color={F1.fg}>
+                      {tile.value}
+                    </StatValue>
+                  </div>
+                  <Mono
+                    className="block"
+                    style={{
+                      fontSize: 10,
+                      color: F1.fg3,
+                      marginTop: 6,
+                      letterSpacing: "0.12em",
+                    }}
+                  >
+                    {tile.sub}
+                  </Mono>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* CHARTS */}
+        <section className="relative" style={{ padding: "40px 32px 60px" }}>
+          <div className="mx-auto" style={{ maxWidth: 1400 }}>
+            <div className="space-y-10">
+              <div>
+                <SectionHeader label="POSITION CHANGES" />
+                <PositionChart positions={positions} drivers={chartDrivers} />
+              </div>
+              <div>
+                <SectionHeader label="TIRE STRATEGY" />
+                <TireStrategyViz stints={stints} drivers={chartDrivers} />
+              </div>
+              <div>
+                <SectionHeader label="LAP TIMES" />
+                <LapTimeChart laps={laps} drivers={chartDrivers} raceControl={raceControl} />
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
     </PageTransition>
   );
 }

@@ -88,8 +88,8 @@ function buildChartData(series: ChartSeries[]): ChartRow[] {
 export function PositionChart({ positions, drivers = [], height = 420 }: PositionChartProps) {
   if (positions.length === 0) {
     return (
-      <div className="rounded-xl border border-border-subtle bg-bg-secondary p-6">
-        <p className="text-sm text-text-muted">No position data available for this session.</p>
+      <div style={{ background: "#141418", border: "1px solid #27272A", padding: 24 }}>
+        <p className="text-sm">No position data available for this session.</p>
       </div>
     );
   }
@@ -99,7 +99,7 @@ export function PositionChart({ positions, drivers = [], height = 420 }: Positio
   const maxPosition = Math.max(...positions.map((item) => item.position), 20);
 
   return (
-    <div className="rounded-xl border border-border-subtle bg-bg-secondary p-4">
+    <div style={{ background: "#141418", border: "1px solid #27272A", padding: 16 }}>
       <div style={{ height }}>
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={chartData} margin={{ top: 20, right: 20, left: 8, bottom: 8 }}>

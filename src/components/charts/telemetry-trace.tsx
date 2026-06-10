@@ -100,8 +100,8 @@ export function TelemetryTrace({
 }: TelemetryTraceProps) {
   if (leftData.length === 0 || rightData.length === 0) {
     return (
-      <div className="rounded-xl border border-border-subtle bg-bg-secondary p-6">
-        <p className="text-sm text-text-muted">
+      <div style={{ background: "#141418", border: "1px solid #27272A", padding: 24 }}>
+        <p className="text-sm">
           Telemetry trace requires car data for both compared drivers.
         </p>
       </div>
@@ -116,7 +116,7 @@ export function TelemetryTrace({
   const maxSpeed = Math.max(...speeds, 1);
 
   return (
-    <div className="rounded-xl border border-border-subtle bg-bg-secondary p-4">
+    <div style={{ background: "#141418", border: "1px solid #27272A", padding: 16 }}>
       <div style={{ height }}>
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={rows} margin={{ top: 20, right: 20, left: 8, bottom: 8 }}>

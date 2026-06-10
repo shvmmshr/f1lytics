@@ -3,9 +3,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { CIRCUIT_LIST } from "@/lib/constants";
 import { PageTransition } from "@/components/layout/page-transition";
-import { SectionHeader } from "@/components/shared/section-header";
+import { F1, Mono, Grid as BroadcastGrid } from "@/components/shared/broadcast";
 import { CircuitGlobeWrapper } from "./circuit-globe-wrapper";
-import { CircuitsGrid } from "./circuits-grid";
 
 export const metadata: Metadata = {
   title: "Circuits",
@@ -43,72 +42,184 @@ export default function CircuitsPage() {
 
   return (
     <PageTransition>
-      <SectionHeader
-        title="Circuits"
-        subtitle="Every track on the 2026 Formula 1 world tour"
-      />
+      <div style={{ background: F1.bg, color: F1.fg, position: "relative" }}>
+        <BroadcastGrid color={F1.line} size={64} opacity={0.18} />
 
-      <CircuitGlobeWrapper circuits={globeCircuits} />
+        <div
+          className="relative"
+          style={{ padding: "40px 32px 28px", borderBottom: `1px solid ${F1.line}` }}
+        >
+          <div className="flex items-center gap-3.5">
+            <Mono style={{ color: F1.red, fontSize: 11, letterSpacing: "0.24em" }}>
+              SECTION 06
+            </Mono>
+            <span style={{ width: 40, height: 1, background: F1.line }} />
+            <Mono style={{ color: F1.fg3, fontSize: 11, letterSpacing: "0.18em" }}>
+              CIRCUITS · {CIRCUIT_LIST.length} TRACKS · WORLD TOUR
+            </Mono>
+          </div>
+          <h1
+            className="font-display uppercase m-0 mt-3"
+            style={{
+              fontWeight: 700,
+              fontSize: "clamp(56px, 8vw, 96px)",
+              lineHeight: 0.9,
+              letterSpacing: "-0.04em",
+            }}
+          >
+            THE CIRCUITS<span style={{ color: F1.red }}>.</span>
+          </h1>
+          <div className="mt-3" style={{ fontSize: 16, color: F1.fg2, maxWidth: 540 }}>
+            Every track on the 2026 Formula 1 world tour. Spin the globe.
+          </div>
+        </div>
 
-      <CircuitsGrid>
-        {CIRCUIT_LIST.map((circuit) => (
-          <Link key={circuit.id} href={`/circuits/${circuit.slug}`}>
-            <article className={`group h-full overflow-hidden rounded-xl border border-border-subtle bg-bg-secondary transition-colors duration-200 hover:bg-bg-tertiary${circuit.cancelled ? " opacity-40" : ""}`}>
-              {/* Track layout image */}
-              <div className="relative h-44 w-full bg-bg-primary">
+        <CircuitGlobeWrapper circuits={globeCircuits} />
+
+        <div
+          className="grid"
+          style={{
+            gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+            gap: 1,
+            background: F1.line,
+            borderTop: `1px solid ${F1.line}`,
+          }}
+        >
+          {CIRCUIT_LIST.map((circuit) => (
+            <Link
+              key={circuit.id}
+              href={`/circuits/${circuit.slug}`}
+              className="group relative block"
+              style={{
+                background: F1.bg,
+                opacity: circuit.cancelled ? 0.5 : 1,
+                borderTop: circuit.isSprint
+                  ? `2px solid ${F1.amber}`
+                  : `2px solid ${F1.line}`,
+                overflow: "hidden",
+              }}
+            >
+              <div
+                className="relative"
+                style={{
+                  height: 168,
+                  background: F1.bg2,
+                  borderBottom: `1px solid ${F1.line}`,
+                }}
+              >
                 <Image
                   src={circuit.trackImage}
                   alt={`${circuit.name} track layout`}
                   fill
-                  className={`object-contain p-4 opacity-80 transition-opacity duration-200 group-hover:opacity-100${
+                  className={`object-contain p-6 transition-opacity${
                     circuit.id === "bahrain" ? " invert" : ""
                   }`}
+                  style={{ filter: "brightness(0) invert(1)", opacity: 0.85 }}
                   sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
                   unoptimized
                 />
-                {/* Round badge */}
-                <span className="absolute left-3 top-3 rounded-md bg-bg-secondary/80 px-2 py-1 font-mono text-[11px] font-bold text-text-secondary backdrop-blur-sm">
-                  R{circuit.round}
-                </span>
-                {/* Sprint badge */}
+                <div
+                  className="absolute"
+                  style={{ top: 12, left: 12, display: "flex", gap: 6 }}
+                >
+                  <Mono
+                    style={{
+                      fontSize: 10,
+                      color: F1.fg,
+                      background: F1.bg,
+                      border: `1px solid ${F1.line}`,
+                      padding: "2px 8px",
+                      letterSpacing: "0.14em",
+                      fontWeight: 700,
+                    }}
+                  >
+                    R{String(circuit.round).padStart(2, "0")}
+                  </Mono>
+                </div>
                 {circuit.isSprint && !circuit.cancelled && (
-                  <span className="absolute right-3 top-3 rounded-md bg-status-yellow/20 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-status-yellow backdrop-blur-sm">
-                    Sprint Weekend
-                  </span>
+                  <div className="absolute" style={{ top: 12, right: 12 }}>
+                    <Mono
+                      style={{
+                        fontSize: 9,
+                        background: F1.amber,
+                        color: F1.ink,
+                        padding: "3px 8px",
+                        letterSpacing: "0.18em",
+                        fontWeight: 700,
+                      }}
+                    >
+                      SPRINT
+                    </Mono>
+                  </div>
                 )}
-                {/* Cancelled badge */}
                 {circuit.cancelled && (
-                  <span className="absolute right-3 top-3 rounded-md bg-status-red/20 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-status-red backdrop-blur-sm">
-                    Cancelled
-                  </span>
+                  <div className="absolute" style={{ top: 12, right: 12 }}>
+                    <Mono
+                      style={{
+                        fontSize: 9,
+                        background: F1.red,
+                        color: F1.fg,
+                        padding: "3px 8px",
+                        letterSpacing: "0.18em",
+                        fontWeight: 700,
+                      }}
+                    >
+                      CANCELLED
+                    </Mono>
+                  </div>
                 )}
               </div>
-
-              {/* Info */}
-              <div className="p-4">
-                <h2 className="text-base font-bold tracking-tight text-text-primary">
-                  {circuit.fullName}
+              <div style={{ padding: 18 }}>
+                <h2
+                  className="font-display"
+                  style={{
+                    fontSize: 18,
+                    fontWeight: 600,
+                    letterSpacing: "-0.02em",
+                    lineHeight: 1.05,
+                    color: F1.fg,
+                  }}
+                >
+                  {circuit.fullName.toUpperCase()}
                 </h2>
-                <p className="mt-1 text-sm text-text-muted">
-                  {countryCodeToFlag(circuit.countryCode)} {circuit.name} · {circuit.city}, {circuit.country}
-                </p>
-
-                <div className="mt-3 flex items-center gap-3 text-xs text-text-muted">
-                  <span className="font-mono">{circuit.length.toFixed(1)} km</span>
-                  <span className="opacity-30">|</span>
-                  <span>{circuit.turns} turns</span>
-                  <span className="opacity-30">|</span>
-                  <span>
+                <Mono
+                  style={{
+                    fontSize: 10,
+                    color: F1.fg3,
+                    letterSpacing: "0.14em",
+                    marginTop: 6,
+                    display: "block",
+                  }}
+                >
+                  {countryCodeToFlag(circuit.countryCode)} {circuit.city.toUpperCase()} ·{" "}
+                  {circuit.country.toUpperCase()}
+                </Mono>
+                <div className="flex items-center gap-3" style={{ marginTop: 12 }}>
+                  <Mono
+                    style={{
+                      fontSize: 11,
+                      color: F1.fg2,
+                      fontVariantNumeric: "tabular-nums",
+                    }}
+                  >
+                    {circuit.length.toFixed(1)} KM
+                  </Mono>
+                  <span style={{ width: 1, height: 12, background: F1.line }} />
+                  <Mono style={{ fontSize: 11, color: F1.fg2 }}>
+                    {circuit.turns} TURNS
+                  </Mono>
+                  <span style={{ width: 1, height: 12, background: F1.line }} />
+                  <Mono style={{ fontSize: 11, color: F1.fg2 }}>
                     {circuit.isSprint && circuit.sprintDate
                       ? `${formatRaceDate(circuit.sprintDate)} / ${formatRaceDate(circuit.raceDate)}`
                       : formatRaceDate(circuit.raceDate)}
-                  </span>
+                  </Mono>
                 </div>
               </div>
-            </article>
-          </Link>
-        ))}
-      </CircuitsGrid>
+            </Link>
+          ))}
+        </div>
+      </div>
     </PageTransition>
   );
 }

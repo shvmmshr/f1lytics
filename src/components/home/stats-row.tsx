@@ -3,12 +3,13 @@
 import { useRef } from "react";
 import { useGSAP } from "@gsap/react";
 import { animateCounter } from "@/lib/gsap";
+import { F1, Mono } from "@/components/shared/broadcast";
 
 const stats = [
-  { value: 22, label: "Races" },
-  { value: 11, label: "Teams" },
-  { value: 22, label: "Drivers" },
-  { value: 6, label: "Sprints" },
+  { value: 22, label: "RACES" },
+  { value: 11, label: "TEAMS" },
+  { value: 22, label: "DRIVERS" },
+  { value: 6, label: "SPRINTS" },
 ];
 
 export function StatsRow() {
@@ -27,26 +28,64 @@ export function StatsRow() {
   );
 
   return (
-    <section ref={sectionRef} className="py-20">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          {stats.map((stat, i) => (
-            <div
-              key={stat.label}
-              className="bg-bg-secondary rounded-xl border border-border-subtle p-6 text-center"
+    <section
+      ref={sectionRef}
+      style={{
+        background: F1.bg,
+        borderTop: `1px solid ${F1.line}`,
+        borderBottom: `1px solid ${F1.line}`,
+        padding: "60px 32px",
+      }}
+    >
+      <div
+        className="mx-auto"
+        style={{
+          maxWidth: 1280,
+          display: "grid",
+          gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+          gap: 1,
+          background: F1.line,
+          border: `1px solid ${F1.line}`,
+        }}
+      >
+        {stats.map((stat, i) => (
+          <div
+            key={stat.label}
+            style={{
+              background: F1.bg,
+              padding: "32px 20px",
+              textAlign: "center",
+            }}
+          >
+            <span
+              ref={(el) => {
+                numberRefs.current[i] = el;
+              }}
+              className="font-display tabular-nums"
+              style={{
+                fontSize: "clamp(48px, 6vw, 72px)",
+                fontWeight: 700,
+                color: F1.fg,
+                letterSpacing: "-0.04em",
+                lineHeight: 1,
+                display: "block",
+              }}
             >
-              <span
-                ref={(el) => {
-                  numberRefs.current[i] = el;
-                }}
-                className="text-5xl md:text-6xl font-bold font-mono text-text-primary"
-              >
-                0
-              </span>
-              <p className="text-sm text-text-secondary mt-2">{stat.label}</p>
-            </div>
-          ))}
-        </div>
+              0
+            </span>
+            <Mono
+              className="block"
+              style={{
+                fontSize: 11,
+                color: F1.fg3,
+                letterSpacing: "0.24em",
+                marginTop: 12,
+              }}
+            >
+              {stat.label}
+            </Mono>
+          </div>
+        ))}
       </div>
     </section>
   );

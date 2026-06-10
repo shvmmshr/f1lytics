@@ -1,22 +1,28 @@
 import type { Metadata } from "next";
+import Image from "next/image";
+import Link from "next/link";
 import { getRaceResults } from "@/lib/api/jolpica";
 import { CIRCUIT_LIST } from "@/lib/constants";
 import { PageTransition } from "@/components/layout/page-transition";
-import { CountdownTimer } from "@/components/shared/countdown-timer";
-import { SectionHeader } from "@/components/shared/section-header";
-import { CalendarTimeline } from "./calendar-timeline";
+import {
+  F1,
+  Mono,
+  DataLabel,
+  LiveDot,
+  RacingStripes,
+  SectionHeader,
+  Grid as BroadcastGrid,
+} from "@/components/shared/broadcast";
 
 export const metadata: Metadata = {
   title: "Race Calendar",
   description: "2026 Formula 1 calendar timeline with countdown to the next race",
 };
 
-function formatRaceDate(date: string): string {
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  }).format(new Date(`${date}T00:00:00Z`));
+function formatDateMonthDay(date: string): string {
+  return new Intl.DateTimeFormat("en-US", { month: "short", day: "2-digit" })
+    .format(new Date(`${date}T00:00:00Z`))
+    .toUpperCase();
 }
 
 function countryCodeToFlag(countryCode: string): string {
@@ -28,156 +34,475 @@ function countryCodeToFlag(countryCode: string): string {
     .join("");
 }
 
+function getCountdownParts(target: Date) {
+  const diff = target.getTime() - Date.now();
+  if (diff <= 0) return null;
+  return {
+    d: Math.floor(diff / 86_400_000),
+    h: Math.floor((diff / 3_600_000) % 24),
+    m: Math.floor((diff / 60_000) % 60),
+    s: Math.floor((diff / 1000) % 60),
+  };
+}
+
 export default async function CalendarPage() {
   let raceResults: Awaited<ReturnType<typeof getRaceResults>> = [];
 
   try {
     raceResults = await getRaceResults("2026");
   } catch {
-    // Continue with static calendar data if API is unavailable.
+    // Continue with static calendar.
   }
 
   const winnerByRound = new Map<number, string>();
   raceResults.forEach((race) => {
     const round = Number.parseInt(race.round, 10);
-    const winner = race.Results?.find((result) => result.position === "1");
+    const winner = race.Results?.find((r) => r.position === "1");
     if (!winner) return;
-
-    winnerByRound.set(round, `${winner.Driver.givenName} ${winner.Driver.familyName}`);
+    winnerByRound.set(
+      round,
+      `${winner.Driver.givenName.slice(0, 1)}. ${winner.Driver.familyName}`,
+    );
   });
 
-  const today = new Date();
-  const todayStr = today.toISOString().split("T")[0];
-  const nextRace = CIRCUIT_LIST.find((circuit) => !circuit.cancelled && circuit.raceDate >= todayStr);
+  const todayStr = new Date().toISOString().split("T")[0];
+  const nextRace = CIRCUIT_LIST.find(
+    (c) => !c.cancelled && c.raceDate >= todayStr,
+  );
+  const countdown = nextRace
+    ? getCountdownParts(new Date(`${nextRace.raceDate}T15:00:00Z`))
+    : null;
 
   return (
     <PageTransition>
-      <SectionHeader title="Race Calendar" subtitle="2026 Season Schedule" />
+      <div style={{ background: F1.bg, color: F1.fg, position: "relative" }}>
+        <BroadcastGrid color={F1.line} size={48} opacity={0.18} />
 
-      {nextRace && (
-        <section className="mb-8 rounded-2xl border border-status-red/50 bg-bg-secondary p-6 shadow-[0_0_20px_var(--color-glow-red)]">
-          <p className="font-mono text-xs uppercase tracking-widest text-text-muted">Next Race</p>
-          <h2 className="mt-2 text-2xl font-bold tracking-tight text-text-primary">
-            R{nextRace.round} · {nextRace.fullName}
-          </h2>
-          <p className="mt-1 text-text-secondary">
-            {countryCodeToFlag(nextRace.countryCode)} {nextRace.city}, {nextRace.country} ·{" "}
-            {formatRaceDate(nextRace.raceDate)}
-          </p>
-          <div className="mt-5">
-            <CountdownTimer
-              targetDate={new Date(`${nextRace.raceDate}T14:00:00Z`)}
-              label="Countdown to race weekend"
-            />
+        {/* Header */}
+        <div
+          className="relative"
+          style={{ padding: "40px 32px 28px", borderBottom: `1px solid ${F1.line}` }}
+        >
+          <div className="flex items-center gap-3.5">
+            <Mono style={{ color: F1.red, fontSize: 11, letterSpacing: "0.24em" }}>
+              SECTION 05
+            </Mono>
+            <span style={{ width: 40, height: 1, background: F1.line }} />
+            <Mono style={{ color: F1.fg3, fontSize: 11, letterSpacing: "0.18em" }}>
+              2026 SEASON · {CIRCUIT_LIST.length} ROUNDS
+            </Mono>
           </div>
-        </section>
-      )}
+          <h1
+            className="font-display uppercase m-0 mt-3"
+            style={{
+              fontWeight: 700,
+              fontSize: "clamp(56px, 8vw, 96px)",
+              lineHeight: 0.9,
+              letterSpacing: "-0.04em",
+            }}
+          >
+            THE CALENDAR<span style={{ color: F1.red }}>.</span>
+          </h1>
+        </div>
 
-      <section>
-        <CalendarTimeline>
-          {CIRCUIT_LIST.map((circuit, index) => {
-            const isCancelled = circuit.cancelled === true;
-            const isPast = circuit.raceDate < todayStr;
-            const isNext = nextRace?.id === circuit.id;
-            const winner = winnerByRound.get(circuit.round);
-            const side = index % 2 === 0 ? "left" : "right";
-
-            return (
-              <article
-                key={circuit.id}
-                data-animate="calendar-card"
-                data-side={side}
-                className={[
-                  "relative rounded-xl border border-border-subtle bg-bg-secondary p-4 transition-colors",
-                  // Mobile: offset for left-side timeline
-                  "ml-8 md:ml-0",
-                  // Desktop: alternating sides
-                  side === "left"
-                    ? "md:mr-auto md:w-[calc(50%-1rem)] md:pr-8"
-                    : "md:ml-auto md:w-[calc(50%-1rem)] md:pl-8",
-                  isCancelled ? "opacity-40" : isPast ? "opacity-50" : "",
-                  isNext
-                    ? "border-status-red/40 opacity-100 shadow-[0_0_15px_var(--color-glow-red)]"
-                    : "",
-                ]
-                  .filter(Boolean)
-                  .join(" ")}
+        {/* Featured next race */}
+        {nextRace && (
+          <div
+            className="relative grid"
+            style={{
+              gridTemplateColumns: "minmax(0, 1.1fr) minmax(0, 1fr)",
+              gap: 0,
+              borderBottom: `1px solid ${F1.line}`,
+            }}
+          >
+            <div
+              className="relative overflow-hidden"
+              style={{ padding: 32, background: F1.bg2 }}
+            >
+              <RacingStripes color={F1.red} opacity={0.05} size={20} />
+              <div
+                className="inline-flex items-center gap-2.5"
+                style={{
+                  padding: "6px 12px",
+                  background: F1.red,
+                  color: F1.ink,
+                }}
               >
-                {/* Dot connector — mobile (left side) */}
-                <div
-                  className={[
-                    "absolute top-5 -left-[23px] h-2.5 w-2.5 rounded-full border-2 bg-bg-primary md:hidden",
-                    isNext
-                      ? "border-status-red shadow-[0_0_8px_var(--color-glow-red)]"
-                      : "border-border-subtle",
-                  ].join(" ")}
-                />
+                <LiveDot color={F1.ink} size={6} />
+                <Mono
+                  style={{
+                    fontSize: 10,
+                    fontWeight: 700,
+                    letterSpacing: "0.2em",
+                  }}
+                >
+                  UP NEXT · ROUND {String(nextRace.round).padStart(2, "0")}
+                </Mono>
+              </div>
+              <div
+                className="font-display uppercase mt-4"
+                style={{
+                  fontSize: 16,
+                  fontWeight: 500,
+                  letterSpacing: "0.04em",
+                  color: F1.fg2,
+                }}
+              >
+                {countryCodeToFlag(nextRace.countryCode)} {nextRace.country}
+              </div>
+              <div
+                className="font-display uppercase"
+                style={{
+                  fontSize: "clamp(56px, 7vw, 84px)",
+                  fontWeight: 700,
+                  letterSpacing: "-0.04em",
+                  lineHeight: 0.85,
+                  marginTop: 4,
+                }}
+              >
+                {nextRace.city.toUpperCase()}
+              </div>
+              <div
+                className="font-display uppercase"
+                style={{
+                  fontSize: 32,
+                  fontWeight: 500,
+                  color: F1.red,
+                  letterSpacing: "-0.02em",
+                  lineHeight: 1,
+                  marginTop: 4,
+                }}
+              >
+                GRAND PRIX
+              </div>
 
-                {/* Dot connector — desktop (timeline side) */}
-                <div
-                  className={[
-                    "absolute top-5 hidden h-2.5 w-2.5 rounded-full border-2 bg-bg-primary md:block",
-                    side === "left" ? "-right-[21px]" : "-left-[21px]",
-                    isNext
-                      ? "border-status-red shadow-[0_0_8px_var(--color-glow-red)]"
-                      : "border-border-subtle",
-                  ].join(" ")}
-                />
-
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <p className="font-mono text-xs uppercase tracking-widest text-text-muted">
-                      Round {circuit.round}
-                    </p>
-                    <h3 className={`mt-1 text-lg font-semibold text-text-primary${isCancelled ? " line-through" : ""}`}>
-                      {circuit.fullName}
-                    </h3>
-                    <p className="mt-1 text-sm text-text-secondary">
-                      {countryCodeToFlag(circuit.countryCode)} {circuit.name} · {circuit.city},{" "}
-                      {circuit.country}
-                    </p>
+              <div
+                className="grid mt-6"
+                style={{ gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}
+              >
+                {[
+                  ["DATE", formatDateMonthDay(nextRace.raceDate)],
+                  ["TURNS", String(nextRace.turns)],
+                  ["LENGTH", `${nextRace.length} KM`],
+                  ["LAP REC", nextRace.lapRecord],
+                ].map(([l, v]) => (
+                  <div
+                    key={l}
+                    style={{
+                      background: F1.bg,
+                      padding: "10px 12px",
+                      border: `1px solid ${F1.line}`,
+                    }}
+                  >
+                    <Mono
+                      style={{
+                        fontSize: 9,
+                        color: F1.fg3,
+                        letterSpacing: "0.18em",
+                      }}
+                    >
+                      {l}
+                    </Mono>
+                    <div
+                      className="font-display"
+                      style={{ fontSize: 18, fontWeight: 600, marginTop: 4 }}
+                    >
+                      {v}
+                    </div>
                   </div>
+                ))}
+              </div>
 
-                  <div className="text-right">
-                    {isCancelled ? (
-                      <span className="inline-flex rounded-full bg-status-red/20 px-2 py-1 text-[10px] font-semibold uppercase tracking-widest text-status-red">
-                        Cancelled
+              {countdown && (
+                <div className="flex gap-6 mt-6">
+                  {[
+                    [String(countdown.d).padStart(2, "0"), "DAYS"],
+                    [String(countdown.h).padStart(2, "0"), "HOURS"],
+                    [String(countdown.m).padStart(2, "0"), "MIN"],
+                    [String(countdown.s).padStart(2, "0"), "SEC"],
+                  ].map(([v, l]) => (
+                    <div key={l}>
+                      <span
+                        className="font-display"
+                        style={{
+                          fontSize: 48,
+                          fontWeight: 700,
+                          lineHeight: 1,
+                          letterSpacing: "-0.04em",
+                        }}
+                      >
+                        {v}
                       </span>
-                    ) : (
-                      <>
-                        {circuit.isSprint && circuit.sprintDate && (
-                          <p className="font-mono text-xs text-status-yellow">
-                            Sprint: {formatRaceDate(circuit.sprintDate)}
-                          </p>
-                        )}
-                        <p className="font-mono text-sm text-text-primary">
-                          Race: {formatRaceDate(circuit.raceDate)}
-                        </p>
-                        {circuit.isSprint && (
-                          <span className="mt-2 inline-flex rounded-full bg-status-yellow/20 px-2 py-1 text-[10px] font-semibold uppercase tracking-widest text-status-yellow">
-                            Sprint Weekend
-                          </span>
-                        )}
-                        {isNext && (
-                          <span className="mt-2 ml-2 inline-flex rounded-full bg-status-red/20 px-2 py-1 text-[10px] font-semibold uppercase tracking-widest text-status-red">
-                            Next
-                          </span>
-                        )}
-                      </>
-                    )}
+                      <Mono
+                        style={{
+                          fontSize: 9,
+                          color: F1.fg3,
+                          letterSpacing: "0.2em",
+                          display: "block",
+                          marginTop: 4,
+                        }}
+                      >
+                        {l}
+                      </Mono>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div
+              className="relative overflow-hidden"
+              style={{ background: F1.ink, minHeight: 360 }}
+            >
+              <Image
+                src={nextRace.trackImage}
+                alt={nextRace.name}
+                fill
+                className="object-contain"
+                style={{ filter: "invert(1) opacity(0.85)" }}
+              />
+              <div
+                aria-hidden
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  background: `radial-gradient(ellipse at center, transparent 30%, ${F1.ink} 100%)`,
+                }}
+              />
+              <div
+                style={{ position: "absolute", top: 20, left: 20, right: 20 }}
+              >
+                <DataLabel>CIRCUIT MAP</DataLabel>
+                <div
+                  className="font-display"
+                  style={{ fontSize: 22, fontWeight: 600, marginTop: 4 }}
+                >
+                  {nextRace.name.toUpperCase()}
+                </div>
+              </div>
+              <div
+                className="flex justify-between"
+                style={{
+                  position: "absolute",
+                  bottom: 20,
+                  left: 20,
+                  right: 20,
+                }}
+              >
+                <div>
+                  <DataLabel>LAP RECORD</DataLabel>
+                  <div
+                    className="font-display"
+                    style={{ fontSize: 18, fontWeight: 600 }}
+                  >
+                    {nextRace.lapRecord}
                   </div>
                 </div>
+                <div>
+                  <DataLabel>HOLDER</DataLabel>
+                  <div
+                    className="font-display"
+                    style={{ fontSize: 18, fontWeight: 600 }}
+                  >
+                    {nextRace.lapRecordHolder.toUpperCase()}
+                  </div>
+                </div>
+                <div>
+                  <DataLabel>{nextRace.isSprint ? "SPRINT" : "FORMAT"}</DataLabel>
+                  <div
+                    className="font-display"
+                    style={{
+                      fontSize: 18,
+                      fontWeight: 600,
+                      color: nextRace.isSprint ? F1.amber : F1.fg,
+                    }}
+                  >
+                    {nextRace.isSprint ? "YES" : "STANDARD"}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
-                {isPast && winner && (
-                  <p className="mt-3 text-xs uppercase tracking-widest text-text-muted">
-                    🏁 Winner: <span className="text-text-primary">{winner}</span>
-                  </p>
-                )}
-              </article>
-            );
-          })}
-        </CalendarTimeline>
-      </section>
+        {/* Calendar grid */}
+        <div className="relative" style={{ padding: "32px" }}>
+          <SectionHeader
+            label="FULL SEASON"
+            right={
+              <div className="flex gap-4">
+                {[
+                  [F1.fg3, "DONE"],
+                  [F1.amber, "NEXT"],
+                  [F1.fg4, "UPCOMING"],
+                ].map(([c, l]) => (
+                  <span
+                    key={l}
+                    className="inline-flex items-center gap-1.5"
+                  >
+                    <span
+                      style={{ width: 8, height: 8, background: c, display: "inline-block" }}
+                    />
+                    <Mono style={{ fontSize: 10, color: F1.fg2 }}>{l}</Mono>
+                  </span>
+                ))}
+              </div>
+            }
+          />
+
+          <div
+            className="grid"
+            style={{
+              gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
+              gap: 1,
+              background: F1.line,
+              border: `1px solid ${F1.line}`,
+            }}
+          >
+            {CIRCUIT_LIST.map((c) => {
+              const isCancelled = c.cancelled === true;
+              const isPast = c.raceDate < todayStr;
+              const isNext = nextRace?.id === c.id;
+              const winner = winnerByRound.get(c.round);
+              const stateColor = isCancelled
+                ? F1.fg4
+                : isNext
+                  ? F1.amber
+                  : isPast
+                    ? F1.fg3
+                    : F1.fg4;
+
+              return (
+                <Link
+                  key={c.id}
+                  href={`/circuits/${c.slug}`}
+                  className="relative block transition-colors hover:bg-white/5"
+                  style={{
+                    background: isNext ? F1.bg2 : F1.bg,
+                    padding: 16,
+                    opacity: isCancelled ? 0.45 : isPast ? 0.85 : 1,
+                    borderTop: `2px solid ${stateColor}`,
+                  }}
+                >
+                  {isNext && <RacingStripes color={F1.amber} opacity={0.06} size={12} />}
+                  <div className="relative flex justify-between items-baseline">
+                    <Mono
+                      style={{
+                        fontSize: 10,
+                        color: F1.fg3,
+                        letterSpacing: "0.16em",
+                        fontWeight: 700,
+                      }}
+                    >
+                      RD {String(c.round).padStart(2, "0")}
+                    </Mono>
+                    <Mono
+                      style={{
+                        fontSize: 10,
+                        color: stateColor,
+                        letterSpacing: "0.18em",
+                        fontWeight: 700,
+                      }}
+                    >
+                      {isCancelled
+                        ? "CANCELLED"
+                        : isNext
+                          ? "NEXT"
+                          : isPast
+                            ? "✓"
+                            : formatDateMonthDay(c.raceDate)}
+                    </Mono>
+                  </div>
+                  <div className="relative mt-2.5 flex items-baseline gap-2">
+                    <span style={{ fontSize: 18 }}>
+                      {countryCodeToFlag(c.countryCode)}
+                    </span>
+                    <span
+                      className="font-display uppercase truncate"
+                      style={{
+                        fontSize: 24,
+                        fontWeight: 600,
+                        letterSpacing: "-0.01em",
+                        lineHeight: 1,
+                        color: isCancelled ? F1.fg3 : F1.fg,
+                        textDecoration: isCancelled ? "line-through" : "none",
+                      }}
+                    >
+                      {c.city.toUpperCase()}
+                    </span>
+                  </div>
+                  <Mono
+                    style={{
+                      fontSize: 10,
+                      color: F1.fg3,
+                      letterSpacing: "0.16em",
+                      display: "block",
+                      marginTop: 2,
+                    }}
+                  >
+                    {c.country.toUpperCase()} · {formatDateMonthDay(c.raceDate)}
+                    {c.isSprint && (
+                      <span style={{ color: F1.amber, marginLeft: 6 }}>· SPRINT</span>
+                    )}
+                  </Mono>
+                  {winner ? (
+                    <div
+                      className="relative mt-3 pt-2.5 flex items-center gap-2"
+                      style={{ borderTop: `1px dashed ${F1.line}` }}
+                    >
+                      <Mono
+                        style={{
+                          fontSize: 9,
+                          color: F1.fg3,
+                          letterSpacing: "0.16em",
+                        }}
+                      >
+                        WINNER
+                      </Mono>
+                      <Mono
+                        style={{
+                          fontSize: 11,
+                          color: F1.amber,
+                          fontWeight: 700,
+                          letterSpacing: "0.04em",
+                          marginLeft: "auto",
+                        }}
+                      >
+                        {winner.toUpperCase()}
+                      </Mono>
+                    </div>
+                  ) : (
+                    <div
+                      className="relative mt-3 pt-2.5 flex justify-between"
+                      style={{ borderTop: `1px dashed ${F1.line}` }}
+                    >
+                      <Mono
+                        style={{
+                          fontSize: 9,
+                          color: F1.fg3,
+                          letterSpacing: "0.16em",
+                        }}
+                      >
+                        {isCancelled ? "—" : "TBD"}
+                      </Mono>
+                      <Mono
+                        style={{
+                          fontSize: 9,
+                          color: F1.fg4,
+                          letterSpacing: "0.14em",
+                        }}
+                      >
+                        ›
+                      </Mono>
+                    </div>
+                  )}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+
+      </div>
     </PageTransition>
   );
 }

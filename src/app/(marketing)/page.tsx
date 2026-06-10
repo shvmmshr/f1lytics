@@ -1,6 +1,5 @@
 import { Hero } from "@/components/home/hero";
 import { NextRaceCountdown } from "@/components/home/next-race-countdown";
-import { ChampionshipSnapshot } from "@/components/home/championship-snapshot";
 import { SeasonCalendarStrip } from "@/components/home/season-calendar-strip";
 import { StatsRow } from "@/components/home/stats-row";
 import { getDriverStandings, getConstructorStandings } from "@/lib/api/jolpica";
@@ -51,13 +50,9 @@ export default async function Home() {
 
   return (
     <>
-      <Hero />
+      <Hero driverStandings={driverStandings} constructorStandings={constructorStandings} />
       <div className="space-y-0">
         <NextRaceCountdown />
-        <ChampionshipSnapshot
-          driverStandings={driverStandings}
-          constructorStandings={constructorStandings}
-        />
         <SeasonCalendarStrip />
         <StatsRow />
       </div>

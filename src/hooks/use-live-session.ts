@@ -5,11 +5,11 @@ import type {
   OpenF1Position,
   OpenF1Interval,
   OpenF1Driver,
+  OpenF1Stint,
+  OpenF1RaceControl,
+  OpenF1TeamRadio,
+  OpenF1CarData,
 } from "@/lib/api/types";
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
 
 interface LiveSessionInfo {
   key: number;
@@ -21,6 +21,14 @@ interface LiveSessionInfo {
   dateEnd: string | null;
 }
 
+export interface LapStats {
+  driver_number: number;
+  last: number | null;
+  best: number | null;
+  sectors: [number | null, number | null, number | null];
+  lapNumber: number;
+}
+
 interface LiveApiResponse {
   isLive: boolean;
   status: "NO SESSION" | "LIVE" | "FINISHED";
@@ -28,6 +36,12 @@ interface LiveApiResponse {
   positions?: OpenF1Position[];
   intervals?: OpenF1Interval[];
   drivers?: OpenF1Driver[];
+  stints?: OpenF1Stint[];
+  lapStats?: LapStats[];
+  raceControl?: OpenF1RaceControl[];
+  teamRadio?: OpenF1TeamRadio[];
+  focusedCarData?: OpenF1CarData | null;
+  focusedDriverNumber?: number | null;
   error?: string;
 }
 
@@ -38,23 +52,22 @@ export interface UseLiveSessionReturn {
   positions: OpenF1Position[];
   intervals: OpenF1Interval[];
   drivers: OpenF1Driver[];
+  stints: OpenF1Stint[];
+  lapStats: LapStats[];
+  raceControl: OpenF1RaceControl[];
+  teamRadio: OpenF1TeamRadio[];
+  focusedCarData: OpenF1CarData | null;
+  focusedDriverNumber: number | null;
+  setFocusedDriverNumber: (n: number | null) => void;
   loading: boolean;
   error: string | null;
   lastUpdated: Date | null;
 }
 
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
-const POLL_LIVE_MS = 10_000; // 10 seconds when live
-const POLL_IDLE_MS = 60_000; // 60 seconds when no session
-const MAX_BACKOFF_MS = 60_000; // cap exponential backoff at 60s
-const BASE_BACKOFF_MS = 10_000; // start backoff at 10s
-
-// ---------------------------------------------------------------------------
-// Hook
-// ---------------------------------------------------------------------------
+const POLL_LIVE_MS = 10_000;
+const POLL_IDLE_MS = 60_000;
+const MAX_BACKOFF_MS = 60_000;
+const BASE_BACKOFF_MS = 10_000;
 
 export function useLiveSession(): UseLiveSessionReturn {
   const [data, setData] = useState<LiveApiResponse>({
@@ -64,20 +77,27 @@ export function useLiveSession(): UseLiveSessionReturn {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [focusedDriverNumber, setFocusedDriverNumber] = useState<number | null>(null);
 
   const errorCountRef = useRef(0);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mountedRef = useRef(true);
+  const focusedRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    focusedRef.current = focusedDriverNumber;
+  }, [focusedDriverNumber]);
 
   const fetchLiveData = useCallback(async () => {
     try {
-      const res = await fetch("/api/live");
+      const focused = focusedRef.current;
+      const url = focused ? `/api/live?focusedDriver=${focused}` : "/api/live";
+      const res = await fetch(url);
       if (!res.ok) {
         throw new Error(`HTTP ${res.status}`);
       }
 
       const json: LiveApiResponse = await res.json();
-
       if (!mountedRef.current) return;
 
       setData(json);
@@ -85,10 +105,8 @@ export function useLiveSession(): UseLiveSessionReturn {
       setLastUpdated(new Date());
       setLoading(false);
 
-      // Reset backoff on success
       errorCountRef.current = 0;
 
-      // Schedule next poll
       const interval = json.isLive ? POLL_LIVE_MS : POLL_IDLE_MS;
       timerRef.current = setTimeout(fetchLiveData, interval);
     } catch (err) {
@@ -100,7 +118,6 @@ export function useLiveSession(): UseLiveSessionReturn {
       setError(message);
       setLoading(false);
 
-      // Exponential backoff: 10s, 20s, 40s, capped at 60s
       const backoff = Math.min(
         BASE_BACKOFF_MS * Math.pow(2, errorCountRef.current - 1),
         MAX_BACKOFF_MS
@@ -128,6 +145,13 @@ export function useLiveSession(): UseLiveSessionReturn {
     positions: data.positions ?? [],
     intervals: data.intervals ?? [],
     drivers: data.drivers ?? [],
+    stints: data.stints ?? [],
+    lapStats: data.lapStats ?? [],
+    raceControl: data.raceControl ?? [],
+    teamRadio: data.teamRadio ?? [],
+    focusedCarData: data.focusedCarData ?? null,
+    focusedDriverNumber,
+    setFocusedDriverNumber,
     loading,
     error,
     lastUpdated,

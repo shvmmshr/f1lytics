@@ -6,15 +6,17 @@ import { useRef, useState, useCallback, useEffect } from "react";
 import { useGSAP } from "@gsap/react";
 import { gsap } from "@/lib/gsap";
 import { cn } from "@/lib/utils";
+import { F1, LiveDot, Mono } from "@/components/shared/broadcast";
+import { getNextEvent } from "@/lib/constants";
 
 const NAV_ITEMS = [
-  { label: "Drivers", href: "/drivers" },
-  { label: "Teams", href: "/teams" },
-  { label: "Standings", href: "/standings" },
-  { label: "Calendar", href: "/calendar" },
-  { label: "Circuits", href: "/circuits" },
-  { label: "Live", href: "/live" },
-  { label: "Compare", href: "/compare" },
+  { label: "LIVE", href: "/live", live: true },
+  { label: "STANDINGS", href: "/standings" },
+  { label: "DRIVERS", href: "/drivers" },
+  { label: "TEAMS", href: "/teams" },
+  { label: "CALENDAR", href: "/calendar" },
+  { label: "CIRCUITS", href: "/circuits" },
+  { label: "COMPARE", href: "/compare" },
 ];
 
 export function Navbar() {
@@ -25,37 +27,30 @@ export function Navbar() {
   const mobileOverlayRef = useRef<HTMLDivElement>(null);
   const mobileNavItemsRef = useRef<HTMLLIElement[]>([]);
 
-  // Scroll-driven background opacity via GSAP + ScrollTrigger
+  const event = getNextEvent();
+  const nextRace = event?.circuit;
+
   useGSAP(
     () => {
       if (!headerRef.current) return;
-
       gsap.fromTo(
         headerRef.current,
-        { backgroundColor: "rgba(12, 12, 14, 0.6)" },
+        { backgroundColor: "rgba(8, 8, 10, 0.6)" },
         {
-          backgroundColor: "rgba(12, 12, 14, 0.95)",
+          backgroundColor: "rgba(8, 8, 10, 0.96)",
           ease: "none",
-          scrollTrigger: {
-            start: "top top",
-            end: "100px top",
-            scrub: true,
-          },
-        }
+          scrollTrigger: { start: "top top", end: "100px top", scrub: true },
+        },
       );
     },
-    { scope: headerRef }
+    { scope: headerRef },
   );
 
-  // Mobile menu open animation
   useGSAP(
     () => {
       if (!mobileMenuOpen || isClosing) return;
-      if (!mobileOverlayRef.current) return;
-
       const items = mobileNavItemsRef.current.filter(Boolean);
       if (items.length === 0) return;
-
       gsap.from(items, {
         x: 40,
         opacity: 0,
@@ -64,32 +59,23 @@ export function Navbar() {
         ease: "power3.out",
       });
     },
-    { dependencies: [mobileMenuOpen, isClosing] }
+    { dependencies: [mobileMenuOpen, isClosing] },
   );
 
-  // Lock body scroll when mobile menu is open
   useEffect(() => {
-    if (mobileMenuOpen) {
-      document.body.classList.add("overflow-hidden");
-    } else {
-      document.body.classList.remove("overflow-hidden");
-    }
-    return () => {
-      document.body.classList.remove("overflow-hidden");
-    };
+    if (mobileMenuOpen) document.body.classList.add("overflow-hidden");
+    else document.body.classList.remove("overflow-hidden");
+    return () => document.body.classList.remove("overflow-hidden");
   }, [mobileMenuOpen]);
 
   const closeMobileMenu = useCallback(() => {
     if (!mobileMenuOpen || isClosing) return;
-
     const items = mobileNavItemsRef.current.filter(Boolean);
     if (items.length === 0) {
       setMobileMenuOpen(false);
       return;
     }
-
     setIsClosing(true);
-
     gsap.to(items, {
       x: 40,
       opacity: 0,
@@ -104,106 +90,213 @@ export function Navbar() {
   }, [mobileMenuOpen, isClosing]);
 
   const handleMobileToggle = useCallback(() => {
-    if (mobileMenuOpen) {
-      closeMobileMenu();
-    } else {
-      setMobileMenuOpen(true);
-    }
+    if (mobileMenuOpen) closeMobileMenu();
+    else setMobileMenuOpen(true);
   }, [mobileMenuOpen, closeMobileMenu]);
 
   return (
     <>
       <header
         ref={headerRef}
-        className="sticky top-0 z-50 w-full border-b border-white/[0.06] bg-bg-primary/60 backdrop-blur-2xl"
+        className="sticky top-0 z-50 w-full backdrop-blur-2xl"
+        style={{
+          background: "rgba(8,8,10,0.6)",
+          borderBottom: `1px solid ${F1.line}`,
+        }}
       >
-        <nav className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          {/* Wordmark with red accent line */}
-          <Link href="/" className="flex items-center gap-2">
-            <span className="relative text-lg font-bold tracking-tighter text-text-primary">
-              F1LYTICS
-              <span
-                className="absolute -bottom-1 left-0 h-[2px] w-full origin-left scale-x-100 bg-status-red transition-transform duration-300"
-                aria-hidden="true"
-              />
+        {/* Top status strip — desktop only */}
+        <div
+          className="hidden md:flex items-center justify-between font-mono"
+          style={{
+            padding: "6px 24px",
+            background: F1.bg,
+            borderBottom: `1px solid ${F1.line}`,
+            fontSize: 10,
+            color: F1.fg2,
+            letterSpacing: "0.1em",
+          }}
+        >
+          <div className="flex gap-6">
+            <span>
+              <span style={{ color: F1.fg3 }}>SEASON</span> · 2026
             </span>
-            <span className="rounded bg-status-red px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
-              2026
+            {nextRace && (
+              <span>
+                <span style={{ color: F1.fg3 }}>NEXT</span> ·{" "}
+                <span style={{ color: F1.red }}>
+                  {nextRace.country.toUpperCase()}
+                </span>{" "}
+                · RD {String(nextRace.round).padStart(2, "0")}/22
+              </span>
+            )}
+          </div>
+          <div className="flex gap-6 items-center">
+            <span className="inline-flex items-center gap-2">
+              <LiveDot />
+              LIVE TIMING · OPENF1
+            </span>
+          </div>
+        </div>
+
+        {/* Main nav row */}
+        <nav
+          className="flex items-stretch"
+          style={{ height: 56 }}
+        >
+          {/* Logo wedge */}
+          <Link
+            href="/"
+            className="flex items-center gap-3 relative overflow-hidden"
+            style={{
+              padding: "0 20px",
+              borderRight: `1px solid ${F1.line}`,
+              background: F1.bg,
+            }}
+          >
+            <span
+              style={{
+                position: "absolute",
+                left: 0,
+                top: 0,
+                bottom: 0,
+                width: 3,
+                background: F1.red,
+              }}
+            />
+            <span
+              className="font-display flex items-center justify-center"
+              style={{
+                width: 32,
+                height: 32,
+                background: F1.red,
+                color: F1.ink,
+                fontWeight: 700,
+                fontSize: 18,
+                clipPath: "polygon(0 0, 100% 0, 85% 100%, 0 100%)",
+              }}
+            >
+              F1
+            </span>
+            <span className="hidden sm:flex flex-col">
+              <span
+                className="font-display"
+                style={{
+                  fontWeight: 600,
+                  fontSize: 18,
+                  letterSpacing: "-0.02em",
+                  lineHeight: 1,
+                  color: F1.fg,
+                }}
+              >
+                F1LYTICS
+              </span>
+              <Mono
+                style={{
+                  fontSize: 8,
+                  color: F1.fg3,
+                  letterSpacing: "0.2em",
+                  marginTop: 2,
+                }}
+              >
+                TELEMETRY · ANALYSIS
+              </Mono>
             </span>
           </Link>
 
-          {/* Desktop navigation */}
-          <ul className="hidden items-center gap-1 md:flex">
+          {/* Desktop nav items */}
+          <ul className="hidden md:flex items-stretch flex-1 list-none m-0 p-0">
             {NAV_ITEMS.map((item) => {
               const isActive =
-                pathname === item.href ||
-                pathname.startsWith(item.href + "/");
-              const isLive = item.label === "Live";
-
+                pathname === item.href || pathname.startsWith(item.href + "/");
               return (
-                <li key={item.href}>
+                <li key={item.href} className="flex">
                   <Link
                     href={item.href}
                     className={cn(
-                      "group relative flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition-colors",
-                      isActive
-                        ? "text-text-primary"
-                        : "text-text-secondary hover:text-text-primary"
+                      "relative flex items-center font-mono transition-colors gap-2",
                     )}
+                    style={{
+                      padding: "0 18px",
+                      fontSize: 11,
+                      letterSpacing: "0.14em",
+                      color: isActive ? F1.fg : F1.fg2,
+                      borderRight: `1px solid ${F1.line}`,
+                      background: isActive ? F1.bg2 : "transparent",
+                    }}
                   >
-                    {isLive && (
-                      <span
-                        className="animate-pulse-glow inline-block h-2 w-2 rounded-full bg-status-red"
-                        aria-hidden="true"
-                      />
-                    )}
-                    {item.label}
-
-                    {/* Sliding underline on hover */}
-                    <span
-                      className={cn(
-                        "absolute bottom-0 left-3 right-3 h-[1px] origin-left bg-text-primary transition-transform duration-300",
-                        isActive ? "scale-x-0" : "scale-x-0 group-hover:scale-x-100"
-                      )}
-                      aria-hidden="true"
-                    />
-
-                    {/* Active red dot indicator */}
                     {isActive && (
                       <span
-                        className="absolute -bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-status-red"
+                        aria-hidden
                         style={{
-                          boxShadow: "0 0 6px var(--color-glow-red)",
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          height: 2,
+                          background: F1.red,
                         }}
-                        aria-hidden="true"
                       />
                     )}
+                    {item.live && <LiveDot size={6} />}
+                    {item.label}
                   </Link>
                 </li>
               );
             })}
           </ul>
 
-          {/* GitHub link */}
-          <a
-            href="https://github.com/shvmmshr/f1lytics"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hidden items-center rounded-lg p-2 text-text-secondary transition-colors hover:bg-white/[0.06] hover:text-text-primary md:inline-flex"
-            aria-label="Star on GitHub"
-          >
-            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
-            </svg>
-          </a>
+          {/* Right utilities (desktop) */}
+          <div className="hidden md:flex items-center">
+            <a
+              href="https://github.com/shvmmshr/f1lytics"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-mono inline-flex items-center transition-colors hover:bg-white/5"
+              aria-label="GitHub"
+              style={{
+                padding: "0 14px",
+                height: "100%",
+                borderLeft: `1px solid ${F1.line}`,
+                color: F1.fg2,
+                fontSize: 11,
+                letterSpacing: "0.14em",
+              }}
+            >
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+              </svg>
+            </a>
+            <Link
+              href="/live"
+              className="font-display inline-flex items-center gap-2 cursor-pointer transition-opacity hover:opacity-90"
+              style={{
+                padding: "0 18px",
+                height: "100%",
+                borderLeft: `1px solid ${F1.line}`,
+                background: F1.red,
+                color: F1.ink,
+                fontWeight: 700,
+                fontSize: 13,
+                letterSpacing: "0.06em",
+              }}
+            >
+              <LiveDot color={F1.ink} size={6} />
+              WATCH LIVE
+            </Link>
+          </div>
 
           {/* Mobile hamburger */}
           <button
             type="button"
-            className="inline-flex items-center justify-center rounded-lg p-2 text-text-secondary transition-colors hover:bg-white/[0.06] hover:text-text-primary md:hidden"
             onClick={handleMobileToggle}
             aria-expanded={mobileMenuOpen}
             aria-label="Toggle navigation menu"
+            className="md:hidden inline-flex items-center justify-center transition-colors ml-auto"
+            style={{
+              padding: "0 18px",
+              borderLeft: `1px solid ${F1.line}`,
+              color: F1.fg2,
+            }}
           >
             <svg
               className="h-5 w-5"
@@ -230,22 +323,18 @@ export function Navbar() {
         </nav>
       </header>
 
-      {/* Full-screen mobile overlay */}
+      {/* Mobile full-screen overlay */}
       {mobileMenuOpen && (
         <div
           ref={mobileOverlayRef}
-          className="fixed inset-0 z-40 flex flex-col bg-bg-primary/95 backdrop-blur-2xl md:hidden"
+          className="fixed inset-0 z-40 flex flex-col backdrop-blur-2xl md:hidden"
+          style={{ background: "rgba(8,8,10,0.96)" }}
         >
-          {/* Spacer to push content below the header */}
           <div className="h-14 shrink-0" />
-
-          <ul className="flex flex-1 flex-col justify-center gap-2 px-8">
+          <ul className="flex flex-1 flex-col justify-center gap-1 px-6 list-none m-0 p-0">
             {NAV_ITEMS.map((item, index) => {
               const isActive =
-                pathname === item.href ||
-                pathname.startsWith(item.href + "/");
-              const isLive = item.label === "Live";
-
+                pathname === item.href || pathname.startsWith(item.href + "/");
               return (
                 <li
                   key={item.href}
@@ -256,48 +345,24 @@ export function Navbar() {
                   <Link
                     href={item.href}
                     onClick={closeMobileMenu}
-                    className={cn(
-                      "flex items-center gap-3 rounded-lg px-4 py-3 text-lg font-medium transition-colors",
-                      isActive
-                        ? "text-text-primary"
-                        : "text-text-secondary hover:text-text-primary"
-                    )}
+                    className="font-display flex items-center gap-3 px-4 py-4 transition-colors uppercase"
+                    style={{
+                      fontSize: 24,
+                      fontWeight: 600,
+                      letterSpacing: "0.04em",
+                      color: isActive ? F1.fg : F1.fg2,
+                      borderLeft: isActive
+                        ? `3px solid ${F1.red}`
+                        : "3px solid transparent",
+                    }}
                   >
-                    {isLive && (
-                      <span
-                        className="animate-pulse-glow inline-block h-2.5 w-2.5 rounded-full bg-status-red"
-                        aria-hidden="true"
-                      />
-                    )}
+                    {item.live && <LiveDot size={8} />}
                     {item.label}
-
-                    {/* Active red dot indicator */}
-                    {isActive && (
-                      <span
-                        className="ml-2 inline-block h-1.5 w-1.5 rounded-full bg-status-red"
-                        style={{
-                          boxShadow: "0 0 6px var(--color-glow-red)",
-                        }}
-                        aria-hidden="true"
-                      />
-                    )}
                   </Link>
                 </li>
               );
             })}
           </ul>
-
-          <a
-            href="https://github.com/shvmmshr/f1lytics"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mx-8 mb-8 flex items-center justify-center gap-2 rounded-lg border border-white/10 py-3 text-sm text-text-secondary transition-colors hover:bg-white/[0.06] hover:text-text-primary"
-          >
-            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
-            </svg>
-            Star on GitHub
-          </a>
         </div>
       )}
     </>

@@ -1,45 +1,62 @@
 "use client";
 
 import { useMemo } from "react";
-import { motion } from "framer-motion";
 import { getNextEvent } from "@/lib/constants/circuits";
 import { CountdownTimer } from "@/components/shared/countdown-timer";
 import { TEAMS } from "@/lib/constants";
-import { useLiveSession } from "@/hooks/use-live-session";
-import type { OpenF1Position, OpenF1Interval, OpenF1Driver } from "@/lib/api/types";
+import { useLiveSession, type LapStats } from "@/hooks/use-live-session";
+import type {
+  OpenF1Position,
+  OpenF1Interval,
+  OpenF1Driver,
+  OpenF1Stint,
+  OpenF1RaceControl,
+  OpenF1TeamRadio,
+  OpenF1CarData,
+} from "@/lib/api/types";
+import {
+  F1,
+  Mono,
+  LiveDot,
+  Brackets,
+  Grid as BroadcastGrid,
+  StatValue,
+  PosPill,
+  Tire,
+  SectorBar,
+  SectionHeader as BroadcastSectionHeader,
+} from "@/components/shared/broadcast";
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
+// ─── Helpers ───────────────────────────────────────────────────────────
 
-function formatRaceDate(dateStr: string): string {
-  return new Intl.DateTimeFormat("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  }).format(new Date(`${dateStr}T00:00:00Z`));
+function formatGap(gap: number | null | undefined): string {
+  if (gap === null || gap === undefined) return "—";
+  return `+${gap.toFixed(3)}`;
 }
 
-function formatGap(gap: number | null): string {
-  if (gap === null) return "---";
-  return `+${gap.toFixed(3)}`;
+function formatLapTime(seconds: number | null | undefined): string {
+  if (seconds === null || seconds === undefined) return "—";
+  const min = Math.floor(seconds / 60);
+  const sec = (seconds - min * 60).toFixed(3);
+  return `${min}:${sec.padStart(6, "0")}`;
+}
+
+function formatSector(sec: number | null | undefined): string {
+  if (sec === null || sec === undefined) return "—";
+  return sec.toFixed(3);
 }
 
 function formatTimeSince(date: Date): string {
   const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
-  if (seconds < 5) return "just now";
-  if (seconds < 60) return `${seconds}s ago`;
+  if (seconds < 5) return "JUST NOW";
+  if (seconds < 60) return `${seconds}s AGO`;
   const minutes = Math.floor(seconds / 60);
-  return `${minutes}m ago`;
+  return `${minutes}m AGO`;
 }
 
-/** Map OpenF1 team_name to a TEAMS key for color lookup */
 function teamColorFromDriverTeam(teamName: string): string {
   const normalized = teamName.toLowerCase().replace(/\s+/g, "_");
-  // Try direct match first
   if (TEAMS[normalized]) return TEAMS[normalized].color;
-  // Fuzzy match against known team keys
   for (const [key, team] of Object.entries(TEAMS)) {
     if (
       normalized.includes(key) ||
@@ -50,223 +67,795 @@ function teamColorFromDriverTeam(teamName: string): string {
       return team.color;
     }
   }
-  return "#27272A";
+  return F1.fg4;
 }
 
-const container = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: { staggerChildren: 0.08 },
-  },
-};
-
-const item = {
-  hidden: { opacity: 0, y: 16 },
-  show: { opacity: 1, y: 0 },
-};
-
-// ---------------------------------------------------------------------------
-// Sub-components
-// ---------------------------------------------------------------------------
-
-function PulsingDot() {
-  return (
-    <span className="relative flex h-3 w-3">
-      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-status-red opacity-75" />
-      <span className="relative inline-flex h-3 w-3 rounded-full bg-status-red" />
-    </span>
-  );
+function compoundShort(c: string): "S" | "M" | "H" | "I" | "W" {
+  const u = c.toUpperCase();
+  if (u.startsWith("S")) return "S";
+  if (u.startsWith("M")) return "M";
+  if (u.startsWith("H")) return "H";
+  if (u.startsWith("I")) return "I";
+  return "W";
 }
 
-function StatusBadge({ status }: { status: "NO SESSION" | "LIVE" | "FINISHED" }) {
-  const styles = {
-    "NO SESSION": "bg-bg-tertiary text-text-muted",
-    LIVE: "bg-status-red/20 text-status-red",
-    FINISHED: "bg-status-green/20 text-status-green",
-  };
+// ─── Top Broadcast Bar ─────────────────────────────────────────────────
 
+function TopBroadcastBar({
+  isLive,
+  sessionName,
+  sessionType,
+  countryName,
+  circuit,
+  currentLap,
+}: {
+  isLive: boolean;
+  sessionName: string;
+  sessionType: string;
+  countryName: string;
+  circuit: string;
+  currentLap: number | null;
+}) {
   return (
-    <span
-      className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-widest ${styles[status]}`}
+    <div
+      className="grid items-stretch"
+      style={{
+        gridTemplateColumns:
+          "auto minmax(0, 1fr) repeat(4, minmax(0, 110px))",
+        background: F1.bg,
+        borderBottom: `1px solid ${F1.line}`,
+      }}
     >
-      {status}
-    </span>
-  );
-}
-
-interface InfoCardProps {
-  label: string;
-  value: string;
-}
-
-function InfoCard({ label, value }: InfoCardProps) {
-  return (
-    <motion.div
-      variants={item}
-      className="rounded-xl border border-border-subtle bg-bg-secondary p-5"
-    >
-      <p className="text-[11px] font-medium uppercase tracking-widest text-text-muted">
-        {label}
-      </p>
-      <p className="mt-2 font-mono text-lg font-bold text-text-primary">
-        {value}
-      </p>
-    </motion.div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Loading skeleton for the position table
-// ---------------------------------------------------------------------------
-
-function PositionTableSkeleton() {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.3, duration: 0.5 }}
-      className="mt-10 overflow-hidden rounded-2xl border border-border-subtle"
-    >
-      {/* Table header */}
-      <div className="grid grid-cols-[3rem_1fr_1fr_6rem_6rem] gap-2 border-b border-border-subtle bg-bg-tertiary px-4 py-3 text-[11px] font-semibold uppercase tracking-widest text-text-muted">
-        <span>Pos</span>
-        <span>Driver</span>
-        <span>Team</span>
-        <span className="text-right">Gap</span>
-        <span className="text-right">Interval</span>
+      {/* LIVE pill */}
+      <div
+        className="flex items-center gap-2"
+        style={{
+          padding: "0 18px",
+          background: isLive ? F1.red : F1.bg2,
+          color: isLive ? F1.ink : F1.fg2,
+          clipPath: "polygon(0 0, 100% 0, 92% 100%, 0 100%)",
+          minHeight: 64,
+        }}
+      >
+        <LiveDot color={isLive ? F1.ink : F1.fg3} size={8} />
+        <Mono
+          style={{
+            fontSize: 12,
+            letterSpacing: "0.18em",
+            fontWeight: 700,
+          }}
+        >
+          {isLive ? "LIVE" : "FINISHED"}
+        </Mono>
       </div>
 
-      {/* Skeleton rows */}
-      {Array.from({ length: 10 }).map((_, i) => (
-        <div
-          key={i}
-          className="grid grid-cols-[3rem_1fr_1fr_6rem_6rem] items-center gap-2 border-b border-border-subtle/50 px-4 py-3"
+      {/* Session title */}
+      <div
+        className="flex flex-col justify-center"
+        style={{
+          padding: "8px 24px",
+          borderRight: `1px solid ${F1.line}`,
+        }}
+      >
+        <Mono style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.24em" }}>
+          {sessionType.toUpperCase()} · {countryName.toUpperCase()}
+        </Mono>
+        <span
+          className="font-display"
+          style={{
+            fontSize: 24,
+            fontWeight: 700,
+            letterSpacing: "-0.02em",
+            lineHeight: 1.05,
+            marginTop: 2,
+          }}
         >
-          <div className="h-4 w-6 animate-pulse rounded bg-bg-tertiary" />
-          <div className="h-4 w-32 animate-pulse rounded bg-bg-tertiary" />
-          <div className="h-4 w-24 animate-pulse rounded bg-bg-tertiary" />
-          <div className="ml-auto h-4 w-16 animate-pulse rounded bg-bg-tertiary" />
-          <div className="ml-auto h-4 w-16 animate-pulse rounded bg-bg-tertiary" />
-        </div>
-      ))}
-    </motion.div>
+          {sessionName.toUpperCase()}
+        </span>
+      </div>
+
+      {/* Lap */}
+      <TopTile label="LAP" value={currentLap !== null ? `${currentLap}` : "—"} />
+      {/* Circuit */}
+      <TopTile label="CIRCUIT" value={circuit.toUpperCase()} small />
+      {/* Air */}
+      <TopTile label="AIR" value="—°C" />
+      {/* Track */}
+      <TopTile label="TRACK" value="—°C" />
+    </div>
   );
 }
 
-// ---------------------------------------------------------------------------
-// Live position table with real data
-// ---------------------------------------------------------------------------
+function TopTile({
+  label,
+  value,
+  small,
+}: {
+  label: string;
+  value: string;
+  small?: boolean;
+}) {
+  return (
+    <div
+      style={{
+        padding: "10px 16px",
+        borderRight: `1px solid ${F1.line}`,
+      }}
+    >
+      <Mono style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.24em" }}>
+        {label}
+      </Mono>
+      <div
+        className="font-display"
+        style={{
+          fontSize: small ? 16 : 24,
+          fontWeight: 700,
+          letterSpacing: "-0.02em",
+          marginTop: 2,
+          lineHeight: 1,
+          fontVariantNumeric: "tabular-nums",
+          color: F1.fg,
+        }}
+      >
+        {value}
+      </div>
+    </div>
+  );
+}
 
-interface LivePositionTableProps {
+// ─── Timing Tower ──────────────────────────────────────────────────────
+
+interface TimingTowerProps {
   positions: OpenF1Position[];
   intervals: OpenF1Interval[];
   drivers: OpenF1Driver[];
+  stints: OpenF1Stint[];
+  lapStats: LapStats[];
+  focusedDriverNumber: number | null;
+  onSelect: (n: number) => void;
 }
 
-function LivePositionTable({ positions, intervals, drivers }: LivePositionTableProps) {
-  // Build lookup maps
+function TimingTower({
+  positions,
+  intervals,
+  drivers,
+  stints,
+  lapStats,
+  focusedDriverNumber,
+  onSelect,
+}: TimingTowerProps) {
   const driverMap = useMemo(() => {
     const map = new Map<number, OpenF1Driver>();
-    for (const d of drivers) {
-      map.set(d.driver_number, d);
-    }
+    for (const d of drivers) map.set(d.driver_number, d);
     return map;
   }, [drivers]);
 
   const intervalMap = useMemo(() => {
     const map = new Map<number, OpenF1Interval>();
-    for (const i of intervals) {
-      map.set(i.driver_number, i);
-    }
+    for (const i of intervals) map.set(i.driver_number, i);
     return map;
   }, [intervals]);
 
-  // Sort positions by position number
+  const stintMap = useMemo(() => {
+    const map = new Map<number, OpenF1Stint>();
+    for (const s of stints) map.set(s.driver_number, s);
+    return map;
+  }, [stints]);
+
+  const lapMap = useMemo(() => {
+    const map = new Map<number, LapStats>();
+    for (const l of lapStats) map.set(l.driver_number, l);
+    return map;
+  }, [lapStats]);
+
   const sortedPositions = useMemo(
     () => [...positions].sort((a, b) => a.position - b.position),
     [positions]
   );
 
+  // Find purple sectors (best of session)
+  const bestSectors = useMemo<[number | null, number | null, number | null]>(() => {
+    const best: [number | null, number | null, number | null] = [null, null, null];
+    for (const l of lapStats) {
+      for (let i = 0; i < 3; i++) {
+        const s = l.sectors[i];
+        if (s !== null && (best[i] === null || s < best[i]!)) best[i] = s;
+      }
+    }
+    return best;
+  }, [lapStats]);
+
   if (sortedPositions.length === 0) {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3, duration: 0.5 }}
-        className="mt-10 rounded-2xl border border-border-subtle bg-bg-secondary p-8 text-center"
-      >
-        <p className="text-sm text-text-secondary">
-          Waiting for position data...
-        </p>
-      </motion.div>
+      <div style={{ padding: 24 }}>
+        <Mono style={{ fontSize: 12, color: F1.fg3, letterSpacing: "0.18em" }}>
+          WAITING FOR POSITION DATA…
+        </Mono>
+      </div>
     );
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.3, duration: 0.5 }}
-      className="mt-10 overflow-hidden rounded-2xl border border-border-subtle"
-    >
-      {/* Table header */}
-      <div className="grid grid-cols-[3rem_1fr_1fr_6rem_6rem] gap-2 border-b border-border-subtle bg-bg-tertiary px-4 py-3 text-[11px] font-semibold uppercase tracking-widest text-text-muted">
-        <span>Pos</span>
-        <span>Driver</span>
-        <span>Team</span>
-        <span className="text-right">Gap</span>
-        <span className="text-right">Interval</span>
+    <div>
+      {/* Header row */}
+      <div
+        className="grid items-center"
+        style={{
+          gridTemplateColumns:
+            "44px 6px 56px minmax(0, 1fr) 90px 90px 76px 76px 56px 96px",
+          gap: 8,
+          padding: "10px 16px",
+          background: F1.bg2,
+          borderBottom: `1px solid ${F1.line}`,
+        }}
+      >
+        {["POS", "", "CODE", "DRIVER · TEAM", "LAST", "BEST", "GAP", "INT", "TYRE", "SECTORS"].map(
+          (h, i) => (
+            <Mono
+              key={i}
+              style={{
+                fontSize: 9,
+                color: F1.fg3,
+                letterSpacing: "0.18em",
+                textAlign: i >= 4 && i <= 7 ? "right" : "left",
+              }}
+            >
+              {h}
+            </Mono>
+          )
+        )}
       </div>
 
-      {/* Table rows */}
-      {sortedPositions.map((pos) => {
-        const driver = driverMap.get(pos.driver_number);
+      {sortedPositions.map((pos, i) => {
+        const d = driverMap.get(pos.driver_number);
         const interval = intervalMap.get(pos.driver_number);
-        const driverName = driver
-          ? `${driver.name_acronym} ${driver.full_name.split(" ").pop()}`
-          : `#${pos.driver_number}`;
-        const teamName = driver?.team_name ?? "Unknown";
-        const teamColor = driver
-          ? teamColorFromDriverTeam(driver.team_name)
-          : "#27272A";
+        const stint = stintMap.get(pos.driver_number);
+        const lap = lapMap.get(pos.driver_number);
+        const focused = pos.driver_number === focusedDriverNumber;
+        const teamColor = d ? teamColorFromDriverTeam(d.team_name) : F1.fg4;
+        const code = d?.name_acronym ?? `#${pos.driver_number}`;
+        const last = d?.full_name?.split(" ").pop() ?? "";
 
         return (
-          <div
+          <button
             key={pos.driver_number}
-            className="grid grid-cols-[3rem_1fr_1fr_6rem_6rem] items-center gap-2 border-b border-border-subtle/50 border-l-[3px] px-4 py-3 transition-colors hover:bg-bg-tertiary/50"
-            style={{ borderLeftColor: teamColor }}
+            type="button"
+            onClick={() => onSelect(pos.driver_number)}
+            className="grid items-center w-full text-left"
+            style={{
+              gridTemplateColumns:
+                "44px 6px 56px minmax(0, 1fr) 90px 90px 76px 76px 56px 96px",
+              gap: 8,
+              padding: "10px 16px",
+              background: focused
+                ? `${teamColor}14`
+                : i % 2 === 0
+                  ? F1.bg
+                  : F1.bg2,
+              borderBottom: `1px solid ${F1.line}`,
+              borderLeft: focused ? `3px solid ${teamColor}` : "3px solid transparent",
+              cursor: "pointer",
+            }}
           >
-            <span className="font-mono text-sm font-bold text-text-primary">
-              {String(pos.position).padStart(2, "0")}
-            </span>
-            <span className="text-sm font-semibold text-text-primary">
-              {driverName}
-            </span>
-            <span className="text-sm text-text-secondary">
-              {teamName}
-            </span>
-            <span className="text-right font-mono text-sm tabular-nums text-text-secondary">
-              {pos.position === 1 ? "LEADER" : formatGap(interval?.gap_to_leader ?? null)}
-            </span>
-            <span className="text-right font-mono text-sm tabular-nums text-text-secondary">
-              {pos.position === 1 ? "---" : formatGap(interval?.interval ?? null)}
-            </span>
-          </div>
+            <PosPill pos={pos.position} size={pos.position <= 3 ? "md" : "sm"} />
+            <span
+              style={{
+                width: 4,
+                height: 28,
+                background: teamColor,
+                alignSelf: "center",
+              }}
+            />
+            <Mono
+              style={{
+                fontSize: 13,
+                fontWeight: 700,
+                letterSpacing: "0.06em",
+                color: F1.fg,
+              }}
+            >
+              {code}
+            </Mono>
+            <div className="flex flex-col min-w-0">
+              <span
+                className="font-display truncate"
+                style={{
+                  fontSize: 16,
+                  fontWeight: 600,
+                  letterSpacing: "-0.01em",
+                  lineHeight: 1.05,
+                  color: F1.fg,
+                }}
+              >
+                {last.toUpperCase()}
+              </span>
+              <Mono
+                style={{
+                  fontSize: 9,
+                  color: F1.fg3,
+                  letterSpacing: "0.14em",
+                  marginTop: 2,
+                }}
+              >
+                {(d?.team_name ?? "—").toUpperCase()}
+              </Mono>
+            </div>
+            <Mono
+              style={{
+                fontSize: 12,
+                color: F1.fg,
+                textAlign: "right",
+                fontVariantNumeric: "tabular-nums",
+              }}
+            >
+              {formatLapTime(lap?.last)}
+            </Mono>
+            <Mono
+              style={{
+                fontSize: 12,
+                color: F1.cyan,
+                textAlign: "right",
+                fontVariantNumeric: "tabular-nums",
+              }}
+            >
+              {formatLapTime(lap?.best)}
+            </Mono>
+            <Mono
+              style={{
+                fontSize: 12,
+                color: F1.fg2,
+                textAlign: "right",
+                fontVariantNumeric: "tabular-nums",
+              }}
+            >
+              {pos.position === 1 ? "LEADER" : formatGap(interval?.gap_to_leader)}
+            </Mono>
+            <Mono
+              style={{
+                fontSize: 12,
+                color: F1.fg2,
+                textAlign: "right",
+                fontVariantNumeric: "tabular-nums",
+              }}
+            >
+              {pos.position === 1 ? "—" : formatGap(interval?.interval)}
+            </Mono>
+            {stint ? (
+              <div className="flex items-center gap-1.5">
+                <Tire compound={compoundShort(stint.compound)} />
+                <Mono style={{ fontSize: 10, color: F1.fg3 }}>
+                  L{lap?.lapNumber ?? "—"}
+                </Mono>
+              </div>
+            ) : (
+              <Mono style={{ fontSize: 11, color: F1.fg3 }}>—</Mono>
+            )}
+            <div className="flex items-center gap-[3px]">
+              {[0, 1, 2].map((idx) => {
+                const sec = lap?.sectors[idx] ?? null;
+                const best = bestSectors[idx];
+                let color: "p" | "g" | "y" | "n" = "n";
+                if (sec !== null) {
+                  if (best !== null && sec === best) color = "p";
+                  else if (sec < (best ?? Infinity) * 1.005) color = "g";
+                  else color = "y";
+                }
+                return <SectorBar key={idx} color={color} />;
+              })}
+            </div>
+          </button>
         );
       })}
-    </motion.div>
+    </div>
   );
 }
 
-// ---------------------------------------------------------------------------
-// Main component
-// ---------------------------------------------------------------------------
+// ─── Telemetry block ───────────────────────────────────────────────────
 
-export function LiveContent() {
+function TelemetryBlock({
+  carData,
+  driver,
+  teamColor,
+}: {
+  carData: OpenF1CarData | null;
+  driver: OpenF1Driver | null;
+  teamColor: string;
+}) {
+  if (!driver) {
+    return (
+      <div style={{ padding: 24 }}>
+        <Mono style={{ fontSize: 11, color: F1.fg3, letterSpacing: "0.18em" }}>
+          SELECT A DRIVER FROM THE TIMING TOWER →
+        </Mono>
+      </div>
+    );
+  }
+
+  const speed = carData?.speed ?? 0;
+  const gear = carData?.gear ?? 0;
+  const rpm = carData?.rpm ?? 0;
+  const throttle = carData?.throttle ?? 0;
+  const brake = carData?.brake ?? 0;
+  const drs = carData?.drs ?? 0;
+  const drsActive = drs >= 10 && drs !== 0 && drs !== 8;
+
+  return (
+    <div style={{ padding: 24 }}>
+      {/* Driver header */}
+      <div className="flex items-center gap-3" style={{ marginBottom: 20 }}>
+        <span style={{ width: 4, height: 36, background: teamColor }} />
+        <div>
+          <Mono style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.18em" }}>
+            FOCUS · #{driver.driver_number} · {driver.name_acronym}
+          </Mono>
+          <div
+            className="font-display"
+            style={{
+              fontSize: 26,
+              fontWeight: 700,
+              letterSpacing: "-0.02em",
+              lineHeight: 1,
+              marginTop: 2,
+            }}
+          >
+            {driver.full_name.split(" ").pop()?.toUpperCase()}
+          </div>
+        </div>
+      </div>
+
+      {/* Speed / Gear / RPM */}
+      <div
+        className="grid"
+        style={{
+          gridTemplateColumns: "1fr 80px 1fr",
+          gap: 1,
+          background: F1.line,
+          border: `1px solid ${F1.line}`,
+        }}
+      >
+        <div style={{ background: F1.bg, padding: 14 }}>
+          <Mono style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.24em" }}>
+            SPEED
+          </Mono>
+          <StatValue size={36} color={teamColor} style={{ display: "block", marginTop: 4 }}>
+            {speed}
+          </StatValue>
+          <Mono style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.18em" }}>
+            KM/H
+          </Mono>
+        </div>
+        <div style={{ background: F1.bg, padding: 14, textAlign: "center" }}>
+          <Mono style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.24em" }}>
+            GEAR
+          </Mono>
+          <StatValue size={36} style={{ display: "block", marginTop: 4 }}>
+            {gear || "N"}
+          </StatValue>
+        </div>
+        <div style={{ background: F1.bg, padding: 14, textAlign: "right" }}>
+          <Mono style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.24em" }}>
+            RPM
+          </Mono>
+          <StatValue size={36} style={{ display: "block", marginTop: 4 }}>
+            {rpm.toLocaleString()}
+          </StatValue>
+          <Mono style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.18em" }}>
+            REV/MIN
+          </Mono>
+        </div>
+      </div>
+
+      {/* Throttle / Brake bars */}
+      <div style={{ marginTop: 16 }}>
+        <div className="flex items-center justify-between" style={{ marginBottom: 6 }}>
+          <Mono style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.18em" }}>
+            THROTTLE
+          </Mono>
+          <Mono
+            style={{
+              fontSize: 10,
+              color: F1.green,
+              letterSpacing: "0.04em",
+              fontVariantNumeric: "tabular-nums",
+            }}
+          >
+            {throttle}%
+          </Mono>
+        </div>
+        <div style={{ height: 8, background: F1.bg3 }}>
+          <div
+            style={{
+              height: "100%",
+              width: `${throttle}%`,
+              background: F1.green,
+              transition: "width 200ms",
+            }}
+          />
+        </div>
+      </div>
+      <div style={{ marginTop: 12 }}>
+        <div className="flex items-center justify-between" style={{ marginBottom: 6 }}>
+          <Mono style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.18em" }}>
+            BRAKE
+          </Mono>
+          <Mono
+            style={{
+              fontSize: 10,
+              color: F1.red,
+              letterSpacing: "0.04em",
+              fontVariantNumeric: "tabular-nums",
+            }}
+          >
+            {brake}%
+          </Mono>
+        </div>
+        <div style={{ height: 8, background: F1.bg3 }}>
+          <div
+            style={{
+              height: "100%",
+              width: `${brake}%`,
+              background: F1.red,
+              transition: "width 200ms",
+            }}
+          />
+        </div>
+      </div>
+
+      {/* DRS */}
+      <div
+        className="flex items-center justify-between"
+        style={{
+          marginTop: 16,
+          padding: "10px 14px",
+          background: drsActive ? `${F1.green}22` : F1.bg2,
+          border: `1px solid ${drsActive ? F1.green : F1.line}`,
+        }}
+      >
+        <Mono style={{ fontSize: 10, color: F1.fg3, letterSpacing: "0.24em" }}>
+          DRS
+        </Mono>
+        <Mono
+          style={{
+            fontSize: 13,
+            color: drsActive ? F1.green : F1.fg3,
+            letterSpacing: "0.18em",
+            fontWeight: 700,
+          }}
+        >
+          {drsActive ? "ACTIVE" : "OFF"}
+        </Mono>
+      </div>
+    </div>
+  );
+}
+
+// ─── Race control + Team radio feed ────────────────────────────────────
+
+function FlagPill({ flag }: { flag: string | null }) {
+  if (!flag) return null;
+  const f = flag.toUpperCase();
+  const map: Record<string, { bg: string; fg: string }> = {
+    GREEN: { bg: F1.green, fg: F1.ink },
+    YELLOW: { bg: F1.yellow, fg: F1.ink },
+    "DOUBLE YELLOW": { bg: F1.yellow, fg: F1.ink },
+    RED: { bg: F1.red, fg: F1.fg },
+    BLUE: { bg: "#3B82F6", fg: F1.fg },
+    CHEQUERED: { bg: F1.fg, fg: F1.ink },
+    BLACK: { bg: F1.ink, fg: F1.fg },
+  };
+  const style = map[f] ?? { bg: F1.bg3, fg: F1.fg2 };
+  return (
+    <span
+      className="inline-flex items-center"
+      style={{
+        background: style.bg,
+        color: style.fg,
+        padding: "1px 6px",
+        fontFamily: "var(--font-mono)",
+        fontSize: 9,
+        fontWeight: 700,
+        letterSpacing: "0.14em",
+      }}
+    >
+      {f}
+    </span>
+  );
+}
+
+function RaceControlFeed({
+  raceControl,
+  teamRadio,
+  drivers,
+}: {
+  raceControl: OpenF1RaceControl[];
+  teamRadio: OpenF1TeamRadio[];
+  drivers: OpenF1Driver[];
+}) {
+  const driverMap = useMemo(() => {
+    const map = new Map<number, OpenF1Driver>();
+    for (const d of drivers) map.set(d.driver_number, d);
+    return map;
+  }, [drivers]);
+
+  return (
+    <div style={{ padding: 24 }}>
+      <BroadcastSectionHeader label="RACE CONTROL" />
+      <div className="mt-4 space-y-3">
+        {raceControl.length === 0 && (
+          <Mono style={{ fontSize: 11, color: F1.fg3, letterSpacing: "0.18em" }}>
+            NO MESSAGES
+          </Mono>
+        )}
+        {raceControl.map((m, i) => {
+          const time = new Date(m.date).toLocaleTimeString("en-GB", {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+          });
+          return (
+            <div
+              key={i}
+              style={{
+                padding: "8px 12px",
+                background: F1.bg2,
+                borderLeft: `2px solid ${m.flag ? F1.amber : F1.line}`,
+              }}
+            >
+              <div className="flex items-center gap-2" style={{ marginBottom: 4 }}>
+                <Mono style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.14em" }}>
+                  {time}
+                </Mono>
+                {m.flag && <FlagPill flag={m.flag} />}
+                <Mono style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.14em" }}>
+                  {m.category.toUpperCase()}
+                </Mono>
+              </div>
+              <div
+                style={{
+                  fontSize: 12,
+                  color: F1.fg,
+                  letterSpacing: "0.01em",
+                  lineHeight: 1.35,
+                }}
+              >
+                {m.message}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Team radio */}
+      <div style={{ marginTop: 28 }}>
+        <BroadcastSectionHeader label="TEAM RADIO" />
+        <div className="mt-4 space-y-2">
+          {teamRadio.length === 0 && (
+            <Mono style={{ fontSize: 11, color: F1.fg3, letterSpacing: "0.18em" }}>
+              NO RADIO TRANSMISSIONS
+            </Mono>
+          )}
+          {teamRadio.map((r, i) => {
+            const d = driverMap.get(r.driver_number);
+            const time = new Date(r.date).toLocaleTimeString("en-GB", {
+              hour: "2-digit",
+              minute: "2-digit",
+              second: "2-digit",
+            });
+            const teamColor = d ? teamColorFromDriverTeam(d.team_name) : F1.fg4;
+            return (
+              <a
+                key={i}
+                href={r.recording_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 group"
+                style={{
+                  padding: "8px 12px",
+                  background: F1.bg2,
+                  borderLeft: `2px solid ${teamColor}`,
+                  textDecoration: "none",
+                }}
+              >
+                <Mono style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.14em" }}>
+                  {time}
+                </Mono>
+                <Mono
+                  style={{
+                    fontSize: 11,
+                    color: F1.fg,
+                    fontWeight: 700,
+                    letterSpacing: "0.06em",
+                  }}
+                >
+                  {d?.name_acronym ?? `#${r.driver_number}`}
+                </Mono>
+                <span style={{ color: F1.fg3, fontSize: 12, marginLeft: "auto" }}>
+                  ▶
+                </span>
+              </a>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Idle / no-session view ────────────────────────────────────────────
+
+function IdleView() {
   const event = useMemo(() => getNextEvent(), []);
   const nextRace = event?.circuit;
+  return (
+    <div className="relative" style={{ padding: "60px 32px" }}>
+      <div
+        className="relative max-w-3xl mx-auto"
+        style={{
+          background: F1.bg2,
+          border: `1px solid ${F1.line}`,
+          padding: "48px 32px",
+          textAlign: "center",
+        }}
+      >
+        <Brackets color={F1.red} size={14} weight={2} />
+        <div className="flex items-center justify-center gap-3" style={{ marginBottom: 18 }}>
+          <LiveDot size={10} />
+          <Mono
+            style={{
+              fontSize: 11,
+              color: F1.red,
+              letterSpacing: "0.24em",
+              fontWeight: 700,
+            }}
+          >
+            STANDBY · NO ACTIVE SESSION
+          </Mono>
+        </div>
+        <h2
+          className="font-display"
+          style={{
+            fontSize: "clamp(40px, 6vw, 72px)",
+            fontWeight: 700,
+            letterSpacing: "-0.04em",
+            lineHeight: 0.9,
+            margin: 0,
+          }}
+        >
+          OFF-AIR<span style={{ color: F1.red }}>.</span>
+        </h2>
+        {nextRace && (
+          <div style={{ marginTop: 20 }}>
+            <Mono style={{ fontSize: 10, color: F1.fg3, letterSpacing: "0.24em" }}>
+              NEXT · {nextRace.country.toUpperCase()} · ROUND{" "}
+              {String(nextRace.round).padStart(2, "0")}
+            </Mono>
+            <div
+              className="font-display"
+              style={{
+                fontSize: 28,
+                fontWeight: 600,
+                letterSpacing: "-0.02em",
+                marginTop: 6,
+              }}
+            >
+              {nextRace.name.toUpperCase()}
+            </div>
+            <div className="flex justify-center" style={{ marginTop: 24 }}>
+              <CountdownTimer
+                targetDate={new Date(`${event!.eventDate}T14:00:00Z`)}
+                label={`${event!.eventType === "sprint" ? "SPRINT" : "RACE"} COVERAGE BEGINS IN`}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
+// ─── Main ──────────────────────────────────────────────────────────────
+
+export function LiveContent() {
   const {
     isLive,
     status,
@@ -274,213 +863,133 @@ export function LiveContent() {
     positions,
     intervals,
     drivers,
+    stints,
+    lapStats,
+    raceControl,
+    teamRadio,
+    focusedCarData,
+    focusedDriverNumber,
+    setFocusedDriverNumber,
     loading,
     lastUpdated,
   } = useLiveSession();
 
   const showLiveData = status === "LIVE" || status === "FINISHED";
 
+  const focusedDriver = useMemo(
+    () =>
+      focusedDriverNumber !== null
+        ? (drivers.find((d) => d.driver_number === focusedDriverNumber) ?? null)
+        : null,
+    [drivers, focusedDriverNumber]
+  );
+
+  const focusedTeamColor = focusedDriver
+    ? teamColorFromDriverTeam(focusedDriver.team_name)
+    : F1.red;
+
+  const currentLap = useMemo(() => {
+    if (lapStats.length === 0) return null;
+    return Math.max(...lapStats.map((l) => l.lapNumber));
+  }, [lapStats]);
+
+  // Auto-focus the leader once data arrives
+  const leader = positions
+    .slice()
+    .sort((a, b) => a.position - b.position)[0];
+  if (
+    showLiveData &&
+    !focusedDriverNumber &&
+    leader &&
+    typeof window !== "undefined"
+  ) {
+    queueMicrotask(() => setFocusedDriverNumber(leader.driver_number));
+  }
+
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
-      {/* ---------------------------------------------------------------- */}
-      {/* Header                                                          */}
-      {/* ---------------------------------------------------------------- */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="flex flex-wrap items-center gap-4"
-      >
-        <div className="flex items-center gap-3">
-          {isLive && <PulsingDot />}
-          <h1 className="text-4xl font-bold tracking-[-0.05em] text-text-primary md:text-5xl">
-            Live Session
-          </h1>
-        </div>
-        <StatusBadge status={status} />
-      </motion.div>
+    <div style={{ background: F1.bg, color: F1.fg, position: "relative" }}>
+      <BroadcastGrid color={F1.line} size={64} opacity={0.14} />
 
-      <motion.span
-        initial={{ scaleX: 0 }}
-        animate={{ scaleX: 1 }}
-        transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
-        className="mt-4 block h-[2px] w-16 origin-left bg-status-red"
-        aria-hidden="true"
-      />
-
-      {/* ---------------------------------------------------------------- */}
-      {/* Active / Recently Finished Session Info                          */}
-      {/* ---------------------------------------------------------------- */}
-      {showLiveData && session && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15, duration: 0.5 }}
-          className="mt-10 rounded-2xl border border-border-subtle bg-bg-secondary p-6"
-        >
-          <p className="text-[11px] font-medium uppercase tracking-widest text-text-muted">
-            {status === "LIVE" ? "Live Now" : "Recently Finished"}
-          </p>
-          <h2 className="mt-2 text-2xl font-bold tracking-tight text-text-primary">
-            {session.name}
-          </h2>
-          <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-text-secondary">
-            <span className="flex items-center gap-2">
-              <span className="text-text-muted">Circuit</span>
-              {session.circuitShortName}
-            </span>
-            <span className="flex items-center gap-2">
-              <span className="text-text-muted">Location</span>
-              {session.countryName}
-            </span>
-            <span className="flex items-center gap-2">
-              <span className="text-text-muted">Type</span>
-              {session.type}
-            </span>
-          </div>
-        </motion.div>
-      )}
-
-      {/* ---------------------------------------------------------------- */}
-      {/* Live / Finished Position Table                                   */}
-      {/* ---------------------------------------------------------------- */}
-      {showLiveData && loading && <PositionTableSkeleton />}
-
-      {showLiveData && !loading && (
+      {showLiveData && session ? (
         <>
-          <LivePositionTable
-            positions={positions}
-            intervals={intervals}
-            drivers={drivers}
+          <TopBroadcastBar
+            isLive={isLive}
+            sessionName={session.name}
+            sessionType={session.type}
+            countryName={session.countryName}
+            circuit={session.circuitShortName}
+            currentLap={currentLap}
           />
 
-          {/* Last updated indicator */}
-          {lastUpdated && (
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
-              className="mt-3 text-right text-xs text-text-muted"
-            >
-              Last updated {formatTimeSince(lastUpdated)}
-            </motion.p>
-          )}
-        </>
-      )}
-
-      {/* ---------------------------------------------------------------- */}
-      {/* Next Race Info Card (when no live session)                       */}
-      {/* ---------------------------------------------------------------- */}
-      {!showLiveData && nextRace && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15, duration: 0.5 }}
-          className="mt-10 rounded-2xl border border-border-subtle bg-bg-secondary p-6"
-        >
-          <p className="text-[11px] font-medium uppercase tracking-widest text-text-muted">
-            Next Event
-          </p>
-          <h2 className="mt-2 text-2xl font-bold tracking-tight text-text-primary">
-            {nextRace.fullName}
-          </h2>
-          <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-text-secondary">
-            <span className="flex items-center gap-2">
-              <span className="text-text-muted">Circuit</span>
-              {nextRace.name}
-            </span>
-            <span className="flex items-center gap-2">
-              <span className="text-text-muted">Location</span>
-              {nextRace.city}, {nextRace.country}
-            </span>
-            <span className="flex items-center gap-2">
-              <span className="text-text-muted">Date</span>
-              {formatRaceDate(event!.eventDate)}
-              {event!.eventType === "sprint" && (
-                <span className="rounded-full bg-status-yellow/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-status-yellow">
-                  Sprint
-                </span>
-              )}
-            </span>
-          </div>
-        </motion.div>
-      )}
-
-      {/* ---------------------------------------------------------------- */}
-      {/* No Session State                                                 */}
-      {/* ---------------------------------------------------------------- */}
-      {!showLiveData && (
-        <div className="mt-16">
-          {/* Animated glow card */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.96 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.25, duration: 0.6 }}
-            className="relative flex flex-col items-center justify-center overflow-hidden rounded-2xl border border-border-subtle bg-bg-secondary p-12 text-center"
+          {/* Main grid */}
+          <div
+            className="grid"
+            style={{
+              gridTemplateColumns: "minmax(0, 1fr) minmax(380px, 440px)",
+              gap: 1,
+              background: F1.line,
+            }}
           >
-            {/* Subtle animated border glow */}
-            <div className="pointer-events-none absolute inset-0 rounded-2xl shadow-[inset_0_0_40px_var(--color-glow-red)] opacity-20 animate-pulse-glow" />
-
-            {/* Checkered overlay */}
-            <div
-              className="pointer-events-none absolute inset-0 animate-checkered-fade opacity-0"
-              style={{
-                backgroundImage:
-                  "repeating-conic-gradient(#ffffff08 0% 25%, transparent 0% 50%)",
-                backgroundSize: "24px 24px",
-              }}
-            />
-
-            <div className="relative z-10">
-              <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-bg-tertiary shadow-[0_0_20px_var(--color-glow-red)]">
-                <span className="relative flex h-4 w-4">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-status-red opacity-75" />
-                  <span className="relative inline-flex h-4 w-4 rounded-full bg-status-red" />
-                </span>
-              </div>
-
-              <h2 className="text-2xl font-bold tracking-tight text-text-primary md:text-3xl">
-                No Active Session
-              </h2>
-              <p className="mt-3 max-w-md text-sm leading-relaxed text-text-secondary">
-                There is no live session right now. Coverage will begin
-                automatically when the next session goes live.
-              </p>
-
-              {/* Countdown */}
-              {nextRace && (
-                <div className="mt-8 flex justify-center">
-                  <CountdownTimer
-                    targetDate={new Date(`${event!.eventDate}T14:00:00Z`)}
-                    label={`${event!.eventType === "sprint" ? "Sprint" : "Race"} coverage begins in`}
-                  />
+            <div style={{ background: F1.bg, padding: 0 }}>
+              {loading && positions.length === 0 ? (
+                <div style={{ padding: 24 }}>
+                  <Mono style={{ fontSize: 11, color: F1.fg3, letterSpacing: "0.18em" }}>
+                    LOADING TIMING DATA…
+                  </Mono>
                 </div>
+              ) : (
+                <TimingTower
+                  positions={positions}
+                  intervals={intervals}
+                  drivers={drivers}
+                  stints={stints}
+                  lapStats={lapStats}
+                  focusedDriverNumber={focusedDriverNumber}
+                  onSelect={setFocusedDriverNumber}
+                />
               )}
             </div>
-          </motion.div>
 
-          {/* Stat cards grid */}
-          {nextRace && (
-            <motion.div
-              variants={container}
-              initial="hidden"
-              animate="show"
-              className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-4"
-            >
-              <InfoCard label="Next Race" value={nextRace.fullName} />
-              <InfoCard label="Circuit" value={nextRace.name} />
-              <InfoCard
-                label="Round"
-                value={`${nextRace.round} / 24`}
+            <div style={{ background: F1.bg }}>
+              <TelemetryBlock
+                carData={focusedCarData}
+                driver={focusedDriver}
+                teamColor={focusedTeamColor}
               />
-              <InfoCard
-                label="Sprint Weekend"
-                value={nextRace.isSprint ? "Yes" : "No"}
-              />
-            </motion.div>
-          )}
-        </div>
+              <div style={{ borderTop: `1px solid ${F1.line}` }}>
+                <RaceControlFeed
+                  raceControl={raceControl}
+                  teamRadio={teamRadio}
+                  drivers={drivers}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Footer ticker */}
+          <div
+            className="flex items-center justify-between"
+            style={{
+              padding: "10px 24px",
+              background: F1.bg2,
+              borderTop: `1px solid ${F1.line}`,
+            }}
+          >
+            <Mono style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.24em" }}>
+              FEED · OPENF1 · SESSION KEY {session.key}
+              {lastUpdated && ` · UPDATED ${formatTimeSince(lastUpdated)}`}
+            </Mono>
+            <Mono style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.24em" }}>
+              CLICK A DRIVER ROW TO FOCUS TELEMETRY
+            </Mono>
+          </div>
+        </>
+      ) : (
+        <IdleView />
       )}
     </div>
   );
 }
+
+// Suppress unused warning — kept for future inline timing displays
+void formatSector;

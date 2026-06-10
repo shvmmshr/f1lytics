@@ -298,6 +298,15 @@ export interface OpenF1Pit {
   pit_duration: number;
 }
 
+/** Team radio recording from OpenF1 */
+export interface OpenF1TeamRadio {
+  session_key: number;
+  meeting_key: number;
+  driver_number: number;
+  date: string;
+  recording_url: string;
+}
+
 /** Driver information from OpenF1 */
 export interface OpenF1Driver {
   session_key: number;

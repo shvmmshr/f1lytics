@@ -5,6 +5,15 @@ import { notFound } from "next/navigation";
 import { getRaceResults, getDriverStandings } from "@/lib/api/jolpica";
 import { DRIVER_LIST, getDriverBySlug, TEAMS } from "@/lib/constants";
 import { PageTransition } from "@/components/layout/page-transition";
+import {
+  F1,
+  Mono,
+  Brackets,
+  Grid as BroadcastGrid,
+  StatValue,
+  PosPill,
+  SectionHeader,
+} from "@/components/shared/broadcast";
 
 interface DriverProfilePageProps {
   params: Promise<{ slug: string }>;
@@ -46,7 +55,7 @@ function calculateAge(dob: string): number {
 
 function formatDOB(dob: string): string {
   return new Intl.DateTimeFormat("en-US", {
-    month: "long",
+    month: "short",
     day: "numeric",
     year: "numeric",
   }).format(new Date(`${dob}T00:00:00Z`));
@@ -59,7 +68,6 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
 
   const team = TEAMS[driver.teamId];
 
-  // Fetch current 2026 data
   let raceResults: Awaited<ReturnType<typeof getRaceResults>> = [];
   let standings: Awaited<ReturnType<typeof getDriverStandings>> = [];
 
@@ -68,11 +76,8 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
       getRaceResults("2026"),
       getDriverStandings("2026"),
     ]);
-  } catch {
-    // APIs unavailable
-  }
+  } catch {}
 
-  // Fetch historical standings (2022-2025)
   const historyYears = ["2022", "2023", "2024", "2025"];
   const historicalStandings: { year: string; position: number | null; points: number; wins: number }[] = [];
 
@@ -95,9 +100,7 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
         });
       }
     }
-  } catch {
-    // Historical data unavailable
-  }
+  } catch {}
 
   const driverStanding = standings.find(
     (s) => s.Driver.code?.toUpperCase() === driver.abbreviation
@@ -130,6 +133,7 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
   const wins = driverRaceResults.filter((r) => r.position === 1).length;
   const podiums = driverRaceResults.filter((r) => r.position !== null && r.position <= 3).length;
   const totalPoints = driverStanding ? Number.parseFloat(driverStanding.points) || 0 : 0;
+  const champPos = driverStanding ? Number.parseInt(driverStanding.position, 10) : null;
   const bestFinish = driverRaceResults.length
     ? Math.min(...driverRaceResults.filter((r) => r.position !== null).map((r) => r.position!))
     : null;
@@ -140,312 +144,610 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
       ).toFixed(1)
     : null;
 
-  // Position color helper
-  const posColor = (pos: number | null) => {
-    if (pos === null) return "var(--color-text-muted)";
-    if (pos === 1) return "#FFD700";
-    if (pos === 2) return "#C0C0C0";
-    if (pos === 3) return "#CD7F32";
-    if (pos <= 10) return team.color;
-    return "var(--color-text-secondary)";
-  };
+  const driverPts = driverStanding ? Number.parseFloat(driverStanding.points) || 0 : 0;
+  const teammatePts = teammateStanding ? Number.parseFloat(teammateStanding.points) || 0 : 0;
+  const maxPairPts = Math.max(driverPts, teammatePts, 1);
+
+  const stats = [
+    { label: "CHAMPIONSHIP", value: champPos ? `P${champPos}` : "—", accent: true },
+    { label: "POINTS · 2026", value: String(totalPoints) },
+    { label: "WINS · 2026", value: String(wins), highlight: wins > 0 },
+    { label: "PODIUMS", value: String(podiums) },
+    { label: "BEST FINISH", value: bestFinish ? `P${bestFinish}` : "—" },
+    { label: "AVG FINISH", value: avgFinish ?? "—" },
+  ];
 
   return (
     <PageTransition>
-      {/* ── Bento Grid — 6 col base with varied spans ── */}
-      <div className="grid auto-rows-auto grid-cols-2 gap-3 md:grid-cols-6">
+      <div style={{ background: F1.bg, color: F1.fg, position: "relative" }}>
+        <BroadcastGrid color={F1.line} size={64} opacity={0.18} />
 
-        {/* ── A. Driver Photo — tall left column ── */}
-        <div className="relative col-span-2 overflow-hidden rounded-2xl border border-border-subtle bg-bg-secondary md:row-span-5">
-          <div className="absolute inset-x-0 top-0 z-10 h-1" style={{ backgroundColor: team.color }} />
-
-          <div className="relative h-full min-h-[420px] w-full md:min-h-[560px]">
-            <Image
-              src={driver.image}
-              alt={`${driver.firstName} ${driver.lastName}`}
-              fill
-              className="object-cover object-top"
-              sizes="(max-width: 768px) 100vw, 33vw"
-              unoptimized
-            />
-            <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
-
-            {/* Number watermark */}
-            <div
-              className="pointer-events-none absolute -right-4 top-6 select-none font-mono text-[140px] font-black leading-none opacity-[0.08]"
-              style={{ color: team.color }}
-            >
-              {driver.number}
-            </div>
-
-            {/* Info overlay */}
-            <div className="absolute inset-x-0 bottom-0 p-6">
-              <div className="flex items-center gap-2">
-                <div className="flex h-7 w-7 items-center justify-center rounded-md bg-white/10 p-1 backdrop-blur-sm">
-                  <Image src={team.logo} alt={team.name} width={18} height={18} className="object-contain" unoptimized />
-                </div>
-                <span className="text-xs font-medium text-white/70">{team.name}</span>
-              </div>
-              <h1 className="mt-3 text-3xl font-bold tracking-tight text-white sm:text-4xl">
-                {driver.firstName}
-                <br />
-                <span style={{ color: team.color }}>{driver.lastName}</span>
-              </h1>
-              <p className="mt-1 text-sm text-white/50">
-                {countryCodeToFlag(driver.countryCode)} {driver.nationality} · #{driver.number}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* ── B. Championship — wide accent card ── */}
+        {/* HERO BAND — team-color sweep + giant number watermark */}
         <div
-          className="col-span-2 flex items-center gap-5 rounded-2xl border p-6"
-          style={{ borderColor: team.color + "30", backgroundColor: team.color + "08" }}
+          className="relative overflow-hidden"
+          style={{
+            minHeight: 460,
+            borderBottom: `1px solid ${F1.line}`,
+            background: `linear-gradient(110deg, ${team.color}55 0%, ${team.color}10 35%, transparent 60%), ${F1.bg}`,
+          }}
         >
-          <div>
-            <p className="text-[10px] uppercase tracking-widest text-text-muted">Championship</p>
-            <p className="mt-1 font-mono text-6xl font-black leading-none" style={{ color: team.color }}>
-              {driverStanding?.position ? `P${driverStanding.position}` : "-"}
-            </p>
-          </div>
-          <div className="h-12 w-px bg-border-subtle" />
-          <div>
-            <p className="font-mono text-3xl font-bold text-text-primary">{totalPoints}</p>
-            <p className="text-xs text-text-muted">points scored</p>
-          </div>
-        </div>
+          {/* Radial glow */}
+          <div
+            aria-hidden
+            style={{
+              position: "absolute",
+              top: -200,
+              left: -200,
+              width: 800,
+              height: 800,
+              background: `radial-gradient(circle, ${team.color}30 0%, transparent 60%)`,
+              filter: "blur(40px)",
+              pointerEvents: "none",
+            }}
+          />
 
-        {/* ── C. Wins — small square ── */}
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-border-subtle bg-bg-secondary p-5 text-center">
-          <p className="text-[10px] uppercase tracking-widest text-text-muted">Wins</p>
-          <p className="mt-2 font-mono text-3xl font-bold" style={{ color: wins > 0 ? team.color : "var(--color-text-primary)" }}>
-            {wins}
-          </p>
-        </div>
-
-        {/* ── D. Podiums — small square ── */}
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-border-subtle bg-bg-secondary p-5 text-center">
-          <p className="text-[10px] uppercase tracking-widest text-text-muted">Podiums</p>
-          <p className="mt-2 font-mono text-3xl font-bold" style={{ color: podiums > 0 ? team.color : "var(--color-text-primary)" }}>
-            {podiums}
-          </p>
-        </div>
-
-        {/* ── E. Profile — tall info card ── */}
-        <div className="col-span-2 row-span-2 rounded-2xl border border-border-subtle bg-bg-secondary p-5">
-          <h3 className="text-xs font-semibold uppercase tracking-widest text-text-muted">Profile</h3>
-          <div className="mt-4 space-y-4">
-            {[
-              { label: "Date of Birth", value: formatDOB(driver.dateOfBirth) },
-              { label: "Age", value: `${calculateAge(driver.dateOfBirth)} years` },
-              { label: "Nationality", value: `${countryCodeToFlag(driver.countryCode)} ${driver.nationality}` },
-              { label: "Number", value: `#${driver.number}` },
-              { label: "Code", value: driver.abbreviation },
-            ].map((row) => (
-              <div key={row.label} className="flex items-center justify-between border-b border-border-subtle pb-3 last:border-0 last:pb-0">
-                <span className="text-xs text-text-muted">{row.label}</span>
-                <span className="text-sm font-medium text-text-primary">{row.value}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* ── F. Best Finish — small ── */}
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-border-subtle bg-bg-secondary p-5 text-center">
-          <p className="text-[10px] uppercase tracking-widest text-text-muted">Best</p>
-          <p
-            className="mt-2 font-mono text-3xl font-bold"
-            style={{ color: bestFinish !== null && bestFinish <= 3 ? posColor(bestFinish) : "var(--color-text-primary)" }}
+          {/* Giant number watermark */}
+          <div
+            aria-hidden
+            className="font-display absolute select-none pointer-events-none"
+            style={{
+              right: -40,
+              top: -60,
+              fontSize: 640,
+              fontWeight: 700,
+              lineHeight: 0.8,
+              color: team.color,
+              opacity: 0.16,
+              letterSpacing: "-0.06em",
+            }}
           >
-            {bestFinish ? `P${bestFinish}` : "-"}
-          </p>
-        </div>
-
-        {/* ── G. Avg Finish — small ── */}
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-border-subtle bg-bg-secondary p-5 text-center">
-          <p className="text-[10px] uppercase tracking-widest text-text-muted">Avg Pos</p>
-          <p className="mt-2 font-mono text-3xl font-bold text-text-primary">
-            {avgFinish ?? "-"}
-          </p>
-        </div>
-
-        {/* ── H. Team — wide card with link ── */}
-        <div className="col-span-2 rounded-2xl border border-border-subtle bg-bg-secondary p-5">
-          <Link
-            href={`/teams/${team.slug}`}
-            className="flex items-center gap-4 rounded-xl border border-border-subtle bg-bg-tertiary p-4 transition-colors hover:bg-bg-primary"
-          >
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-bg-primary p-2">
-              <Image src={team.logo} alt={team.name} width={32} height={32} className="object-contain" unoptimized />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="font-bold text-text-primary">{team.name}</p>
-              <p className="truncate text-xs text-text-muted">{team.fullName}</p>
-            </div>
-            <span className="text-xs text-text-muted">&rarr;</span>
-          </Link>
-          <div className="mt-3 grid grid-cols-3 gap-3">
-            {[
-              { label: "Engine", value: team.engine },
-              { label: "Base", value: team.base },
-              { label: "Principal", value: team.principal },
-            ].map((row) => (
-              <div key={row.label}>
-                <p className="text-[10px] uppercase tracking-widest text-text-muted">{row.label}</p>
-                <p className="mt-1 text-xs font-medium text-text-primary">{row.value}</p>
-              </div>
-            ))}
+            {driver.number}
           </div>
-        </div>
 
-        {/* ── I. Season History — full width timeline ── */}
-        {historicalStandings.length > 0 && (
-          <div className="col-span-2 rounded-2xl border border-border-subtle bg-bg-secondary p-5 md:col-span-6">
-            <h3 className="text-xs font-semibold uppercase tracking-widest text-text-muted">Career Timeline</h3>
-            <div className="mt-4 grid grid-cols-5 gap-2">
-              {historicalStandings.map((h) => (
-                <div key={h.year} className="rounded-xl border border-border-subtle bg-bg-tertiary p-4 text-center">
-                  <p className="font-mono text-xs text-text-muted">{h.year}</p>
-                  <p
-                    className="mt-2 font-mono text-2xl font-bold"
-                    style={{ color: posColor(h.position) }}
-                  >
-                    {h.position ? `P${h.position}` : "-"}
-                  </p>
-                  <div className="mx-auto mt-2 h-1 w-8 rounded-full" style={{ backgroundColor: posColor(h.position), opacity: 0.4 }} />
-                  <p className="mt-2 font-mono text-[10px] text-text-muted">
-                    {h.points} pts
-                  </p>
-                  <p className="font-mono text-[10px] text-text-muted">
-                    {h.wins} {h.wins === 1 ? "win" : "wins"}
-                  </p>
-                </div>
-              ))}
-              {/* 2026 current */}
+          {/* Breadcrumb */}
+          <div
+            className="relative flex items-center gap-3"
+            style={{ padding: "20px 32px 0" }}
+          >
+            <Mono style={{ fontSize: 10, color: F1.fg3, letterSpacing: "0.18em" }}>
+              <Link href="/" className="hover:text-white transition-colors">F1LYTICS</Link>
+              {" › "}
+              <Link href="/drivers" className="hover:text-white transition-colors">DRIVERS · 2026</Link>
+              {" › "}
+              <span style={{ color: F1.fg }}>
+                {driver.lastName.toUpperCase()} · #{driver.number}
+              </span>
+            </Mono>
+          </div>
+
+          {/* Identity */}
+          <div
+            className="relative grid"
+            style={{
+              gridTemplateColumns: "minmax(260px, 320px) minmax(0, 1fr)",
+              gap: 32,
+              padding: "32px 32px 40px",
+              alignItems: "end",
+            }}
+          >
+            <div
+              className="relative"
+              style={{
+                width: "100%",
+                aspectRatio: "3/4",
+                maxHeight: 400,
+                background: F1.bg2,
+                border: `1px solid ${F1.line}`,
+                overflow: "hidden",
+              }}
+            >
               <div
-                className="rounded-xl border p-4 text-center"
-                style={{ borderColor: team.color + "40", backgroundColor: team.color + "06" }}
+                aria-hidden
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: 3,
+                  background: team.color,
+                  zIndex: 2,
+                }}
+              />
+              <Image
+                src={driver.image}
+                alt={`${driver.firstName} ${driver.lastName}`}
+                fill
+                className="object-cover object-top"
+                sizes="(max-width: 768px) 100vw, 320px"
+                unoptimized
+                priority
+              />
+              <div
+                aria-hidden
+                className="absolute inset-x-0 bottom-0"
+                style={{
+                  height: "40%",
+                  background: "linear-gradient(to top, rgba(8,8,10,0.9), transparent)",
+                }}
+              />
+            </div>
+
+            <div className="min-w-0">
+              <div className="flex items-center gap-3 mb-3">
+                <span
+                  style={{
+                    width: 4,
+                    height: 28,
+                    background: team.color,
+                    display: "inline-block",
+                  }}
+                />
+                <Mono style={{ fontSize: 11, color: F1.fg2, letterSpacing: "0.18em" }}>
+                  {team.name.toUpperCase()} · {team.engine.toUpperCase()}
+                </Mono>
+              </div>
+              <div
+                className="font-display"
+                style={{
+                  fontSize: "clamp(28px, 3vw, 40px)",
+                  fontWeight: 500,
+                  letterSpacing: "-0.02em",
+                  lineHeight: 0.9,
+                  color: F1.fg2,
+                }}
               >
-                <p className="font-mono text-xs font-semibold" style={{ color: team.color }}>2026</p>
-                <p className="mt-2 font-mono text-2xl font-bold" style={{ color: team.color }}>
-                  {driverStanding?.position ? `P${driverStanding.position}` : "-"}
-                </p>
-                <div className="mx-auto mt-2 h-1 w-8 rounded-full" style={{ backgroundColor: team.color, opacity: 0.5 }} />
-                <p className="mt-2 font-mono text-[10px] text-text-muted">
-                  {totalPoints} pts
-                </p>
-                <p className="font-mono text-[10px] text-text-muted">
-                  {wins} {wins === 1 ? "win" : "wins"}
-                </p>
+                {driver.firstName.toUpperCase()}
+              </div>
+              <h1
+                className="font-display uppercase m-0"
+                style={{
+                  fontSize: "clamp(72px, 10vw, 156px)",
+                  fontWeight: 700,
+                  lineHeight: 0.85,
+                  letterSpacing: "-0.05em",
+                  color: F1.fg,
+                }}
+              >
+                {driver.lastName}
+                <span style={{ color: team.color }}>.</span>
+              </h1>
+
+              {/* Identity strip */}
+              <div
+                className="flex flex-wrap items-center mt-5"
+                style={{ gap: "0 24px", rowGap: 8 }}
+              >
+                {[
+                  { label: "BORN", value: formatDOB(driver.dateOfBirth) },
+                  { label: "AGE", value: `${calculateAge(driver.dateOfBirth)}` },
+                  { label: "NATIONALITY", value: `${countryCodeToFlag(driver.countryCode)} ${driver.nationality}` },
+                  { label: "CAR", value: `#${driver.number}` },
+                  { label: "CODE", value: driver.abbreviation },
+                ].map((row) => (
+                  <div key={row.label} className="flex items-baseline gap-2">
+                    <Mono
+                      style={{
+                        fontSize: 9,
+                        color: F1.fg3,
+                        letterSpacing: "0.18em",
+                      }}
+                    >
+                      {row.label}
+                    </Mono>
+                    <Mono
+                      style={{
+                        fontSize: 13,
+                        color: F1.fg,
+                        letterSpacing: "0.04em",
+                      }}
+                    >
+                      {row.value}
+                    </Mono>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
-        )}
+        </div>
 
-        {/* ── J. Race Results — wide table ── */}
-        <div className="col-span-2 rounded-2xl border border-border-subtle bg-bg-secondary p-5 md:col-span-4">
-          <h3 className="text-xs font-semibold uppercase tracking-widest text-text-muted">2026 Race Results</h3>
+        {/* STAT TILES — 3×2 grid with corner brackets */}
+        <div
+          className="grid"
+          style={{
+            gridTemplateColumns: "repeat(6, minmax(0, 1fr))",
+            gap: 1,
+            background: F1.line,
+            borderBottom: `1px solid ${F1.line}`,
+          }}
+        >
+          {stats.map((s) => (
+            <div
+              key={s.label}
+              className="relative"
+              style={{
+                background: F1.bg,
+                padding: "24px 20px",
+                minHeight: 124,
+              }}
+            >
+              <Brackets color={F1.fg4} size={8} />
+              <Mono
+                style={{
+                  fontSize: 9,
+                  color: F1.fg3,
+                  letterSpacing: "0.18em",
+                  display: "block",
+                }}
+              >
+                {s.label}
+              </Mono>
+              <StatValue
+                size={48}
+                color={s.accent ? team.color : s.highlight ? F1.amber : F1.fg}
+                style={{ marginTop: 12, display: "block" }}
+              >
+                {s.value}
+              </StatValue>
+            </div>
+          ))}
+        </div>
 
-          {driverRaceResults.length > 0 ? (
-            <div className="mt-4 overflow-hidden rounded-lg border border-border-subtle">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border-subtle bg-bg-tertiary text-[10px] uppercase tracking-widest text-text-muted">
-                    <th className="px-4 py-2.5 text-left font-medium">Rnd</th>
-                    <th className="px-4 py-2.5 text-left font-medium">Race</th>
-                    <th className="hidden px-4 py-2.5 text-right font-medium sm:table-cell">Grid</th>
-                    <th className="px-4 py-2.5 text-right font-medium">Finish</th>
-                    <th className="px-4 py-2.5 text-right font-medium">Pts</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {driverRaceResults.map((r) => {
-                    const gained = r.grid && r.position ? r.grid - r.position : null;
+        {/* MAIN CONTENT — season results + side panel */}
+        <div
+          className="grid"
+          style={{
+            gridTemplateColumns: "minmax(0, 1fr) minmax(0, 380px)",
+            gap: 1,
+            background: F1.line,
+          }}
+        >
+          {/* SEASON FORM (race results) */}
+          <div style={{ background: F1.bg, padding: "28px 32px" }}>
+            <SectionHeader
+              label="SEASON FORM · 2026"
+              right={
+                <Mono style={{ fontSize: 10, color: F1.fg3 }}>
+                  {driverRaceResults.length} ROUNDS COMPLETED
+                </Mono>
+              }
+            />
+
+            {driverRaceResults.length === 0 ? (
+              <div className="mt-6">
+                <Mono style={{ color: F1.fg3, fontSize: 12, letterSpacing: "0.18em" }}>
+                  NO RACE RESULTS YET FOR 2026.
+                </Mono>
+              </div>
+            ) : (
+              <div className="mt-6">
+                {/* Header row */}
+                <div
+                  className="grid items-center"
+                  style={{
+                    gridTemplateColumns: "44px minmax(0, 1fr) 60px 60px 60px 50px",
+                    gap: 12,
+                    padding: "10px 12px",
+                    background: F1.bg2,
+                    borderBottom: `1px solid ${F1.line}`,
+                  }}
+                >
+                  {["RND", "GRAND PRIX", "GRID", "FIN", "Δ", "PTS"].map((h, i) => (
+                    <Mono
+                      key={h}
+                      style={{
+                        fontSize: 9,
+                        color: F1.fg3,
+                        letterSpacing: "0.18em",
+                        textAlign: i >= 2 ? "right" : "left",
+                      }}
+                    >
+                      {h}
+                    </Mono>
+                  ))}
+                </div>
+
+                {driverRaceResults.map((r, i) => {
+                  const gained = r.grid && r.position ? r.grid - r.position : null;
+                  return (
+                    <div
+                      key={r.round}
+                      className="grid items-center"
+                      style={{
+                        gridTemplateColumns: "44px minmax(0, 1fr) 60px 60px 60px 50px",
+                        gap: 12,
+                        padding: "12px",
+                        background: i % 2 === 0 ? F1.bg : F1.bg2,
+                        borderBottom: `1px solid ${F1.line}`,
+                      }}
+                    >
+                      <Mono style={{ fontSize: 11, color: F1.fg3, letterSpacing: "0.08em" }}>
+                        R{String(r.round).padStart(2, "0")}
+                      </Mono>
+                      <span
+                        className="font-display truncate"
+                        style={{
+                          fontSize: 16,
+                          fontWeight: 500,
+                          letterSpacing: "-0.01em",
+                        }}
+                      >
+                        {r.raceName.replace(/Grand Prix/i, "GP").toUpperCase()}
+                      </span>
+                      <Mono
+                        style={{
+                          fontSize: 13,
+                          color: F1.fg2,
+                          textAlign: "right",
+                          fontVariantNumeric: "tabular-nums",
+                        }}
+                      >
+                        {r.grid ?? "—"}
+                      </Mono>
+                      <div style={{ textAlign: "right" }}>
+                        {r.position !== null ? (
+                          <PosPill pos={r.position} size="sm" />
+                        ) : (
+                          <Mono style={{ fontSize: 13, color: F1.fg3 }}>DNF</Mono>
+                        )}
+                      </div>
+                      <Mono
+                        style={{
+                          fontSize: 11,
+                          color:
+                            gained === null
+                              ? F1.fg3
+                              : gained > 0
+                                ? F1.green
+                                : gained < 0
+                                  ? F1.red
+                                  : F1.fg3,
+                          textAlign: "right",
+                          fontVariantNumeric: "tabular-nums",
+                        }}
+                      >
+                        {gained === null ? "—" : gained > 0 ? `+${gained}` : gained === 0 ? "0" : gained}
+                      </Mono>
+                      <Mono
+                        style={{
+                          fontSize: 13,
+                          color: r.points > 0 ? F1.fg : F1.fg3,
+                          textAlign: "right",
+                          fontVariantNumeric: "tabular-nums",
+                          fontWeight: 600,
+                        }}
+                      >
+                        {r.points > 0 ? r.points : "—"}
+                      </Mono>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* CAREER TIMELINE */}
+            {historicalStandings.length > 0 && (
+              <div className="mt-10">
+                <SectionHeader
+                  label="CAREER TIMELINE"
+                  right={
+                    <Mono style={{ fontSize: 10, color: F1.fg3 }}>
+                      LAST {historicalStandings.length + 1} SEASONS
+                    </Mono>
+                  }
+                />
+                <div
+                  className="grid mt-6"
+                  style={{
+                    gridTemplateColumns: `repeat(${historicalStandings.length + 1}, minmax(0, 1fr))`,
+                    gap: 1,
+                    background: F1.line,
+                    border: `1px solid ${F1.line}`,
+                  }}
+                >
+                  {historicalStandings.map((h) => (
+                    <div
+                      key={h.year}
+                      style={{ background: F1.bg, padding: "16px 12px", textAlign: "center" }}
+                    >
+                      <Mono style={{ fontSize: 10, color: F1.fg3, letterSpacing: "0.18em" }}>
+                        {h.year}
+                      </Mono>
+                      <StatValue size={28} style={{ display: "block", marginTop: 6 }}>
+                        {h.position ? `P${h.position}` : "—"}
+                      </StatValue>
+                      <Mono style={{ fontSize: 10, color: F1.fg3, marginTop: 4, display: "block" }}>
+                        {h.points} PTS · {h.wins}W
+                      </Mono>
+                    </div>
+                  ))}
+                  <div
+                    style={{
+                      background: F1.bg,
+                      padding: "16px 12px",
+                      textAlign: "center",
+                      borderTop: `2px solid ${team.color}`,
+                    }}
+                  >
+                    <Mono style={{ fontSize: 10, color: team.color, letterSpacing: "0.18em", fontWeight: 600 }}>
+                      2026
+                    </Mono>
+                    <StatValue size={28} color={team.color} style={{ display: "block", marginTop: 6 }}>
+                      {champPos ? `P${champPos}` : "—"}
+                    </StatValue>
+                    <Mono style={{ fontSize: 10, color: F1.fg3, marginTop: 4, display: "block" }}>
+                      {totalPoints} PTS · {wins}W
+                    </Mono>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* SIDE PANEL — teammate H2H + team card */}
+          <div style={{ background: F1.bg, padding: "28px 24px" }}>
+            {teammate && (
+              <>
+                <SectionHeader label="TEAMMATE H2H" />
+                <div className="mt-5 space-y-4">
+                  {[
+                    { d: driver, s: driverStanding, pts: driverPts, isFocus: true },
+                    { d: teammate, s: teammateStanding, pts: teammatePts, isFocus: false },
+                  ].map(({ d, s, pts, isFocus }) => {
+                    const pos = s?.position ? Number.parseInt(s.position, 10) : null;
                     return (
-                      <tr key={r.round} className="border-b border-border-subtle last:border-0">
-                        <td className="px-4 py-3 font-mono text-text-muted">R{r.round}</td>
-                        <td className="px-4 py-3 text-text-primary">{r.raceName}</td>
-                        <td className="hidden px-4 py-3 text-right font-mono text-text-muted sm:table-cell">
-                          {r.grid ?? "-"}
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <span className="font-mono font-bold" style={{ color: posColor(r.position) }}>
-                            {r.position !== null ? `P${r.position}` : "-"}
-                          </span>
-                          {gained !== null && gained !== 0 && (
-                            <span className={`ml-1.5 text-[10px] ${gained > 0 ? "text-green-500" : "text-red-400"}`}>
-                              {gained > 0 ? `+${gained}` : gained}
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3 text-right font-mono text-text-secondary">
-                          {r.points > 0 ? r.points : "-"}
-                        </td>
-                      </tr>
+                      <Link
+                        key={d.id}
+                        href={`/drivers/${d.slug}`}
+                        className="block group"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div
+                            className="relative shrink-0"
+                            style={{
+                              width: 40,
+                              height: 40,
+                              background: F1.bg2,
+                              border: `1px solid ${F1.line}`,
+                              overflow: "hidden",
+                            }}
+                          >
+                            <Image
+                              src={d.image}
+                              alt={`${d.firstName} ${d.lastName}`}
+                              fill
+                              className="object-cover object-top"
+                              unoptimized
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div
+                              className="font-display truncate"
+                              style={{
+                                fontSize: 16,
+                                fontWeight: 600,
+                                letterSpacing: "-0.01em",
+                                color: isFocus ? F1.fg : F1.fg2,
+                              }}
+                            >
+                              {d.lastName.toUpperCase()}
+                            </div>
+                            <Mono style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.14em" }}>
+                              #{d.number} · {d.abbreviation}
+                            </Mono>
+                          </div>
+                          <div style={{ textAlign: "right" }}>
+                            <StatValue size={20} color={isFocus ? team.color : F1.fg2}>
+                              {pos ? `P${pos}` : "—"}
+                            </StatValue>
+                            <Mono style={{ fontSize: 10, color: F1.fg3, display: "block" }}>
+                              {pts} PTS
+                            </Mono>
+                          </div>
+                        </div>
+                        {/* mirrored bar */}
+                        <div
+                          style={{
+                            marginTop: 8,
+                            height: 4,
+                            background: F1.bg3,
+                            position: "relative",
+                          }}
+                        >
+                          <div
+                            style={{
+                              height: "100%",
+                              width: `${(pts / maxPairPts) * 100}%`,
+                              background: team.color,
+                              opacity: isFocus ? 1 : 0.45,
+                            }}
+                          />
+                        </div>
+                      </Link>
                     );
                   })}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <p className="mt-4 text-sm text-text-muted">No race results available yet for 2026.</p>
-          )}
-        </div>
+                </div>
+              </>
+            )}
 
-        {/* ── K. Teammate Battle — sidebar alongside results ── */}
-        {teammate && (
-          <div className="col-span-2 rounded-2xl border border-border-subtle bg-bg-secondary p-5">
-            <h3 className="text-xs font-semibold uppercase tracking-widest text-text-muted">Teammate Battle</h3>
-            <p className="mt-1 text-[10px] text-text-muted">{team.name}</p>
-
-            <div className="mt-4 space-y-3">
-              {[
-                { d: driver, s: driverStanding },
-                { d: teammate, s: teammateStanding },
-              ].map(({ d, s }) => {
-                const pos = s?.position ? Number.parseInt(String(s.position), 10) : null;
-                const displayPos = pos !== null && !Number.isNaN(pos) ? `P${pos}` : "-";
-                const pts = s ? Number.parseFloat(s.points) || 0 : 0;
-                const maxPts = Math.max(
-                  driverStanding ? Number.parseFloat(driverStanding.points) || 0 : 0,
-                  teammateStanding ? Number.parseFloat(teammateStanding.points) || 0 : 0,
-                  1
-                );
-                return (
-                  <Link
-                    key={d.id}
-                    href={`/drivers/${d.slug}`}
-                    className="block rounded-xl border border-border-subtle bg-bg-tertiary p-4 transition-colors hover:bg-bg-primary"
+            {/* TEAM CARD */}
+            <div className="mt-8">
+              <SectionHeader label="CONSTRUCTOR" />
+              <Link
+                href={`/teams/${team.slug}`}
+                className="block mt-5 group"
+                style={{
+                  background: F1.bg2,
+                  border: `1px solid ${F1.line}`,
+                  borderTop: `2px solid ${team.color}`,
+                  padding: 20,
+                }}
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    style={{
+                      width: 44,
+                      height: 44,
+                      background: F1.bg,
+                      border: `1px solid ${F1.line}`,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      padding: 8,
+                    }}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full border border-border-subtle bg-bg-primary">
-                        <Image src={d.image} alt={`${d.firstName} ${d.lastName}`} fill className="object-cover object-top" unoptimized />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-bold text-text-primary">
-                          {d.firstName} <span style={{ color: team.color }}>{d.lastName}</span>
-                        </p>
-                        <p className="text-[10px] text-text-muted">#{d.number}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-mono text-xs font-bold" style={{ color: team.color }}>{displayPos}</p>
-                        <p className="font-mono text-lg font-bold text-text-primary">{pts}<span className="text-[9px] text-text-muted"> pts</span></p>
-                      </div>
+                    <Image
+                      src={team.logo}
+                      alt={team.name}
+                      width={28}
+                      height={28}
+                      className="object-contain"
+                      unoptimized
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div
+                      className="font-display"
+                      style={{ fontSize: 18, fontWeight: 600, letterSpacing: "-0.01em" }}
+                    >
+                      {team.name.toUpperCase()}
                     </div>
-                    {/* Points bar */}
-                    <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-bg-primary">
+                    <Mono style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.14em" }}>
+                      {team.fullName.toUpperCase()}
+                    </Mono>
+                  </div>
+                  <Mono style={{ fontSize: 16, color: F1.fg3 }}>→</Mono>
+                </div>
+                <div
+                  className="grid mt-4"
+                  style={{ gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 12 }}
+                >
+                  {[
+                    { label: "ENGINE", value: team.engine },
+                    { label: "BASE", value: team.base },
+                    { label: "PRINCIPAL", value: team.principal },
+                    { label: "LINEUP", value: team.drivers.join(" · ") },
+                  ].map((row) => (
+                    <div key={row.label}>
+                      <Mono style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.18em" }}>
+                        {row.label}
+                      </Mono>
                       <div
-                        className="h-full rounded-full transition-all"
-                        style={{ width: `${(pts / maxPts) * 100}%`, backgroundColor: team.color }}
-                      />
+                        style={{
+                          fontSize: 12,
+                          color: F1.fg,
+                          marginTop: 2,
+                          letterSpacing: "0.02em",
+                        }}
+                      >
+                        {row.value}
+                      </div>
                     </div>
-                  </Link>
-                );
-              })}
+                  ))}
+                </div>
+              </Link>
             </div>
           </div>
-        )}
+        </div>
       </div>
     </PageTransition>
   );

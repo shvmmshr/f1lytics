@@ -7,6 +7,7 @@ import {
   differenceInMinutes,
   differenceInSeconds,
 } from "date-fns";
+import { F1, Mono } from "@/components/shared/broadcast";
 
 interface CountdownTimerProps {
   targetDate: Date;
@@ -49,15 +50,43 @@ export function CountdownTimer({ targetDate, label }: CountdownTimerProps) {
   return (
     <div>
       {label && (
-        <p className="mb-3 text-xs font-medium uppercase tracking-widest text-text-muted">{label}</p>
+        <Mono
+          className="mb-3 block uppercase"
+          style={{ fontSize: 11, color: F1.fg3, letterSpacing: "0.18em" }}
+        >
+          {label}
+        </Mono>
       )}
-      <div className="flex gap-3">
+      <div className="flex" style={{ gap: 1, background: F1.line }}>
         {blocks.map((block) => (
-          <div key={block.label} className="text-center">
-            <div className="rounded-lg bg-bg-secondary px-3 py-2 font-mono text-2xl font-bold tabular-nums text-text-primary">
+          <div
+            key={block.label}
+            className="text-center flex-1"
+            style={{ background: F1.bg, padding: "10px 14px" }}
+          >
+            <div
+              className="font-display tabular-nums"
+              style={{
+                fontSize: 28,
+                fontWeight: 700,
+                color: F1.fg,
+                letterSpacing: "-0.02em",
+                lineHeight: 1,
+              }}
+            >
               {String(block.value).padStart(2, "0")}
             </div>
-            <p className="mt-1 text-[10px] font-medium text-text-muted">{block.label}</p>
+            <Mono
+              className="block"
+              style={{
+                fontSize: 9,
+                color: F1.fg3,
+                letterSpacing: "0.2em",
+                marginTop: 6,
+              }}
+            >
+              {block.label}
+            </Mono>
           </div>
         ))}
       </div>

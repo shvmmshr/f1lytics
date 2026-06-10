@@ -9,6 +9,7 @@ import type {
   OpenF1RaceControl,
   OpenF1Pit,
   OpenF1Driver,
+  OpenF1TeamRadio,
 } from "./types";
 
 const BASE_URL = "https://api.openf1.org/v1";
@@ -187,4 +188,16 @@ export async function getPositions(params: {
   driver_number?: number;
 }): Promise<OpenF1Position[]> {
   return fetchOpenF1<OpenF1Position>("/position", params);
+}
+
+// =============================================================================
+// Team radio (live — no cache)
+// =============================================================================
+
+/** Fetch team radio recordings for a session (optionally per driver). */
+export async function getTeamRadio(params: {
+  session_key: number;
+  driver_number?: number;
+}): Promise<OpenF1TeamRadio[]> {
+  return fetchOpenF1<OpenF1TeamRadio>("/team_radio", params);
 }

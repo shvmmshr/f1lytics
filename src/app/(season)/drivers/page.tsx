@@ -1,10 +1,16 @@
 import type { Metadata } from "next";
-import { DRIVER_LIST } from "@/lib/constants";
+import Link from "next/link";
+import Image from "next/image";
+import { DRIVER_LIST, TEAMS } from "@/lib/constants";
 import { getDriverStandings } from "@/lib/api/jolpica";
-import { DriverCard } from "@/components/shared/driver-card";
 import { PageTransition } from "@/components/layout/page-transition";
-import { SectionHeader } from "@/components/shared/section-header";
-import { DriversGrid } from "./drivers-grid";
+import {
+  F1,
+  Mono,
+  Grid as BroadcastGrid,
+  StatValue,
+  PosPill,
+} from "@/components/shared/broadcast";
 
 export const metadata: Metadata = {
   title: "Drivers",
@@ -15,50 +21,250 @@ export default async function DriversPage() {
   let standings: Awaited<ReturnType<typeof getDriverStandings>> = [];
   try {
     standings = await getDriverStandings("2026");
-  } catch {
-    // Fall back to static data if API unavailable.
-  }
+  } catch {}
 
-  const pointsMap = new Map<string, { points: number; position: number }>();
-  standings.forEach((standing) => {
-    const code = standing.Driver.code?.toUpperCase();
+  const pointsMap = new Map<string, { points: number; position: number; wins: number }>();
+  standings.forEach((s) => {
+    const code = s.Driver.code?.toUpperCase();
     if (!code) return;
-
-    const pts = Number.parseFloat(standing.points) || 0;
-    const pos = Number.parseInt(standing.position, 10);
-    if (!Number.isNaN(pos)) {
-      pointsMap.set(code, { points: pts, position: pos });
-    }
+    const pts = Number.parseFloat(s.points) || 0;
+    const pos = Number.parseInt(s.position, 10);
+    const wins = Number.parseInt(s.wins, 10) || 0;
+    if (!Number.isNaN(pos)) pointsMap.set(code, { points: pts, position: pos, wins });
   });
 
   const sortedDrivers = [...DRIVER_LIST].sort((a, b) => {
-    const aStanding = pointsMap.get(a.abbreviation);
-    const bStanding = pointsMap.get(b.abbreviation);
-
-    if (aStanding && bStanding) return aStanding.position - bStanding.position;
-    if (aStanding) return -1;
-    if (bStanding) return 1;
+    const aS = pointsMap.get(a.abbreviation);
+    const bS = pointsMap.get(b.abbreviation);
+    if (aS && bS) return aS.position - bS.position;
+    if (aS) return -1;
+    if (bS) return 1;
     return 0;
   });
 
   return (
     <PageTransition>
-      <SectionHeader title="Drivers" subtitle="2026 F1 Season Grid" />
+      <div style={{ background: F1.bg, color: F1.fg, position: "relative" }}>
+        <BroadcastGrid color={F1.line} size={64} opacity={0.18} />
 
-      <DriversGrid>
-        {sortedDrivers.map((driver) => {
-          const standing = pointsMap.get(driver.abbreviation);
+        {/* Page header */}
+        <div
+          className="relative"
+          style={{ padding: "40px 32px 28px", borderBottom: `1px solid ${F1.line}` }}
+        >
+          <div className="flex items-center gap-3.5">
+            <Mono style={{ color: F1.red, fontSize: 11, letterSpacing: "0.24em" }}>
+              SECTION 03
+            </Mono>
+            <span style={{ width: 40, height: 1, background: F1.line }} />
+            <Mono style={{ color: F1.fg3, fontSize: 11, letterSpacing: "0.18em" }}>
+              2026 GRID · {DRIVER_LIST.length} DRIVERS · {Object.keys(TEAMS).length} TEAMS
+            </Mono>
+          </div>
+          <h1
+            className="font-display uppercase m-0 mt-3"
+            style={{
+              fontWeight: 700,
+              fontSize: "clamp(56px, 8vw, 96px)",
+              lineHeight: 0.9,
+              letterSpacing: "-0.04em",
+            }}
+          >
+            THE GRID<span style={{ color: F1.red }}>.</span>
+          </h1>
+          <div className="mt-3" style={{ fontSize: 16, color: F1.fg2, maxWidth: 540 }}>
+            Every driver on the 2026 grid. Sorted by championship position.
+          </div>
+        </div>
 
-          return (
-            <DriverCard
-              key={driver.id}
-              driver={driver}
-              points={standing?.points}
-              position={standing?.position}
-            />
-          );
-        })}
-      </DriversGrid>
+        {/* Driver tile grid */}
+        <div
+          className="grid"
+          style={{
+            gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+            gap: 1,
+            background: F1.line,
+          }}
+        >
+          {sortedDrivers.map((d) => {
+            const team = TEAMS[d.teamId];
+            const stat = pointsMap.get(d.abbreviation);
+            return (
+              <Link
+                key={d.id}
+                href={`/drivers/${d.slug}`}
+                className="relative group"
+                style={{
+                  background: F1.bg,
+                  padding: 0,
+                  minHeight: 260,
+                  overflow: "hidden",
+                  display: "block",
+                  borderTop: `2px solid ${team.color}`,
+                  transition: "background 200ms",
+                }}
+              >
+                {/* Team-color sweep on hover */}
+                <div
+                  aria-hidden
+                  className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100"
+                  style={{
+                    background: `linear-gradient(135deg, ${team.color}18 0%, transparent 50%)`,
+                    transition: "opacity 200ms",
+                  }}
+                />
+
+                {/* Giant number watermark */}
+                <div
+                  aria-hidden
+                  className="font-display absolute pointer-events-none select-none"
+                  style={{
+                    right: -16,
+                    top: -24,
+                    fontSize: 200,
+                    fontWeight: 700,
+                    lineHeight: 0.8,
+                    color: team.color,
+                    opacity: 0.18,
+                    letterSpacing: "-0.06em",
+                  }}
+                >
+                  {d.number}
+                </div>
+
+                {/* Top row — position pill + team strip */}
+                <div
+                  className="relative flex items-center gap-3"
+                  style={{ padding: "16px 20px 10px" }}
+                >
+                  {stat ? (
+                    <PosPill pos={stat.position} size="sm" />
+                  ) : (
+                    <Mono
+                      style={{
+                        fontSize: 11,
+                        color: F1.fg3,
+                        letterSpacing: "0.14em",
+                      }}
+                    >
+                      —
+                    </Mono>
+                  )}
+                  <span
+                    style={{
+                      width: 4,
+                      height: 24,
+                      background: team.color,
+                    }}
+                  />
+                  <Mono
+                    style={{
+                      fontSize: 10,
+                      color: F1.fg3,
+                      letterSpacing: "0.18em",
+                    }}
+                  >
+                    {team.name.toUpperCase()}
+                  </Mono>
+                </div>
+
+                {/* Driver image + name */}
+                <div className="relative flex items-end gap-3" style={{ padding: "0 20px" }}>
+                  <div
+                    className="relative shrink-0"
+                    style={{
+                      width: 88,
+                      height: 110,
+                      background: F1.bg2,
+                      border: `1px solid ${F1.line}`,
+                      overflow: "hidden",
+                    }}
+                  >
+                    <Image
+                      src={d.image}
+                      alt={`${d.firstName} ${d.lastName}`}
+                      fill
+                      className="object-cover object-top"
+                      sizes="88px"
+                      unoptimized
+                    />
+                  </div>
+                  <div className="min-w-0 flex-1 pb-2">
+                    <div
+                      className="font-display"
+                      style={{
+                        fontSize: 14,
+                        color: F1.fg2,
+                        fontWeight: 500,
+                        letterSpacing: "-0.01em",
+                        lineHeight: 1,
+                      }}
+                    >
+                      {d.firstName.toUpperCase()}
+                    </div>
+                    <div
+                      className="font-display truncate"
+                      style={{
+                        fontSize: 30,
+                        color: F1.fg,
+                        fontWeight: 700,
+                        letterSpacing: "-0.03em",
+                        lineHeight: 0.9,
+                        marginTop: 4,
+                      }}
+                    >
+                      {d.lastName.toUpperCase()}
+                    </div>
+                    <Mono
+                      style={{
+                        fontSize: 9,
+                        color: F1.fg3,
+                        letterSpacing: "0.18em",
+                        marginTop: 6,
+                        display: "block",
+                      }}
+                    >
+                      #{d.number} · {d.abbreviation}
+                    </Mono>
+                  </div>
+                </div>
+
+                {/* Footer — points + wins */}
+                <div
+                  className="relative flex items-center justify-between"
+                  style={{
+                    padding: "12px 20px 14px",
+                    marginTop: 12,
+                    borderTop: `1px solid ${F1.line}`,
+                    background: F1.bg2,
+                  }}
+                >
+                  <div>
+                    <Mono style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.18em" }}>
+                      POINTS
+                    </Mono>
+                    <StatValue size={22} style={{ display: "block", marginTop: 2 }}>
+                      {stat ? stat.points : "—"}
+                    </StatValue>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <Mono style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.18em" }}>
+                      WINS
+                    </Mono>
+                    <StatValue
+                      size={22}
+                      color={stat && stat.wins > 0 ? F1.amber : F1.fg}
+                      style={{ display: "block", marginTop: 2 }}
+                    >
+                      {stat ? stat.wins : "—"}
+                    </StatValue>
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      </div>
     </PageTransition>
   );
 }

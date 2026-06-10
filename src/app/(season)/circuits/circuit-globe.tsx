@@ -245,22 +245,51 @@ function LoadingFallback() {
 
 export function CircuitGlobe({ circuits }: CircuitGlobeProps) {
   return (
-    <section className="mb-8 overflow-hidden rounded-2xl border border-border-subtle bg-bg-secondary p-4">
-      <p className="mb-3 text-xs uppercase tracking-widest text-text-muted">
-        World Map
-      </p>
-      <div className="h-[450px] w-full overflow-hidden rounded-xl border border-border-subtle bg-bg-primary">
-        <Suspense fallback={<LoadingFallback />}>
-          <Canvas
-            camera={{ position: [0, 0.5, 2.8], fov: 45 }}
-            style={{ background: "transparent" }}
-            gl={{ alpha: true, antialias: true }}
+    <section
+      style={{
+        background: "#141418",
+        borderTop: "1px solid #27272A",
+        borderBottom: "1px solid #27272A",
+        padding: "32px",
+      }}
+    >
+      <div className="mx-auto" style={{ maxWidth: 1400 }}>
+        <div className="flex items-center gap-3.5 mb-4">
+          <span
+            className="font-mono"
+            style={{
+              color: "#FF1801",
+              fontSize: 11,
+              letterSpacing: "0.24em",
+              fontWeight: 700,
+            }}
           >
-            <Suspense fallback={null}>
-              <SceneContent circuits={circuits} />
-            </Suspense>
-          </Canvas>
-        </Suspense>
+            WORLD MAP
+          </span>
+          <span style={{ width: 40, height: 1, background: "#27272A" }} />
+          <span
+            className="font-mono"
+            style={{ color: "#A1A1AA", fontSize: 11, letterSpacing: "0.18em" }}
+          >
+            {circuits.length} STOPS · LIVE GLOBE
+          </span>
+        </div>
+        <div
+          className="h-[450px] w-full overflow-hidden"
+          style={{ background: "#0C0C0E", border: "1px solid #27272A" }}
+        >
+          <Suspense fallback={<LoadingFallback />}>
+            <Canvas
+              camera={{ position: [0, 0.5, 2.8], fov: 45 }}
+              style={{ background: "transparent" }}
+              gl={{ alpha: true, antialias: true }}
+            >
+              <Suspense fallback={null}>
+                <SceneContent circuits={circuits} />
+              </Suspense>
+            </Canvas>
+          </Suspense>
+        </div>
       </div>
     </section>
   );

@@ -33,8 +33,8 @@ function getDriverLabel(driverNumber: number, drivers: TireStrategyDriver[]): st
 export function TireStrategyViz({ stints, drivers = [] }: TireStrategyVizProps) {
   if (stints.length === 0) {
     return (
-      <div className="rounded-xl border border-border-subtle bg-bg-secondary p-6">
-        <p className="text-sm text-text-muted">No tyre stint data available for this session.</p>
+      <div style={{ background: "#141418", border: "1px solid #27272A", padding: 24 }}>
+        <p className="text-sm">No tyre stint data available for this session.</p>
       </div>
     );
   }
@@ -53,8 +53,8 @@ export function TireStrategyViz({ stints, drivers = [] }: TireStrategyVizProps) 
     .sort((a, b) => a - b);
 
   return (
-    <div className="rounded-xl border border-border-subtle bg-bg-secondary p-5">
-      <div className="mb-4 flex flex-wrap gap-3 text-xs uppercase tracking-widest text-text-muted">
+    <div style={{ background: "#141418", border: "1px solid #27272A", padding: 20 }}>
+      <div className="mb-4 flex flex-wrap gap-3 text-xs uppercase tracking-widest text-zinc-500">
         {Object.entries(COMPOUND_COLORS).map(([compound, color]) => (
           <span key={compound} className="inline-flex items-center gap-2">
             <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />

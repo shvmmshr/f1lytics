@@ -10,29 +10,37 @@
 
 @theme inline {
   /* --- Font families --- */
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-antonio);
+  --font-sans: var(--font-space-grotesk);
+  --font-mono: var(--font-jetbrains-mono);
 
   /* --- Tracking (letter-spacing) --- */
   --tracking-tighter: -0.04em;
   --tracking-tight: -0.02em;
   --tracking-display: -0.05em;
+  --tracking-broadcast: 0.18em;
+  --tracking-mono-wide: 0.16em;
 
   /* --- F1lytics custom colors --- */
 
   /* Backgrounds */
+  --color-bg-ink: #08080A;
   --color-bg-primary: #0C0C0E;
   --color-bg-secondary: #141418;
   --color-bg-tertiary: #1C1C22;
+  --color-bg-hover: #26262E;
 
   /* Text */
   --color-text-primary: #F4F4F5;
   --color-text-secondary: #A1A1AA;
   --color-text-muted: #52525B;
+  --color-text-faint: #3F3F46;
 
   /* Borders */
   --color-border-subtle: #27272A;
   --color-border-active: #3F3F46;
+  --color-line: #27272A;
+  --color-line-hi: #3F3F46;
 
   /* Status */
   --color-status-green: #22C55E;
@@ -40,8 +48,15 @@
   --color-status-yellow: #EAB308;
   --color-status-blue: #3B82F6;
 
+  /* Broadcast / FIA-graphic accents */
+  --color-signal-red: #FF1801;
+  --color-signal-red-deep: #C20012;
+  --color-signal-amber: #F5A623;
+  --color-signal-cyan: #27F4D2;
+  --color-signal-purple: #B07CFF;
+
   /* Glows */
-  --color-glow-red: rgba(239, 68, 68, 0.4);
+  --color-glow-red: rgba(255, 24, 1, 0.45);
 
   /* F1 Team colors */
   --color-team-mclaren: #FF8000;
@@ -214,12 +229,36 @@
 @keyframes pulse-glow {
   0%, 100% {
     opacity: 1;
-    box-shadow: 0 0 4px 1px var(--color-status-red);
+    box-shadow: 0 0 4px 1px var(--color-signal-red);
   }
   50% {
     opacity: 0.5;
-    box-shadow: 0 0 8px 3px var(--color-status-red);
+    box-shadow: 0 0 8px 3px var(--color-signal-red);
   }
+}
+
+@keyframes f1pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(255, 24, 1, 0.7);
+    opacity: 1;
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(255, 24, 1, 0);
+    opacity: 0.6;
+  }
+}
+
+@keyframes ticker {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-f1pulse {
+  animation: f1pulse 1.4s infinite;
+}
+
+.animate-ticker {
+  animation: ticker 60s linear infinite;
 }
 
 @keyframes checkered-fade {

@@ -6,6 +6,14 @@ import { getConstructorStandings, getDriverStandings, getRaceResults } from "@/l
 import { TEAM_LIST, TEAMS, getTeamBySlug } from "@/lib/constants";
 import { DRIVERS, type Driver } from "@/lib/constants/drivers";
 import { PageTransition } from "@/components/layout/page-transition";
+import {
+  F1,
+  Mono,
+  Brackets,
+  Grid as BroadcastGrid,
+  StatValue,
+  SectionHeader,
+} from "@/components/shared/broadcast";
 
 interface TeamPageProps {
   params: Promise<{ slug: string }>;
@@ -178,205 +186,625 @@ export default async function TeamPage({ params }: TeamPageProps) {
   const totalWins = raceData.filter((r) => r.bestFinish === 1).length;
 
   const posColor = (pos: number | null) => {
-    if (pos === null) return "var(--color-text-muted)";
-    if (pos === 1) return "#FFD700";
+    if (pos === null) return F1.fg4;
+    if (pos === 1) return F1.amber;
     if (pos === 2) return "#C0C0C0";
     if (pos === 3) return "#CD7F32";
     if (pos <= 10) return team.color;
-    return "var(--color-text-secondary)";
+    return F1.fg3;
   };
+
+  const teamSlugUpper = team.name.toUpperCase();
 
   return (
     <PageTransition>
-      <div className="grid auto-rows-auto grid-cols-2 gap-3 md:grid-cols-6">
+      <div style={{ background: F1.bg, color: F1.fg, position: "relative" }}>
+        <BroadcastGrid color={F1.line} size={64} opacity={0.18} />
 
-        {/* ── A. Team Hero — wide banner ── */}
-        <div
-          className="col-span-2 overflow-hidden rounded-2xl border border-border-subtle md:col-span-4"
-          style={{ backgroundImage: `linear-gradient(135deg, ${team.color}18 0%, transparent 60%)` }}
+        {/* HERO BAND */}
+        <section
+          className="relative overflow-hidden"
+          style={{
+            borderBottom: `1px solid ${F1.line}`,
+            background: `linear-gradient(135deg, ${team.color}26 0%, ${team.color}08 30%, transparent 60%)`,
+            padding: "44px 32px 36px",
+          }}
         >
-          <div className="absolute inset-x-0 top-0 h-1" style={{ backgroundColor: team.color }} />
-          <div className="relative p-6">
-            <div className="flex items-center gap-4">
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-border-subtle bg-bg-primary p-3">
-                <Image src={team.logo} alt={team.name} width={40} height={40} className="object-contain" unoptimized />
+          {/* Giant watermark team name */}
+          <div
+            aria-hidden
+            className="font-display absolute pointer-events-none select-none"
+            style={{
+              right: -24,
+              top: -12,
+              fontSize: "clamp(180px, 22vw, 360px)",
+              fontWeight: 700,
+              lineHeight: 0.85,
+              letterSpacing: "-0.06em",
+              color: team.color,
+              opacity: 0.08,
+              whiteSpace: "nowrap",
+            }}
+          >
+            {teamSlugUpper}
+          </div>
+
+          <div className="relative mx-auto" style={{ maxWidth: 1400 }}>
+            <div className="flex items-center gap-3.5 mb-5">
+              <Mono style={{ color: F1.red, fontSize: 11, letterSpacing: "0.24em", fontWeight: 700 }}>
+                CONSTRUCTOR
+              </Mono>
+              <span style={{ width: 40, height: 1, background: F1.line }} />
+              <Mono style={{ color: F1.fg3, fontSize: 11, letterSpacing: "0.18em" }}>
+                <Link href="/teams" style={{ color: F1.fg3 }}>SEASON / TEAMS</Link> / {teamSlugUpper}
+              </Mono>
+            </div>
+
+            <div
+              className="grid"
+              style={{
+                gridTemplateColumns: "minmax(0, 1.4fr) minmax(0, 1fr)",
+                gap: 32,
+                alignItems: "stretch",
+              }}
+            >
+              {/* IDENTITY */}
+              <div className="flex items-center gap-5 min-w-0">
+                <div
+                  className="flex items-center justify-center shrink-0"
+                  style={{
+                    width: 84,
+                    height: 84,
+                    background: F1.bg,
+                    border: `1px solid ${F1.line}`,
+                    padding: 14,
+                  }}
+                >
+                  <Image
+                    src={team.logo}
+                    alt={team.name}
+                    width={56}
+                    height={56}
+                    className="object-contain"
+                    unoptimized
+                  />
+                </div>
+                <div className="min-w-0">
+                  <h1
+                    className="font-display uppercase m-0"
+                    style={{
+                      fontWeight: 700,
+                      fontSize: "clamp(48px, 6vw, 80px)",
+                      lineHeight: 0.9,
+                      letterSpacing: "-0.04em",
+                      color: F1.fg,
+                    }}
+                  >
+                    {team.name}
+                    <span style={{ color: team.color }}>.</span>
+                  </h1>
+                  <Mono
+                    className="block mt-2"
+                    style={{
+                      fontSize: 12,
+                      color: F1.fg2,
+                      letterSpacing: "0.16em",
+                    }}
+                  >
+                    {team.fullName.toUpperCase()}
+                  </Mono>
+                </div>
               </div>
-              <div>
-                <p className="text-[10px] uppercase tracking-widest text-text-muted">Constructor</p>
-                <h1 className="text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
-                  {team.name}
-                </h1>
-                <p className="mt-0.5 text-sm text-text-secondary">{team.fullName}</p>
+
+              {/* CHAMPIONSHIP TILE */}
+              <div
+                className="relative"
+                style={{
+                  background: F1.bg2,
+                  border: `1px solid ${team.color}55`,
+                  padding: "20px 24px",
+                }}
+              >
+                <Brackets color={team.color} size={10} />
+                <Mono
+                  className="block"
+                  style={{ fontSize: 10, color: F1.fg3, letterSpacing: "0.2em" }}
+                >
+                  CHAMPIONSHIP
+                </Mono>
+                <div
+                  className="font-display"
+                  style={{
+                    fontSize: 64,
+                    fontWeight: 700,
+                    color: team.color,
+                    lineHeight: 1,
+                    letterSpacing: "-0.04em",
+                    marginTop: 6,
+                  }}
+                >
+                  {constructorStanding?.position ? `P${constructorStanding.position}` : "—"}
+                </div>
+                <Mono
+                  className="block"
+                  style={{ fontSize: 11, color: F1.fg2, marginTop: 8, letterSpacing: "0.14em" }}
+                >
+                  {totalPoints} <span style={{ color: F1.fg3 }}>PTS</span> · {totalWins}{" "}
+                  <span style={{ color: F1.fg3 }}>{totalWins === 1 ? "WIN" : "WINS"}</span>
+                </Mono>
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* ── B. Championship Position ── */}
-        <div
-          className="col-span-2 flex flex-col items-center justify-center rounded-2xl border p-6 text-center"
-          style={{ borderColor: team.color + "30", backgroundColor: team.color + "08" }}
-        >
-          <p className="text-[10px] uppercase tracking-widest text-text-muted">Championship</p>
-          <p className="mt-2 font-mono text-5xl font-black" style={{ color: team.color }}>
-            {constructorStanding?.position ? `P${constructorStanding.position}` : "-"}
-          </p>
-          <p className="mt-1 font-mono text-sm text-text-secondary">
-            {totalPoints} <span className="text-text-muted">pts</span> · {totalWins} <span className="text-text-muted">wins</span>
-          </p>
-        </div>
-
-        {/* ── C. Drivers — wide card with headshots ── */}
-        <div className="col-span-2 rounded-2xl border border-border-subtle bg-bg-secondary p-5 md:col-span-4">
-          <h3 className="text-xs font-semibold uppercase tracking-widest text-text-muted">Drivers</h3>
-          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {teamDrivers.map((d) => {
-              const standing = driverStandingMap.get(d.abbreviation);
-              const pos = standing?.position;
-              const pts = standing?.points ?? 0;
-              return (
-                <Link
-                  key={d.id}
-                  href={`/drivers/${d.slug}`}
-                  className="flex items-center gap-4 rounded-xl border border-border-subtle bg-bg-tertiary p-4 transition-colors hover:bg-bg-primary"
-                >
-                  <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border-2 bg-bg-primary" style={{ borderColor: team.color }}>
-                    <Image src={d.image} alt={`${d.firstName} ${d.lastName}`} fill className="object-cover object-top" unoptimized />
+            {/* DETAILS STRIP */}
+            <div
+              className="grid mt-9"
+              style={{
+                gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+                gap: 1,
+                background: F1.line,
+                border: `1px solid ${F1.line}`,
+              }}
+            >
+              {[
+                ["ENGINE", team.engine],
+                ["BASE", team.base],
+                ["PRINCIPAL", team.principal],
+              ].map(([label, value]) => (
+                <div key={label} style={{ background: F1.bg, padding: "16px 20px" }}>
+                  <Mono style={{ fontSize: 10, color: F1.fg3, letterSpacing: "0.2em" }}>
+                    {label}
+                  </Mono>
+                  <div
+                    className="font-display"
+                    style={{
+                      fontSize: 18,
+                      fontWeight: 600,
+                      color: F1.fg,
+                      letterSpacing: "-0.01em",
+                      marginTop: 6,
+                    }}
+                  >
+                    {value}
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="font-bold text-text-primary">
-                      {d.firstName} <span style={{ color: team.color }}>{d.lastName}</span>
-                    </p>
-                    <p className="text-xs text-text-muted">#{d.number} · {d.abbreviation}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-mono text-xs font-bold" style={{ color: team.color }}>
-                      {pos ? `P${pos}` : "-"}
-                    </p>
-                    <p className="font-mono text-lg font-bold text-text-primary">
-                      {pts}<span className="text-[9px] text-text-muted"> pts</span>
-                    </p>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* ── D. Team Info ── */}
-        <div className="col-span-2 rounded-2xl border border-border-subtle bg-bg-secondary p-5">
-          <h3 className="text-xs font-semibold uppercase tracking-widest text-text-muted">Details</h3>
-          <div className="mt-4 space-y-4">
-            {[
-              { label: "Engine", value: team.engine },
-              { label: "Base", value: team.base },
-              { label: "Principal", value: team.principal },
-            ].map((row) => (
-              <div key={row.label} className="flex items-center justify-between border-b border-border-subtle pb-3 last:border-0 last:pb-0">
-                <span className="text-xs text-text-muted">{row.label}</span>
-                <span className="text-right text-sm font-medium text-text-primary">{row.value}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* ── E. Constructor History ── */}
-        {historicalStandings.length > 0 && (
-          <div className="col-span-2 rounded-2xl border border-border-subtle bg-bg-secondary p-5 md:col-span-6">
-            <h3 className="text-xs font-semibold uppercase tracking-widest text-text-muted">Constructor Timeline</h3>
-            <div className="mt-4 grid grid-cols-5 gap-2">
-              {historicalStandings.map((h) => (
-                <div key={h.year} className="rounded-xl border border-border-subtle bg-bg-tertiary p-4 text-center">
-                  <p className="font-mono text-xs text-text-muted">{h.year}</p>
-                  <p className="mt-2 font-mono text-2xl font-bold" style={{ color: posColor(h.position) }}>
-                    {h.position ? `P${h.position}` : "-"}
-                  </p>
-                  <div className="mx-auto mt-2 h-1 w-8 rounded-full" style={{ backgroundColor: posColor(h.position), opacity: 0.4 }} />
-                  <p className="mt-2 font-mono text-[10px] text-text-muted">{h.points} pts</p>
-                  <p className="font-mono text-[10px] text-text-muted">{h.wins} {h.wins === 1 ? "win" : "wins"}</p>
                 </div>
               ))}
-              <div className="rounded-xl border p-4 text-center" style={{ borderColor: team.color + "40", backgroundColor: team.color + "06" }}>
-                <p className="font-mono text-xs font-semibold" style={{ color: team.color }}>2026</p>
-                <p className="mt-2 font-mono text-2xl font-bold" style={{ color: team.color }}>
-                  {constructorStanding?.position ? `P${constructorStanding.position}` : "-"}
-                </p>
-                <div className="mx-auto mt-2 h-1 w-8 rounded-full" style={{ backgroundColor: team.color, opacity: 0.5 }} />
-                <p className="mt-2 font-mono text-[10px] text-text-muted">{totalPoints} pts</p>
-                <p className="font-mono text-[10px] text-text-muted">{totalWins} {totalWins === 1 ? "win" : "wins"}</p>
-              </div>
             </div>
           </div>
-        )}
+        </section>
 
-        {/* ── F. Season Results Table ── */}
-        <div className="col-span-2 rounded-2xl border border-border-subtle bg-bg-secondary p-5 md:col-span-6">
-          <h3 className="text-xs font-semibold uppercase tracking-widest text-text-muted">2026 Race Results</h3>
-
-          {raceData.length > 0 ? (
-            <div className="mt-4 overflow-hidden rounded-lg border border-border-subtle">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border-subtle bg-bg-tertiary text-[10px] uppercase tracking-widest text-text-muted">
-                    <th className="px-4 py-2.5 text-left font-medium">Rnd</th>
-                    <th className="px-4 py-2.5 text-left font-medium">Race</th>
-                    {teamDrivers.map((d) => (
-                      <th key={d.id} className="hidden px-4 py-2.5 text-right font-medium sm:table-cell">{d.abbreviation}</th>
-                    ))}
-                    <th className="px-4 py-2.5 text-right font-medium">Pts</th>
-                    <th className="px-4 py-2.5 text-right font-medium">Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {raceData.map((r) => (
-                    <tr key={r.round} className="border-b border-border-subtle last:border-0">
-                      <td className="px-4 py-3 font-mono text-text-muted">R{r.round}</td>
-                      <td className="px-4 py-3 text-text-primary">{r.raceName}</td>
-                      {r.driverResults.map((dr) => (
-                        <td key={dr.driver.id} className="hidden px-4 py-3 text-right sm:table-cell">
-                          <span className="font-mono font-bold" style={{ color: posColor(dr.position) }}>
-                            {dr.position ? `P${dr.position}` : "-"}
-                          </span>
-                        </td>
-                      ))}
-                      <td className="px-4 py-3 text-right font-mono text-text-secondary">
-                        {r.racePoints > 0 ? r.racePoints : "-"}
-                      </td>
-                      <td className="px-4 py-3 text-right font-mono font-bold text-text-primary">
-                        {r.cumulativePoints}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <p className="mt-4 text-sm text-text-muted">No race data available yet for 2026.</p>
-          )}
-        </div>
-
-        {/* ── G. Points Progression Bars ── */}
-        {raceData.length > 0 && (
-          <div className="col-span-2 rounded-2xl border border-border-subtle bg-bg-secondary p-5 md:col-span-6">
-            <h3 className="text-xs font-semibold uppercase tracking-widest text-text-muted">Points Progression</h3>
-            <div className="mt-4 space-y-2">
-              {raceData.map((r) => {
-                const maxCum = raceData[raceData.length - 1].cumulativePoints || 1;
-                const pct = Math.max((r.cumulativePoints / maxCum) * 100, 3);
+        {/* DRIVERS */}
+        <section
+          className="relative"
+          style={{ padding: "40px 32px", borderBottom: `1px solid ${F1.line}` }}
+        >
+          <div className="mx-auto" style={{ maxWidth: 1400 }}>
+            <SectionHeader label="DRIVERS" accent={team.color} />
+            <div
+              className="grid"
+              style={{
+                gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))",
+                gap: 1,
+                background: F1.line,
+                border: `1px solid ${F1.line}`,
+              }}
+            >
+              {teamDrivers.map((d) => {
+                const standing = driverStandingMap.get(d.abbreviation);
+                const pos = standing?.position;
+                const pts = standing?.points ?? 0;
                 return (
-                  <div key={r.round}>
-                    <div className="mb-1 flex items-center justify-between text-[10px] text-text-muted">
-                      <span>R{r.round} · {r.raceName}</span>
-                      <span className="font-mono">{r.cumulativePoints} pts</span>
+                  <Link
+                    key={d.id}
+                    href={`/drivers/${d.slug}`}
+                    className="group flex items-center gap-4"
+                    style={{
+                      background: F1.bg,
+                      borderTop: `2px solid ${team.color}`,
+                      padding: "16px 18px",
+                    }}
+                  >
+                    <div
+                      className="relative shrink-0 overflow-hidden"
+                      style={{
+                        width: 60,
+                        height: 60,
+                        background: F1.bg2,
+                        border: `1px solid ${team.color}55`,
+                      }}
+                    >
+                      <Image
+                        src={d.image}
+                        alt={`${d.firstName} ${d.lastName}`}
+                        fill
+                        className="object-cover object-top"
+                        unoptimized
+                      />
                     </div>
-                    <div className="h-2 overflow-hidden rounded-full bg-bg-tertiary">
-                      <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: team.color }} />
+                    <div className="min-w-0 flex-1">
+                      <Mono
+                        className="block"
+                        style={{ fontSize: 10, color: F1.fg3, letterSpacing: "0.18em" }}
+                      >
+                        {d.firstName.toUpperCase()}
+                      </Mono>
+                      <div
+                        className="font-display"
+                        style={{
+                          fontSize: 22,
+                          fontWeight: 700,
+                          color: F1.fg,
+                          letterSpacing: "-0.02em",
+                          lineHeight: 1.05,
+                        }}
+                      >
+                        {d.lastName.toUpperCase()}
+                      </div>
+                      <Mono
+                        className="block"
+                        style={{ fontSize: 10, color: F1.fg3, letterSpacing: "0.16em", marginTop: 4 }}
+                      >
+                        #{d.number} · {d.abbreviation}
+                      </Mono>
                     </div>
-                  </div>
+                    <div className="text-right shrink-0">
+                      <Mono
+                        className="block"
+                        style={{
+                          fontSize: 11,
+                          color: pos ? team.color : F1.fg3,
+                          fontWeight: 700,
+                          letterSpacing: "0.08em",
+                        }}
+                      >
+                        {pos ? `P${pos}` : "—"}
+                      </Mono>
+                      <StatValue size={26} color={F1.fg}>
+                        {pts}
+                      </StatValue>
+                      <Mono
+                        className="block"
+                        style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.18em" }}
+                      >
+                        PTS
+                      </Mono>
+                    </div>
+                  </Link>
                 );
               })}
             </div>
           </div>
+        </section>
+
+        {/* CONSTRUCTOR TIMELINE */}
+        {historicalStandings.length > 0 && (
+          <section
+            className="relative"
+            style={{ padding: "40px 32px", borderBottom: `1px solid ${F1.line}` }}
+          >
+            <div className="mx-auto" style={{ maxWidth: 1400 }}>
+              <SectionHeader label="CONSTRUCTOR TIMELINE" accent={team.color} />
+              <div
+                className="grid"
+                style={{
+                  gridTemplateColumns: `repeat(${historicalStandings.length + 1}, minmax(0, 1fr))`,
+                  gap: 1,
+                  background: F1.line,
+                  border: `1px solid ${F1.line}`,
+                }}
+              >
+                {historicalStandings.map((h) => (
+                  <div
+                    key={h.year}
+                    style={{
+                      background: F1.bg,
+                      padding: "20px 16px",
+                      textAlign: "center",
+                    }}
+                  >
+                    <Mono style={{ fontSize: 10, color: F1.fg3, letterSpacing: "0.2em" }}>
+                      {h.year}
+                    </Mono>
+                    <div
+                      className="font-display"
+                      style={{
+                        fontSize: 36,
+                        fontWeight: 700,
+                        color: posColor(h.position),
+                        lineHeight: 1,
+                        letterSpacing: "-0.03em",
+                        marginTop: 8,
+                      }}
+                    >
+                      {h.position ? `P${h.position}` : "—"}
+                    </div>
+                    <div
+                      className="mx-auto"
+                      style={{
+                        marginTop: 8,
+                        height: 2,
+                        width: 32,
+                        background: posColor(h.position),
+                        opacity: 0.6,
+                      }}
+                    />
+                    <Mono
+                      className="block"
+                      style={{ fontSize: 10, color: F1.fg3, marginTop: 8 }}
+                    >
+                      {h.points} pts
+                    </Mono>
+                    <Mono
+                      className="block"
+                      style={{ fontSize: 10, color: F1.fg3 }}
+                    >
+                      {h.wins} {h.wins === 1 ? "win" : "wins"}
+                    </Mono>
+                  </div>
+                ))}
+                <div
+                  style={{
+                    background: F1.bg,
+                    padding: "20px 16px",
+                    textAlign: "center",
+                    borderTop: `2px solid ${team.color}`,
+                    boxShadow: `inset 0 0 0 1px ${team.color}40`,
+                  }}
+                >
+                  <Mono style={{ fontSize: 10, color: team.color, letterSpacing: "0.2em", fontWeight: 700 }}>
+                    2026
+                  </Mono>
+                  <div
+                    className="font-display"
+                    style={{
+                      fontSize: 36,
+                      fontWeight: 700,
+                      color: team.color,
+                      lineHeight: 1,
+                      letterSpacing: "-0.03em",
+                      marginTop: 8,
+                    }}
+                  >
+                    {constructorStanding?.position ? `P${constructorStanding.position}` : "—"}
+                  </div>
+                  <div
+                    className="mx-auto"
+                    style={{
+                      marginTop: 8,
+                      height: 2,
+                      width: 32,
+                      background: team.color,
+                    }}
+                  />
+                  <Mono className="block" style={{ fontSize: 10, color: F1.fg3, marginTop: 8 }}>
+                    {totalPoints} pts
+                  </Mono>
+                  <Mono className="block" style={{ fontSize: 10, color: F1.fg3 }}>
+                    {totalWins} {totalWins === 1 ? "win" : "wins"}
+                  </Mono>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* RACE RESULTS */}
+        <section
+          className="relative"
+          style={{ padding: "40px 32px", borderBottom: `1px solid ${F1.line}` }}
+        >
+          <div className="mx-auto" style={{ maxWidth: 1400 }}>
+            <SectionHeader label="2026 RACE RESULTS" accent={team.color} />
+            {raceData.length > 0 ? (
+              <div
+                style={{
+                  background: F1.bg2,
+                  border: `1px solid ${F1.line}`,
+                  overflow: "hidden",
+                }}
+              >
+                <table className="w-full" style={{ borderCollapse: "collapse" }}>
+                  <thead>
+                    <tr style={{ background: F1.bg, borderBottom: `1px solid ${F1.line}` }}>
+                      <th
+                        className="font-mono text-left"
+                        style={{
+                          padding: "12px 18px",
+                          fontSize: 10,
+                          color: F1.fg3,
+                          letterSpacing: "0.2em",
+                          fontWeight: 600,
+                        }}
+                      >
+                        RND
+                      </th>
+                      <th
+                        className="font-mono text-left"
+                        style={{
+                          padding: "12px 18px",
+                          fontSize: 10,
+                          color: F1.fg3,
+                          letterSpacing: "0.2em",
+                          fontWeight: 600,
+                        }}
+                      >
+                        RACE
+                      </th>
+                      {teamDrivers.map((d) => (
+                        <th
+                          key={d.id}
+                          className="font-mono text-right hidden sm:table-cell"
+                          style={{
+                            padding: "12px 18px",
+                            fontSize: 10,
+                            color: F1.fg3,
+                            letterSpacing: "0.2em",
+                            fontWeight: 600,
+                          }}
+                        >
+                          {d.abbreviation}
+                        </th>
+                      ))}
+                      <th
+                        className="font-mono text-right"
+                        style={{
+                          padding: "12px 18px",
+                          fontSize: 10,
+                          color: F1.fg3,
+                          letterSpacing: "0.2em",
+                          fontWeight: 600,
+                        }}
+                      >
+                        PTS
+                      </th>
+                      <th
+                        className="font-mono text-right"
+                        style={{
+                          padding: "12px 18px",
+                          fontSize: 10,
+                          color: F1.fg3,
+                          letterSpacing: "0.2em",
+                          fontWeight: 600,
+                        }}
+                      >
+                        TOTAL
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {raceData.map((r) => (
+                      <tr
+                        key={r.round}
+                        style={{ borderBottom: `1px solid ${F1.line}` }}
+                      >
+                        <td
+                          className="font-mono"
+                          style={{
+                            padding: "14px 18px",
+                            color: F1.fg3,
+                            fontSize: 12,
+                            letterSpacing: "0.08em",
+                          }}
+                        >
+                          R{String(r.round).padStart(2, "0")}
+                        </td>
+                        <td
+                          className="font-display"
+                          style={{
+                            padding: "14px 18px",
+                            color: F1.fg,
+                            fontSize: 14,
+                            fontWeight: 500,
+                            letterSpacing: "-0.01em",
+                          }}
+                        >
+                          {r.raceName}
+                        </td>
+                        {r.driverResults.map((dr) => (
+                          <td
+                            key={dr.driver.id}
+                            className="font-mono text-right hidden sm:table-cell tabular-nums"
+                            style={{
+                              padding: "14px 18px",
+                              color: posColor(dr.position),
+                              fontSize: 13,
+                              fontWeight: 700,
+                            }}
+                          >
+                            {dr.position ? `P${dr.position}` : "—"}
+                          </td>
+                        ))}
+                        <td
+                          className="font-mono text-right tabular-nums"
+                          style={{
+                            padding: "14px 18px",
+                            color: F1.fg2,
+                            fontSize: 13,
+                          }}
+                        >
+                          {r.racePoints > 0 ? r.racePoints : "—"}
+                        </td>
+                        <td
+                          className="font-mono text-right tabular-nums"
+                          style={{
+                            padding: "14px 18px",
+                            color: F1.fg,
+                            fontSize: 14,
+                            fontWeight: 700,
+                          }}
+                        >
+                          {r.cumulativePoints}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <Mono style={{ color: F1.fg3, fontSize: 12, letterSpacing: "0.14em" }}>
+                NO RACE DATA AVAILABLE YET FOR 2026.
+              </Mono>
+            )}
+          </div>
+        </section>
+
+        {/* POINTS PROGRESSION */}
+        {raceData.length > 0 && (
+          <section className="relative" style={{ padding: "40px 32px 60px" }}>
+            <div className="mx-auto" style={{ maxWidth: 1400 }}>
+              <SectionHeader label="POINTS PROGRESSION" accent={team.color} />
+              <div
+                style={{
+                  background: F1.bg2,
+                  border: `1px solid ${F1.line}`,
+                  padding: "20px 24px",
+                }}
+              >
+                <div className="space-y-3">
+                  {raceData.map((r) => {
+                    const maxCum = raceData[raceData.length - 1].cumulativePoints || 1;
+                    const pct = Math.max((r.cumulativePoints / maxCum) * 100, 3);
+                    return (
+                      <div key={r.round}>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <Mono
+                            style={{
+                              fontSize: 10,
+                              color: F1.fg3,
+                              letterSpacing: "0.14em",
+                            }}
+                          >
+                            R{String(r.round).padStart(2, "0")} · {r.raceName.toUpperCase()}
+                          </Mono>
+                          <Mono
+                            style={{
+                              fontSize: 11,
+                              color: F1.fg,
+                              fontWeight: 700,
+                              letterSpacing: "0.08em",
+                            }}
+                          >
+                            {r.cumulativePoints} PTS
+                          </Mono>
+                        </div>
+                        <div
+                          className="relative"
+                          style={{ height: 3, background: F1.bg }}
+                        >
+                          <div
+                            style={{
+                              height: "100%",
+                              width: `${pct}%`,
+                              background: team.color,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </section>
         )}
       </div>
     </PageTransition>

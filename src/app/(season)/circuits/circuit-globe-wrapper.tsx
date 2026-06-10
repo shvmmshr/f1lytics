@@ -7,7 +7,12 @@ const CircuitGlobe = dynamic(
   () => import("./circuit-globe").then((m) => ({ default: m.CircuitGlobe })),
   {
     ssr: false,
-    loading: () => <div className="h-[500px] w-full rounded-2xl bg-card-bg" />,
+    loading: () => (
+      <div
+        className="h-[500px] w-full"
+        style={{ background: "#141418", border: "1px solid #27272A" }}
+      />
+    ),
   }
 );
 
