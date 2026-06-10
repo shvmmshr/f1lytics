@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getConstructorStandings, getDriverStandings } from "@/lib/api/jolpica";
-import { DRIVER_LIST, TEAM_LIST, TEAMS } from "@/lib/constants";
+import { DRIVER_LIST, TEAMS } from "@/lib/constants";
+import { mapConstructorToTeamId } from "@/lib/constructor-map";
 import { PageTransition } from "@/components/layout/page-transition";
 import {
   F1,
@@ -16,50 +17,6 @@ export const metadata: Metadata = {
   title: "Standings",
   description: "Driver and constructor championship standings for the 2026 F1 season",
 };
-
-const CONSTRUCTOR_TO_TEAM: Record<string, string> = {
-  mclaren: "mclaren",
-  ferrari: "ferrari",
-  red_bull: "red_bull",
-  mercedes: "mercedes",
-  aston_martin: "aston_martin",
-  alpine: "alpine",
-  williams: "williams",
-  rb: "racing_bulls",
-  racing_bulls: "racing_bulls",
-  haas: "haas",
-  sauber: "audi",
-  kick_sauber: "audi",
-  audi: "audi",
-  cadillac: "cadillac",
-};
-
-function normalize(value: string): string {
-  return value.toLowerCase().replace(/[^a-z0-9]/g, "");
-}
-
-function mapConstructorToTeamId(constructorId: string, constructorName: string): string | undefined {
-  const mappedId = CONSTRUCTOR_TO_TEAM[constructorId];
-  if (mappedId && TEAMS[mappedId]) return mappedId;
-
-  const normalizedName = normalize(constructorName);
-
-  if (normalizedName.includes("racingbulls") || normalizedName === "rb") return "racing_bulls";
-  if (normalizedName.includes("sauber")) return "audi";
-  if (normalizedName.includes("redbull")) return "red_bull";
-
-  const matchedTeam = TEAM_LIST.find((team) => {
-    const teamName = normalize(team.name);
-    const teamFullName = normalize(team.fullName);
-    return (
-      teamName === normalizedName ||
-      teamFullName.includes(normalizedName) ||
-      normalizedName.includes(teamName)
-    );
-  });
-
-  return matchedTeam?.id;
-}
 
 export default async function StandingsPage() {
   let driverStandings: Awaited<ReturnType<typeof getDriverStandings>> = [];

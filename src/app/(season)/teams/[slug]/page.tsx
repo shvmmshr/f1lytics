@@ -3,7 +3,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getConstructorStandings, getDriverStandings, getRaceResults } from "@/lib/api/jolpica";
-import { TEAM_LIST, TEAMS, getTeamBySlug } from "@/lib/constants";
+import { TEAM_LIST, getTeamBySlug } from "@/lib/constants";
+import { mapConstructorToTeamId } from "@/lib/constructor-map";
 import { DRIVERS, type Driver } from "@/lib/constants/drivers";
 import { PageTransition } from "@/components/layout/page-transition";
 import {
@@ -17,37 +18,6 @@ import {
 
 interface TeamPageProps {
   params: Promise<{ slug: string }>;
-}
-
-const CONSTRUCTOR_TO_TEAM: Record<string, string> = {
-  mclaren: "mclaren",
-  ferrari: "ferrari",
-  red_bull: "red_bull",
-  mercedes: "mercedes",
-  aston_martin: "aston_martin",
-  alpine: "alpine",
-  williams: "williams",
-  rb: "racing_bulls",
-  racing_bulls: "racing_bulls",
-  haas: "haas",
-  sauber: "audi",
-  kick_sauber: "audi",
-  audi: "audi",
-  cadillac: "cadillac",
-};
-
-function normalize(value: string): string {
-  return value.toLowerCase().replace(/[^a-z0-9]/g, "");
-}
-
-function mapConstructorToTeamId(constructorId: string, constructorName: string): string | undefined {
-  const mappedId = CONSTRUCTOR_TO_TEAM[constructorId];
-  if (mappedId && TEAMS[mappedId]) return mappedId;
-  const n = normalize(constructorName);
-  if (n.includes("racingbulls") || n === "rb") return "racing_bulls";
-  if (n.includes("sauber")) return "audi";
-  if (n.includes("redbull")) return "red_bull";
-  return TEAM_LIST.find((t) => n.includes(normalize(t.name)) || normalize(t.name).includes(n))?.id;
 }
 
 export function generateStaticParams() {
@@ -66,6 +36,10 @@ export async function generateMetadata({ params }: TeamPageProps): Promise<Metad
 
 function getTeamDrivers(ids: [string, string]): Driver[] {
   return ids.map((id) => DRIVERS[id]).filter(Boolean);
+}
+
+function normalize(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]/g, "");
 }
 
 // Fetch historical constructor standings

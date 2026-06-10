@@ -482,7 +482,8 @@ function DriverSelector({
         >
           {DRIVER_LIST.map((d) => (
             <SelectItem key={d.id} value={d.id} disabled={d.id === exclude}>
-              {d.firstName} {d.lastName} — {TEAMS[d.teamId].name}
+              {d.firstName} {d.lastName}
+              {TEAMS[d.teamId] ? ` — ${TEAMS[d.teamId].name}` : ""}
             </SelectItem>
           ))}
         </SelectContent>
@@ -967,23 +968,10 @@ function DriverComparison({ stats }: { stats: Record<string, DriverStat> }) {
 
 /* ── Team Comparison ── */
 
-function normalize(name: string): string {
-  return name.toLowerCase().replace(/[^a-z]/g, "");
-}
-
 function getConstructorStat(team: Team, stats: Record<string, ConstructorStat>): ConstructorStat {
-  for (const [key, stat] of Object.entries(stats)) {
-    if (
-      key.includes(normalize(team.name)) ||
-      normalize(team.name).includes(key) ||
-      (team.id === "red_bull" && key.includes("redbull")) ||
-      (team.id === "racing_bulls" && (key.includes("racingbulls") || key === "rb")) ||
-      (team.id === "audi" && key.includes("sauber"))
-    ) {
-      return stat;
-    }
-  }
-  return { position: null, points: 0, wins: 0, pointsPerRound: [] };
+  // Stats are now keyed by f1lytics team id (see compare/page.tsx), so this is a
+  // direct lookup — no fragile name-substring matching.
+  return stats[team.id] ?? { position: null, points: 0, wins: 0, pointsPerRound: [] };
 }
 
 function TeamVsHero({

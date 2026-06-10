@@ -1,8 +1,16 @@
 import type { Metadata } from "next";
 import { getDriverStandings, getConstructorStandings, getRaceResults, getAllQualifyingResults } from "@/lib/api/jolpica";
+import { mapConstructorToTeamId } from "@/lib/constructor-map";
 import { PageTransition } from "@/components/layout/page-transition";
 import { F1, Mono, Grid as BroadcastGrid } from "@/components/shared/broadcast";
 import { CompareTool } from "./compare-tool";
+
+/** Driver 3-letter code, falling back to the first 3 letters of the surname when
+ *  Jolpica omits `code` (can happen for rookies). Keeps the same key across the
+ *  standings, race-result and qualifying loops so a driver's stats don't split. */
+function driverCode(driver: { code?: string; familyName: string }): string {
+  return (driver.code ?? driver.familyName.slice(0, 3)).toUpperCase();
+}
 
 export const metadata: Metadata = {
   title: "Compare",
@@ -75,8 +83,7 @@ export default async function ComparePage() {
   const driverStats: Record<string, DriverStat> = {};
 
   for (const s of driverStandings) {
-    const code = s.Driver.code?.toUpperCase();
-    if (!code) continue;
+    const code = driverCode(s.Driver);
     const pos = Number.parseInt(s.position, 10);
     driverStats[code] = {
       position: Number.isNaN(pos) ? null : pos,
@@ -105,16 +112,21 @@ export default async function ComparePage() {
   for (const race of sortedRaces) {
     const round = Number.parseInt(race.round, 10);
     for (const result of race.Results ?? []) {
-      const code = result.Driver.code?.toUpperCase();
-      if (!code || !driverStats[code]) continue;
+      const code = driverCode(result.Driver);
+      if (!driverStats[code]) continue;
       const pos = Number.parseInt(result.position, 10);
       const pts = Number.parseFloat(result.points) || 0;
       const isFinished = result.status === "Finished" || result.status?.startsWith("+");
 
       driverStats[code].races++;
       if (!Number.isNaN(pos)) {
-        if (pos <= 3) driverStats[code].podiums++;
-        if (driverStats[code].bestFinish === null || pos < driverStats[code].bestFinish!) {
+        // Podiums/best finish only count classified finishes (a retirement
+        // can still carry a numeric classification position).
+        if (isFinished && pos <= 3) driverStats[code].podiums++;
+        if (
+          isFinished &&
+          (driverStats[code].bestFinish === null || pos < driverStats[code].bestFinish!)
+        ) {
           driverStats[code].bestFinish = pos;
         }
       }
@@ -152,8 +164,8 @@ export default async function ComparePage() {
   for (const quali of qualifyingResults) {
     const round = Number.parseInt(quali.round, 10);
     for (const result of quali.QualifyingResults ?? []) {
-      const code = result.Driver.code?.toUpperCase();
-      if (!code || !driverStats[code]) continue;
+      const code = driverCode(result.Driver);
+      if (!driverStats[code]) continue;
       const pos = Number.parseInt(result.position, 10);
       if (!Number.isNaN(pos)) {
         driverStats[code].qualifyingHistory.push({
@@ -178,10 +190,14 @@ export default async function ComparePage() {
   const constructorStats: Record<string, ConstructorStat> = {};
 
   for (const s of constructorStandings) {
-    const name = s.Constructor.name?.toLowerCase().replace(/[^a-z]/g, "");
-    if (!name) continue;
+    // Key by our internal team id (handles Cadillac/Haas/Audi which the old
+    // name-substring match missed). Falls back to a normalized name key.
+    const teamId =
+      mapConstructorToTeamId(s.Constructor.constructorId, s.Constructor.name) ??
+      s.Constructor.name?.toLowerCase().replace(/[^a-z]/g, "");
+    if (!teamId) continue;
     const pos = Number.parseInt(s.position, 10);
-    constructorStats[name] = {
+    constructorStats[teamId] = {
       position: Number.isNaN(pos) ? null : pos,
       points: Number.parseFloat(s.points) || 0,
       wins: Number.parseInt(s.wins, 10) || 0,
@@ -196,16 +212,18 @@ export default async function ComparePage() {
     const roundConstructorPoints: Record<string, number> = {};
     const round = Number.parseInt(race.round, 10);
     for (const result of race.Results ?? []) {
-      const cName = result.Constructor.name?.toLowerCase().replace(/[^a-z]/g, "");
-      if (!cName) continue;
-      roundConstructorPoints[cName] = (roundConstructorPoints[cName] ?? 0) + (Number.parseFloat(result.points) || 0);
+      const teamId =
+        mapConstructorToTeamId(result.Constructor.constructorId, result.Constructor.name) ??
+        result.Constructor.name?.toLowerCase().replace(/[^a-z]/g, "");
+      if (!teamId) continue;
+      roundConstructorPoints[teamId] = (roundConstructorPoints[teamId] ?? 0) + (Number.parseFloat(result.points) || 0);
     }
-    for (const [cName, pts] of Object.entries(roundConstructorPoints)) {
-      constructorCumulative[cName] = (constructorCumulative[cName] ?? 0) + pts;
-      if (constructorStats[cName]) {
-        constructorStats[cName].pointsPerRound.push({
+    for (const [teamId, pts] of Object.entries(roundConstructorPoints)) {
+      constructorCumulative[teamId] = (constructorCumulative[teamId] ?? 0) + pts;
+      if (constructorStats[teamId]) {
+        constructorStats[teamId].pointsPerRound.push({
           round,
-          cumulativePoints: constructorCumulative[cName],
+          cumulativePoints: constructorCumulative[teamId],
         });
       }
     }
