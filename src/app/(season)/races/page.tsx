@@ -28,16 +28,17 @@ export default async function RacesPage() {
     // Continue with static data if API is unavailable.
   }
 
-  const winnerByRound = new Map<
-    number,
+  // Keyed by race date, not round — Jolpica renumbers rounds when races are
+  // cancelled, so its round 4 (Miami) ≠ our round 4 (cancelled Bahrain).
+  const winnerByDate = new Map<
+    string,
     { name: string; constructor: string }
   >();
   raceResults.forEach((race) => {
-    const round = Number.parseInt(race.round, 10);
     const winner = race.Results?.find((result) => result.position === "1");
     if (!winner) return;
 
-    winnerByRound.set(round, {
+    winnerByDate.set(race.date, {
       name: `${winner.Driver.givenName} ${winner.Driver.familyName}`,
       constructor: winner.Constructor.name,
     });
@@ -90,7 +91,7 @@ export default async function RacesPage() {
           {CIRCUIT_LIST.map((circuit) => {
             const isCancelled = circuit.cancelled === true;
             const isPast = circuit.raceDate < today;
-            const winner = !isCancelled ? winnerByRound.get(circuit.round) : undefined;
+            const winner = !isCancelled ? winnerByDate.get(circuit.raceDate) : undefined;
             const accent = isCancelled
               ? F1.red
               : circuit.isSprint

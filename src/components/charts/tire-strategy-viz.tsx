@@ -21,7 +21,8 @@ const COMPOUND_COLORS: Record<string, string> = {
   wet: "#3B82F6",
 };
 
-function getCompoundColor(compound: string): string {
+function getCompoundColor(compound: string | null): string {
+  if (!compound) return "#6B7280";
   const normalized = compound.toLowerCase().trim();
   return COMPOUND_COLORS[normalized] ?? "#6B7280";
 }
@@ -103,9 +104,9 @@ export function TireStrategyViz({ stints, drivers = [] }: TireStrategyVizProps) 
                         width: `${width}%`,
                         backgroundColor: color,
                       }}
-                      title={`${stint.compound} · laps ${stint.lap_start}-${stint.lap_end}`}
+                      title={`${stint.compound ?? "Unknown compound"} · laps ${stint.lap_start}-${stint.lap_end}`}
                     >
-                      {stint.compound.slice(0, 1).toUpperCase()}
+                      {(stint.compound ?? "?").slice(0, 1).toUpperCase()}
                       {index < driverStints.length - 1 && (
                         <span className="absolute top-0 right-0 h-full w-px bg-black/40" />
                       )}

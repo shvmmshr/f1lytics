@@ -12,6 +12,7 @@ import type {
   OpenF1TeamRadio,
   OpenF1Weather,
 } from "./types";
+import { fetchWithRetry } from "./fetch-retry";
 
 const BASE_URL = "https://api.openf1.org/v1";
 
@@ -55,7 +56,7 @@ async function fetchOpenF1<T>(
     fetchOptions.cache = "no-store";
   }
 
-  const response = await fetch(url.toString(), fetchOptions);
+  const response = await fetchWithRetry(url.toString(), fetchOptions);
 
   if (!response.ok) {
     throw new Error(
@@ -229,11 +230,17 @@ export async function getCarData(params: {
 // =============================================================================
 
 /** Fetch position data for a session (optionally for a single driver). No cache. */
-export async function getPositions(params: {
-  session_key: number;
-  driver_number?: number;
-}): Promise<OpenF1Position[]> {
-  return fetchOpenF1<OpenF1Position>("/position", params);
+export async function getPositions(
+  params: {
+    session_key: number;
+    driver_number?: number;
+  },
+  noStore = false
+): Promise<OpenF1Position[]> {
+  // Cached by default (historical positions never change); the live route
+  // passes noStore. An uncached fetch here would also force `revalidate: 0`,
+  // which breaks static prerendering of the race pages that call this.
+  return fetchOpenF1<OpenF1Position>("/position", params, 3600, noStore);
 }
 
 // =============================================================================

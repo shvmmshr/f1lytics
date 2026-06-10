@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getRaceResults } from "@/lib/api/jolpica";
-import { CIRCUIT_LIST, getCircuitBySlug } from "@/lib/constants";
+import { CIRCUIT_LIST, getApiRound, getCircuitBySlug } from "@/lib/constants";
 import { PageTransition } from "@/components/layout/page-transition";
 import {
   F1,
@@ -61,10 +61,16 @@ export default async function CircuitPage({ params }: CircuitPageProps) {
   let lastWinner: string | null = null;
   let topResults: { position: string; driverId: string; driver: string; team: string; time: string }[] = [];
 
-  if (!circuit.cancelled) {
+  // Skip the fetch for races that haven't run — there are no results to get,
+  // and it keeps the build burst under Jolpica's free-tier rate limit.
+  const raceHasHappened = circuit.raceDate <= new Date().toISOString().split("T")[0];
+
+  if (!circuit.cancelled && raceHasHappened) {
     try {
-      const raceResults = await getRaceResults("2026", String(circuit.round));
-      const race = raceResults[0];
+      // Jolpica renumbers rounds when races are cancelled — translate ours,
+      // and only trust the result if the date confirms it's the same race.
+      const raceResults = await getRaceResults("2026", String(getApiRound(circuit)));
+      const race = raceResults[0]?.date === circuit.raceDate ? raceResults[0] : undefined;
       if (race?.Results) {
         const winner = race.Results.find((r) => r.position === "1");
         if (winner) lastWinner = `${winner.Driver.givenName} ${winner.Driver.familyName}`;

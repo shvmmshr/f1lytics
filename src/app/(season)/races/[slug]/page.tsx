@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getRaceResults } from "@/lib/api/jolpica";
 import { getLaps, getPositions, getRaceControl, getSessions, getStints } from "@/lib/api/openf1";
-import { CIRCUIT_LIST, TEAMS, getCircuitBySlug } from "@/lib/constants";
+import { CIRCUIT_LIST, TEAMS, getApiRound, getCircuitBySlug } from "@/lib/constants";
 import { PageTransition } from "@/components/layout/page-transition";
 import { PositionBadge } from "@/components/shared/position-badge";
 import {
@@ -122,10 +122,24 @@ export default async function RacePage({ params }: RacePageProps) {
   let raceControl: Awaited<ReturnType<typeof getRaceControl>> = [];
   let matchedSession: OpenF1SessionCandidate | null = null;
 
-  if (!circuit.cancelled) {
+  // No data exists for races that haven't run — skip both APIs for them.
+  // This also keeps the build's request burst well under the free-tier
+  // rate limits (16 of 24 races are in the future at season midpoint).
+  const raceHasHappened = circuit.raceDate <= new Date().toISOString().split("T")[0];
+
+  if (!circuit.cancelled && raceHasHappened) {
     try {
-      const raceResults = await getRaceResults("2026", String(circuit.round));
-      race = raceResults[0] ?? null;
+      // Jolpica drops cancelled races from its calendar, so its round numbers
+      // differ from ours — getApiRound translates. The date check guards
+      // against any further renumbering returning a different race entirely.
+      const raceResults = await getRaceResults("2026", String(getApiRound(circuit)));
+      const candidate = raceResults[0] ?? null;
+      race = candidate && candidate.date === circuit.raceDate ? candidate : null;
+      if (candidate && !race) {
+        console.error(
+          `[f1lytics] round mismatch for ${circuit.slug}: API returned ${candidate.raceName} (${candidate.date}), expected ${circuit.raceDate}`
+        );
+      }
     } catch (err) {
       console.error("[f1lytics] race result fetch failed:", err);
       // Keep rendering static race shell if Jolpica is unavailable.
@@ -137,21 +151,32 @@ export default async function RacePage({ params }: RacePageProps) {
         session_name: "Race",
       })) as OpenF1SessionCandidate[];
 
+      // Closest race session by date — but only trust it if it falls within
+      // the race weekend (±4 days), so a missing session can never silently
+      // attach another grand prix's telemetry to this page.
+      const WEEKEND_MS = 4 * 24 * 60 * 60 * 1000;
       matchedSession =
         sessions
           .filter((session) => session.session_name.toLowerCase() === "race")
-          .sort((a, b) => {
-            const diffA = Math.abs(new Date(a.date_start).getTime() - raceDate.getTime());
-            const diffB = Math.abs(new Date(b.date_start).getTime() - raceDate.getTime());
-            return diffA - diffB;
-          })[0] ?? null;
+          .map((session) => ({
+            session,
+            diff: Math.abs(new Date(session.date_start).getTime() - raceDate.getTime()),
+          }))
+          .filter(({ diff }) => diff <= WEEKEND_MS)
+          .sort((a, b) => a.diff - b.diff)[0]?.session ?? null;
 
       if (matchedSession) {
+        // Each call tolerates failure (e.g. an OpenF1 429 during the build
+        // burst) so one throttled endpoint costs one chart, not all four.
+        const logAndEmpty = (endpoint: string) => (err: unknown) => {
+          console.error(`[f1lytics] race ${endpoint} fetch failed:`, err);
+          return [];
+        };
         [laps, stints, positions, raceControl] = await Promise.all([
-          getLaps({ session_key: matchedSession.session_key }),
-          getStints({ session_key: matchedSession.session_key }),
-          getPositions({ session_key: matchedSession.session_key }),
-          getRaceControl({ session_key: matchedSession.session_key }),
+          getLaps({ session_key: matchedSession.session_key }).catch(logAndEmpty("laps")),
+          getStints({ session_key: matchedSession.session_key }).catch(logAndEmpty("stints")),
+          getPositions({ session_key: matchedSession.session_key }).catch(logAndEmpty("positions")),
+          getRaceControl({ session_key: matchedSession.session_key }).catch(logAndEmpty("race control")),
         ]);
       }
     } catch (err) {
@@ -339,7 +364,9 @@ export default async function RacePage({ params }: RacePageProps) {
               </div>
             ) : (
               <Mono style={{ color: F1.fg3, fontSize: 12, letterSpacing: "0.14em" }}>
-                PODIUM DATA WILL APPEAR WHEN RACE RESULTS ARE AVAILABLE.
+                {circuit.cancelled
+                  ? "THIS ROUND WAS CANCELLED — NO PODIUM FOR 2026."
+                  : "PODIUM DATA WILL APPEAR WHEN RACE RESULTS ARE AVAILABLE."}
               </Mono>
             )}
           </div>
@@ -508,7 +535,9 @@ export default async function RacePage({ params }: RacePageProps) {
               </div>
             ) : (
               <Mono style={{ color: F1.fg3, fontSize: 12, letterSpacing: "0.14em" }}>
-                RESULTS TABLE WILL POPULATE AFTER THIS RACE IS COMPLETED.
+                {circuit.cancelled
+                  ? "THIS ROUND WAS CANCELLED — NO RESULTS FOR 2026."
+                  : "RESULTS TABLE WILL POPULATE AFTER THIS RACE IS COMPLETED."}
               </Mono>
             )}
           </div>

@@ -68,7 +68,8 @@ function teamColorFromDriverTeam(teamName: string): string {
   return F1.fg4;
 }
 
-function compoundShort(c: string): "S" | "M" | "H" | "I" | "W" {
+function compoundShort(c: string | null): "S" | "M" | "H" | "I" | "W" | "?" {
+  if (!c) return "?"; // OpenF1 sometimes reports stints with a null compound
   const u = c.toUpperCase();
   if (u.startsWith("S")) return "S";
   if (u.startsWith("M")) return "M";

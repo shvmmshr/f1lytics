@@ -11,6 +11,8 @@ import type {
   RaceSchedule,
 } from "./types";
 
+import { fetchWithRetry } from "./fetch-retry";
+
 const BASE_URL = "https://api.jolpi.ca/ergast/f1";
 
 /**
@@ -25,7 +27,7 @@ async function fetchJolpica<T>(
 ): Promise<JolpicaResponse<T>> {
   const url = `${BASE_URL}${path}`;
 
-  const res = await fetch(url, {
+  const res = await fetchWithRetry(url, {
     next: { revalidate },
   });
 

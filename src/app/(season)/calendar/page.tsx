@@ -46,13 +46,14 @@ export default async function CalendarPage() {
     // Continue with static calendar.
   }
 
-  const winnerByRound = new Map<number, string>();
+  // Keyed by race date, not round — Jolpica renumbers rounds when races are
+  // cancelled, so its round numbers don't match our calendar's.
+  const winnerByDate = new Map<string, string>();
   raceResults.forEach((race) => {
-    const round = Number.parseInt(race.round, 10);
     const winner = race.Results?.find((r) => r.position === "1");
     if (!winner) return;
-    winnerByRound.set(
-      round,
+    winnerByDate.set(
+      race.date,
       `${winner.Driver.givenName.slice(0, 1)}. ${winner.Driver.familyName}`,
     );
   });
@@ -314,7 +315,7 @@ export default async function CalendarPage() {
               const isCancelled = c.cancelled === true;
               const isPast = c.raceDate < todayStr;
               const isNext = nextRace?.id === c.id;
-              const winner = winnerByRound.get(c.round);
+              const winner = isCancelled ? undefined : winnerByDate.get(c.raceDate);
               const stateColor = isCancelled
                 ? F1.fg4
                 : isNext

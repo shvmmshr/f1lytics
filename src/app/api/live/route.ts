@@ -86,7 +86,7 @@ export async function GET(req: Request) {
     ] = await Promise.all([
       // Every call tolerates failure (e.g. an OpenF1 429) so one bad endpoint
       // degrades that panel rather than blanking the whole timing screen.
-      getPositions({ session_key: sessionKey }).catch(() => []),
+      getPositions({ session_key: sessionKey }, true).catch(() => []),
       getIntervals({ session_key: sessionKey }).catch(() => []),
       getDrivers({ session_key: sessionKey }, true).catch(() => []),
       getLaps({ session_key: sessionKey }, true).catch(() => []),

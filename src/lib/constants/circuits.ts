@@ -530,6 +530,19 @@ export function getCircuitBySlug(slug: string): Circuit | undefined {
   return CIRCUIT_LIST.find((circuit) => circuit.slug === slug);
 }
 
+/**
+ * Round number as used by external APIs (Jolpica/Ergast). Cancelled races are
+ * removed from the official calendar entirely, so API round numbers shift down
+ * by the number of cancelled rounds before this one — e.g. with Bahrain (4) and
+ * Saudi Arabia (5) cancelled, our Miami round 6 is Jolpica round 4.
+ */
+export function getApiRound(circuit: Circuit): number {
+  const cancelledBefore = CIRCUIT_LIST.filter(
+    (c) => c.cancelled && c.round < circuit.round
+  ).length;
+  return circuit.round - cancelledBefore;
+}
+
 export function getNextRace(currentDate: Date = new Date()): Circuit | undefined {
   const dateStr = currentDate.toISOString().split("T")[0];
   return CIRCUIT_LIST.find((circuit) => !circuit.cancelled && circuit.raceDate >= dateStr);

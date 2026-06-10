@@ -253,7 +253,8 @@ export interface OpenF1Stint {
   session_key: number;
   driver_number: number;
   stint_number: number;
-  compound: string;
+  /** Tyre compound — null when OpenF1 hasn't classified the stint */
+  compound: string | null;
   lap_start: number;
   lap_end: number;
   tyre_age_at_start: number;
