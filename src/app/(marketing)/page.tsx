@@ -1,6 +1,7 @@
 import { Hero } from "@/components/home/hero";
 import { NextRaceCountdown } from "@/components/home/next-race-countdown";
 import { SeasonCalendarStrip } from "@/components/home/season-calendar-strip";
+import { NewsStrip } from "@/components/home/news-strip";
 import { StatsRow } from "@/components/home/stats-row";
 import { getDriverStandings, getConstructorStandings } from "@/lib/api/jolpica";
 import { DRIVER_LIST, TEAM_LIST } from "@/lib/constants";
@@ -66,6 +67,7 @@ export default async function Home() {
       <div className="space-y-0">
         <NextRaceCountdown />
         <SeasonCalendarStrip />
+        <NewsStrip />
         <StatsRow />
       </div>
     </>
