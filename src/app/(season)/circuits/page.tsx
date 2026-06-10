@@ -5,6 +5,7 @@ import { CIRCUIT_LIST } from "@/lib/constants";
 import { PageTransition } from "@/components/layout/page-transition";
 import { F1, Mono, Grid as BroadcastGrid } from "@/components/shared/broadcast";
 import { CircuitGlobeWrapper } from "./circuit-globe-wrapper";
+import { CircuitsGrid } from "./circuits-grid";
 
 export const metadata: Metadata = {
   title: "Circuits",
@@ -76,19 +77,12 @@ export default function CircuitsPage() {
 
         <CircuitGlobeWrapper circuits={globeCircuits} />
 
-        <div
-          className="grid"
-          style={{
-            gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-            gap: 1,
-            background: F1.line,
-            borderTop: `1px solid ${F1.line}`,
-          }}
-        >
+        <CircuitsGrid>
           {CIRCUIT_LIST.map((circuit) => (
             <Link
               key={circuit.id}
               href={`/circuits/${circuit.slug}`}
+              data-circuit-card
               className="group relative block"
               style={{
                 background: F1.bg,
@@ -218,7 +212,7 @@ export default function CircuitsPage() {
               </div>
             </Link>
           ))}
-        </div>
+        </CircuitsGrid>
       </div>
     </PageTransition>
   );

@@ -5,7 +5,7 @@ import { useGSAP } from "@gsap/react";
 import { gsap } from "@/lib/gsap";
 import Image from "next/image";
 import Link from "next/link";
-import { getNextEvent, TEAMS } from "@/lib/constants";
+import { getNextEvent, TEAMS, CIRCUIT_LIST, DRIVER_LIST, TEAM_LIST } from "@/lib/constants";
 import {
   F1,
   LiveDot,
@@ -89,7 +89,7 @@ export function Hero({
   return (
     <section
       ref={heroRef}
-      className="relative overflow-hidden"
+      className="relative flex flex-col overflow-hidden"
       style={{ background: F1.ink, color: F1.fg, minHeight: "100vh" }}
     >
       {/* Background image + treatments */}
@@ -135,14 +135,16 @@ export function Hero({
         )}
       </div>
 
-      {/* Hero content */}
+      {/* Hero content — flex-grows to fill the viewport so the ticker pins to the
+          bottom (no dead black space below it). Single column on mobile. */}
       <div
-        className="relative grid mx-auto"
+        className="relative grid mx-auto w-full grid-cols-1 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]"
         style={{
           maxWidth: 1440,
-          padding: "64px 64px 0",
-          gridTemplateColumns: "minmax(0, 1.4fr) minmax(0, 1fr)",
-          gap: 56,
+          padding: "clamp(32px, 5vw, 64px) clamp(20px, 5vw, 64px) 40px",
+          gap: "clamp(32px, 4vw, 56px)",
+          flex: 1,
+          alignContent: "center",
         }}
       >
         {/* LEFT — headline */}
@@ -180,13 +182,13 @@ export function Hero({
           <div
             ref={subRef}
             className="mt-8"
-            style={{ maxWidth: 520, fontSize: 18, lineHeight: 1.5, color: F1.fg2 }}
+            style={{ maxWidth: 520, fontSize: 18, lineHeight: 1.5, color: F1.fg2, opacity: 0 }}
           >
             Live timing, telemetry and the full 2026 season — in one place.
           </div>
 
           {/* CTAs */}
-          <div ref={ctaRef} className="mt-9 flex items-center" style={{ gap: 0 }}>
+          <div ref={ctaRef} className="mt-9 flex items-center flex-wrap" style={{ gap: 0, opacity: 0 }}>
             <Link
               href="/live"
               className="font-display inline-flex items-center gap-3 cursor-pointer transition-opacity hover:opacity-90"
@@ -230,13 +232,14 @@ export function Hero({
               gap: 0,
               borderTop: `1px solid ${F1.line}`,
               paddingTop: 24,
+              opacity: 0,
             }}
           >
             {[
-              ["ROUND", `${event ? String(event.circuit.round).padStart(2, "0") : "—"}/22`],
-              ["DRIVERS", "22"],
-              ["TEAMS", "11"],
-              ["CIRCUITS", "22"],
+              ["ROUND", `${event ? String(event.circuit.round).padStart(2, "0") : "—"}/${CIRCUIT_LIST.length}`],
+              ["DRIVERS", String(DRIVER_LIST.length)],
+              ["TEAMS", String(TEAM_LIST.length)],
+              ["CIRCUITS", String(CIRCUIT_LIST.filter((c) => !c.cancelled).length)],
             ].map(([l, v], i) => (
               <div
                 key={i}
@@ -256,7 +259,7 @@ export function Hero({
         </div>
 
         {/* RIGHT — Up next + championship ticker */}
-        <div ref={tickerRef} className="flex flex-col gap-4 min-w-0">
+        <div ref={tickerRef} className="flex flex-col gap-4 min-w-0" style={{ opacity: 0 }}>
           {/* UP NEXT card */}
           {nextRace && (
             <div
@@ -477,24 +480,28 @@ export function Hero({
         </div>
       </div>
 
-      {/* Bottom red ticker tape */}
+      {/* Bottom red ticker tape — seamless scrolling marquee (content duplicated
+          so the -50% translate loops without a seam). Pinned to the section bottom. */}
       <div
-        className="relative mt-20 font-mono overflow-hidden"
+        className="relative font-mono overflow-hidden"
         style={{
           background: F1.red,
           color: F1.ink,
-          padding: "10px 24px",
+          padding: "10px 0",
           fontSize: 11,
           letterSpacing: "0.18em",
-          whiteSpace: "nowrap",
-          display: "flex",
-          gap: 32,
         }}
       >
-        <span>● 2026 SEASON · 22 ROUNDS · 11 TEAMS · 22 DRIVERS</span>
-        <span>● LIVE TIMING POWERED BY OPENF1</span>
-        <span>● HISTORICAL DATA · JOLPICA F1</span>
-        <span>● BUILT FOR SPEED</span>
+        <div className="animate-ticker flex whitespace-nowrap" style={{ width: "max-content" }}>
+          {[0, 1].map((copy) => (
+            <div key={copy} className="flex shrink-0" style={{ gap: 32, paddingRight: 32 }} aria-hidden={copy === 1}>
+              <span>● 2026 SEASON · {CIRCUIT_LIST.filter((c) => !c.cancelled).length} ROUNDS · {TEAM_LIST.length} TEAMS · {DRIVER_LIST.length} DRIVERS</span>
+              <span>● LIVE TIMING POWERED BY OPENF1 + F1 SIGNALR</span>
+              <span>● HISTORICAL DATA · JOLPICA F1</span>
+              <span>● BUILT FOR SPEED</span>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );

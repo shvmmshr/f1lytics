@@ -5,19 +5,15 @@ import { useGSAP } from "@gsap/react";
 import { staggerEntrance } from "@/lib/gsap";
 import { F1 } from "@/components/shared/broadcast";
 
-interface CircuitsGridProps {
-  children: React.ReactNode;
-}
-
-export function CircuitsGrid({ children }: CircuitsGridProps) {
+/** Client wrapper that scroll-reveals the season race cards with a GSAP stagger. */
+export function CalendarGrid({ children }: { children: React.ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
 
   useGSAP(
     () => {
-      if (!ref.current) return;
-      staggerEntrance("[data-circuit-card]", ref.current);
+      if (ref.current) staggerEntrance("[data-cal-card]", ref.current);
     },
-    { scope: ref }
+    { scope: ref },
   );
 
   return (
@@ -25,10 +21,10 @@ export function CircuitsGrid({ children }: CircuitsGridProps) {
       ref={ref}
       className="grid"
       style={{
-        gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+        gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
         gap: 1,
         background: F1.line,
-        borderTop: `1px solid ${F1.line}`,
+        border: `1px solid ${F1.line}`,
       }}
     >
       {children}

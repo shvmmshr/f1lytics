@@ -11,6 +11,7 @@ import {
   StatValue,
   PosPill,
 } from "@/components/shared/broadcast";
+import { DriversGrid } from "./drivers-grid";
 
 export const metadata: Metadata = {
   title: "Drivers",
@@ -80,23 +81,17 @@ export default async function DriversPage() {
         </div>
 
         {/* Driver tile grid */}
-        <div
-          className="grid"
-          style={{
-            gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-            gap: 1,
-            background: F1.line,
-          }}
-        >
-          {sortedDrivers.map((d) => {
-            const team = TEAMS[d.teamId];
-            const stat = pointsMap.get(d.abbreviation);
-            return (
-              <Link
-                key={d.id}
-                href={`/drivers/${d.slug}`}
-                className="relative group"
-                style={{
+        <DriversGrid>
+            {sortedDrivers.map((d) => {
+              const team = TEAMS[d.teamId];
+              const stat = pointsMap.get(d.abbreviation);
+              return (
+                <Link
+                  key={d.id}
+                  href={`/drivers/${d.slug}`}
+                  data-driver-card
+                  className="relative group"
+                  style={{
                   background: F1.bg,
                   padding: 0,
                   minHeight: 260,
@@ -265,7 +260,7 @@ export default async function DriversPage() {
               </Link>
             );
           })}
-        </div>
+        </DriversGrid>
       </div>
     </PageTransition>
   );

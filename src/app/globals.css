@@ -284,3 +284,33 @@
 .animate-checkered-fade {
   animation: checkered-fade 3s ease-in-out infinite;
 }
+
+/* Animated navbar hover underline (scaleX from left). */
+.nav-underline::after {
+  content: "";
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: 10px;
+  height: 1.5px;
+  background: #ff1801;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.nav-underline:hover::after {
+  transform: scaleX(1);
+}
+
+/* Accessibility: honour the user's reduced-motion preference. Neutralises CSS
+   animations/transitions (incl. the ticker marquee); GSAP is handled in lib/gsap.ts. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

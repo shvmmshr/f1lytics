@@ -25,6 +25,30 @@ interface RacePageProps {
   }>;
 }
 
+function ChartEmptyState({ label }: { label: string }) {
+  return (
+    <div
+      style={{
+        minHeight: 200,
+        background: F1.bg2,
+        border: `1px solid ${F1.line}`,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 8,
+      }}
+    >
+      <Mono style={{ fontSize: 13, color: F1.fg2, letterSpacing: "0.2em", fontWeight: 600 }}>
+        {label.toUpperCase()} · NO DATA
+      </Mono>
+      <Mono style={{ fontSize: 10, color: F1.fg3, letterSpacing: "0.14em" }}>
+        OPENF1 DATA AVAILABLE AFTER SESSION ENDS
+      </Mono>
+    </div>
+  );
+}
+
 interface OpenF1SessionCandidate {
   session_key: number;
   date_start: string;
@@ -565,15 +589,27 @@ export default async function RacePage({ params }: RacePageProps) {
             <div className="space-y-10">
               <div>
                 <SectionHeader label="POSITION CHANGES" />
-                <PositionChart positions={positions} drivers={chartDrivers} />
+                {positions.length === 0 ? (
+                  <ChartEmptyState label="RACE POSITIONS" />
+                ) : (
+                  <PositionChart positions={positions} drivers={chartDrivers} />
+                )}
               </div>
               <div>
                 <SectionHeader label="TIRE STRATEGY" />
-                <TireStrategyViz stints={stints} drivers={chartDrivers} />
+                {stints.length === 0 ? (
+                  <ChartEmptyState label="TIRE STRATEGY" />
+                ) : (
+                  <TireStrategyViz stints={stints} drivers={chartDrivers} />
+                )}
               </div>
               <div>
                 <SectionHeader label="LAP TIMES" />
-                <LapTimeChart laps={laps} drivers={chartDrivers} raceControl={raceControl} />
+                {laps.length === 0 ? (
+                  <ChartEmptyState label="LAP TIME ANALYSIS" />
+                ) : (
+                  <LapTimeChart laps={laps} drivers={chartDrivers} raceControl={raceControl} />
+                )}
               </div>
             </div>
           </div>

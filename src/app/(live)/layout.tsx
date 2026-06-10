@@ -1,4 +1,5 @@
 import { Navbar } from "@/components/layout/navbar";
+import { AnimatedOutlet } from "@/components/layout/animated-outlet";
 
 export default function LiveLayout({
   children,
@@ -8,7 +9,9 @@ export default function LiveLayout({
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar />
-      <main className="flex-1">{children}</main>
+      <main className="flex-1">
+        <AnimatedOutlet>{children}</AnimatedOutlet>
+      </main>
     </div>
   );
 }

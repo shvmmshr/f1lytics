@@ -220,7 +220,7 @@ export function Navbar() {
                   <Link
                     href={item.href}
                     className={cn(
-                      "relative flex items-center font-mono transition-colors gap-2",
+                      "nav-underline relative flex items-center font-mono transition-colors gap-2",
                     )}
                     style={{
                       padding: "0 18px",

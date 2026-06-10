@@ -12,6 +12,7 @@ import {
   Trend,
   Grid as BroadcastGrid,
 } from "@/components/shared/broadcast";
+import { AnimatedBar } from "@/components/shared/animated-bar";
 
 export const metadata: Metadata = {
   title: "Standings",
@@ -174,11 +175,18 @@ export default async function StandingsPage() {
                       left: 0,
                       top: 0,
                       bottom: 0,
-                      width: `${ptsPct}%`,
-                      background: `linear-gradient(90deg, ${d.color}26 0%, transparent 100%)`,
+                      width: "100%",
                       pointerEvents: "none",
+                      overflow: "hidden",
                     }}
-                  />
+                  >
+                    <AnimatedBar
+                      widthPercent={ptsPct}
+                      color={`linear-gradient(90deg, ${d.color}26 0%, transparent 100%)`}
+                      height="100%"
+                      track="transparent"
+                    />
+                  </div>
                   <span style={{ position: "relative" }}>
                     <PosPill pos={d.position} size={d.position <= 3 ? "md" : "sm"} />
                   </span>
@@ -314,14 +322,8 @@ export default async function StandingsPage() {
                       </Mono>
                     </div>
                   </div>
-                  <div style={{ marginTop: 8, height: 3, background: F1.bg3 }}>
-                    <div
-                      style={{
-                        height: "100%",
-                        width: `${ptsPct}%`,
-                        background: c.color,
-                      }}
-                    />
+                  <div style={{ marginTop: 8 }}>
+                    <AnimatedBar widthPercent={ptsPct} color={c.color} />
                   </div>
                 </div>
               );

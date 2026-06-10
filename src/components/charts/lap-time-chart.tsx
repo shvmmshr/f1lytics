@@ -13,6 +13,7 @@ import {
 } from "recharts";
 import type { OpenF1Lap, OpenF1RaceControl } from "@/lib/api/types";
 import { TEAMS } from "@/lib/constants";
+import { F1, Mono } from "@/components/shared/broadcast";
 
 interface LapTimeDriver {
   driverNumber: number;
@@ -88,8 +89,24 @@ export function LapTimeChart({
 }: LapTimeChartProps) {
   if (laps.length === 0) {
     return (
-      <div style={{ background: "#141418", border: "1px solid #27272A", padding: 24 }}>
-        <p className="text-sm">No lap-time data available for this session.</p>
+      <div
+        style={{
+          height,
+          background: F1.bg2,
+          border: `1px solid ${F1.line}`,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 8,
+        }}
+      >
+        <Mono style={{ fontSize: 13, color: F1.fg2, letterSpacing: "0.2em", fontWeight: 600 }}>
+          NO DATA
+        </Mono>
+        <Mono style={{ fontSize: 10, color: F1.fg3, letterSpacing: "0.14em" }}>
+          OPENF1 DATA AVAILABLE AFTER SESSION ENDS
+        </Mono>
       </div>
     );
   }

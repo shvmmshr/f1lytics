@@ -1,6 +1,7 @@
 "use client";
 
 import type { OpenF1Stint } from "@/lib/api/types";
+import { F1, Mono } from "@/components/shared/broadcast";
 
 interface TireStrategyDriver {
   driverNumber: number;
@@ -33,8 +34,24 @@ function getDriverLabel(driverNumber: number, drivers: TireStrategyDriver[]): st
 export function TireStrategyViz({ stints, drivers = [] }: TireStrategyVizProps) {
   if (stints.length === 0) {
     return (
-      <div style={{ background: "#141418", border: "1px solid #27272A", padding: 24 }}>
-        <p className="text-sm">No tyre stint data available for this session.</p>
+      <div
+        style={{
+          minHeight: 200,
+          background: F1.bg2,
+          border: `1px solid ${F1.line}`,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 8,
+        }}
+      >
+        <Mono style={{ fontSize: 13, color: F1.fg2, letterSpacing: "0.2em", fontWeight: 600 }}>
+          NO DATA
+        </Mono>
+        <Mono style={{ fontSize: 10, color: F1.fg3, letterSpacing: "0.14em" }}>
+          OPENF1 DATA AVAILABLE AFTER SESSION ENDS
+        </Mono>
       </div>
     );
   }

@@ -12,6 +12,7 @@ import {
   Grid as BroadcastGrid,
   StatValue,
 } from "@/components/shared/broadcast";
+import { TeamsGrid } from "./teams-grid";
 
 export const metadata: Metadata = {
   title: "Teams",
@@ -84,16 +85,7 @@ export default async function TeamsPage() {
         </div>
 
         {/* Team tile grid */}
-        <div
-          className="grid"
-          style={{
-            gridTemplateColumns: "minmax(0, 1fr)",
-            gap: 1,
-            background: F1.line,
-            borderTop: `1px solid ${F1.line}`,
-            borderBottom: `1px solid ${F1.line}`,
-          }}
-        >
+        <TeamsGrid>
           {sortedTeams.map((team) => {
             const standing = standingsByTeam.get(team.id);
             const teamDrivers = team.drivers.map((id) => DRIVERS[id]).filter(Boolean);
@@ -102,6 +94,7 @@ export default async function TeamsPage() {
               <Link
                 key={team.id}
                 href={`/teams/${team.slug}`}
+                data-team-card
                 className="group relative block"
                 style={{
                   background: F1.bg,
@@ -281,7 +274,7 @@ export default async function TeamsPage() {
               </Link>
             );
           })}
-        </div>
+        </TeamsGrid>
       </div>
     </PageTransition>
   );

@@ -12,6 +12,7 @@ import {
 } from "recharts";
 import type { OpenF1Position } from "@/lib/api/types";
 import { TEAMS } from "@/lib/constants";
+import { F1, Mono } from "@/components/shared/broadcast";
 
 interface PositionChartDriver {
   driverNumber: number;
@@ -101,8 +102,24 @@ function buildChartData(series: ChartSeries[]): ChartRow[] {
 export function PositionChart({ positions, drivers = [], height = 420 }: PositionChartProps) {
   if (positions.length === 0) {
     return (
-      <div style={{ background: "#141418", border: "1px solid #27272A", padding: 24 }}>
-        <p className="text-sm">No position data available for this session.</p>
+      <div
+        style={{
+          height,
+          background: F1.bg2,
+          border: `1px solid ${F1.line}`,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 8,
+        }}
+      >
+        <Mono style={{ fontSize: 13, color: F1.fg2, letterSpacing: "0.2em", fontWeight: 600 }}>
+          NO DATA
+        </Mono>
+        <Mono style={{ fontSize: 10, color: F1.fg3, letterSpacing: "0.14em" }}>
+          OPENF1 DATA AVAILABLE AFTER SESSION ENDS
+        </Mono>
       </div>
     );
   }

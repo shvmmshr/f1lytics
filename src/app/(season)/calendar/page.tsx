@@ -4,6 +4,7 @@ import Link from "next/link";
 import { getRaceResults } from "@/lib/api/jolpica";
 import { CIRCUIT_LIST } from "@/lib/constants";
 import { PageTransition } from "@/components/layout/page-transition";
+import { CalendarGrid } from "./calendar-grid";
 import {
   F1,
   Mono,
@@ -351,15 +352,7 @@ export default async function CalendarPage() {
             }
           />
 
-          <div
-            className="grid"
-            style={{
-              gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
-              gap: 1,
-              background: F1.line,
-              border: `1px solid ${F1.line}`,
-            }}
-          >
+          <CalendarGrid>
             {CIRCUIT_LIST.map((c) => {
               const isCancelled = c.cancelled === true;
               const isPast = c.raceDate < todayStr;
@@ -377,6 +370,7 @@ export default async function CalendarPage() {
                 <Link
                   key={c.id}
                   href={`/circuits/${c.slug}`}
+                  data-cal-card
                   className="relative block transition-colors hover:bg-white/5"
                   style={{
                     background: isNext ? F1.bg2 : F1.bg,
@@ -500,7 +494,7 @@ export default async function CalendarPage() {
                 </Link>
               );
             })}
-          </div>
+          </CalendarGrid>
         </div>
 
       </div>

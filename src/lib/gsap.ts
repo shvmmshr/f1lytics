@@ -5,6 +5,16 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
+// Respect prefers-reduced-motion: collapse all GSAP tweens to near-instant so
+// content still ends in its final (visible) state, but without perceived motion.
+// (CSS animations/transitions are handled separately in globals.css.)
+if (typeof window !== "undefined" && typeof window.matchMedia === "function") {
+  const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+  const apply = () => gsap.globalTimeline.timeScale(mq.matches ? 1000 : 1);
+  apply();
+  mq.addEventListener?.("change", apply);
+}
+
 export { gsap, ScrollTrigger };
 
 export function animateCounter(
