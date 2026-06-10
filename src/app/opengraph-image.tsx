@@ -2,7 +2,7 @@ import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
 
-export const alt = "F1lytics — Formula 1 2026 Dashboard";
+export const alt = "F1lytics · 2026 Formula 1 stats, standings, and results";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -260,11 +260,11 @@ export default function OGImage() {
               marginTop: 24,
               fontWeight: 400,
               lineHeight: 1.5,
-              maxWidth: 500,
+              maxWidth: 540,
             }}
           >
-            Real-time standings, race results, driver stats, and live timing for
-            Formula 1.
+            Standings, race results, driver and team stats, telemetry, and the
+            full 2026 Formula 1 season.
           </p>
         </div>
 
@@ -283,7 +283,7 @@ export default function OGImage() {
         >
           {/* Feature pills */}
           <div style={{ display: "flex", gap: 16 }}>
-            {["Live Timing", "Standings", "Analytics", "Compare"].map(
+            {["Standings", "Race Results", "Telemetry", "Live Timing"].map(
               (label) => (
                 <div
                   key={label}

@@ -26,41 +26,59 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
+// Single source of truth for the site-wide SEO copy. Stats-first framing (the
+// site is analytics, not a live broadcast), no em dashes, and a description
+// kept under ~160 chars so Google shows it whole instead of padding the snippet
+// with scraped on-page text.
+const SITE_NAME = "F1lytics";
+const SITE_URL = "https://f1lytics.com";
+const TITLE = "F1lytics · 2026 Formula 1 Stats & Standings";
+const DESCRIPTION =
+  "Standings, race results, driver and team stats, telemetry, and the full 2026 Formula 1 calendar in one place, plus live timing when sessions are running.";
+
 export const metadata: Metadata = {
-  metadataBase: new URL("https://f1lytics.com"),
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: "F1lytics — Formula 1 2026 Dashboard",
-    template: "%s — F1lytics",
+    default: TITLE,
+    template: `%s · ${SITE_NAME}`,
   },
-  description:
-    "Live standings, race results, driver stats, and real-time timing for the 2026 Formula 1 World Championship.",
+  description: DESCRIPTION,
+  applicationName: SITE_NAME,
   keywords: [
     "Formula 1",
     "F1 2026",
     "F1 standings",
-    "F1 live timing",
     "F1 results",
+    "F1 race results",
+    "F1 driver stats",
+    "F1 constructor standings",
+    "F1 telemetry",
+    "F1 lap times",
+    "F1 live timing",
     "F1 calendar",
     "F1 drivers",
     "F1 teams",
+    "F1 news",
     "F1lytics",
   ],
-  authors: [{ name: "F1lytics" }],
-  creator: "F1lytics",
+  authors: [{ name: SITE_NAME }],
+  creator: SITE_NAME,
+  alternates: {
+    canonical: "/",
+  },
+  category: "sports",
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://f1lytics.com",
-    siteName: "F1lytics",
-    title: "F1lytics — Formula 1 2026 Dashboard",
-    description:
-      "Live standings, race results, driver stats, and real-time timing for the 2026 Formula 1 World Championship.",
+    url: SITE_URL,
+    siteName: SITE_NAME,
+    title: TITLE,
+    description: DESCRIPTION,
   },
   twitter: {
     card: "summary_large_image",
-    title: "F1lytics — Formula 1 2026 Dashboard",
-    description:
-      "Live standings, race results, driver stats, and real-time timing for the 2026 F1 season.",
+    title: TITLE,
+    description: DESCRIPTION,
   },
   robots: {
     index: true,
@@ -91,10 +109,17 @@ export default function RootLayout({
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "WebSite",
-              name: "F1lytics",
-              url: "https://f1lytics.com",
+              name: SITE_NAME,
+              alternateName: "F1 Analytics",
+              url: SITE_URL,
+              inLanguage: "en",
               description:
-                "Formula 1 2026 dashboard with live standings, race results, and driver analytics.",
+                "F1lytics is a 2026 Formula 1 stats site with championship standings, race results, driver and team analytics, telemetry, the full season calendar, and live timing.",
+              about: {
+                "@type": "SportsOrganization",
+                name: "Formula 1",
+                sport: "Motorsport",
+              },
             }),
           }}
         />
