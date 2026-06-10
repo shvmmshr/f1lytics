@@ -36,9 +36,12 @@ export interface LiveWeather {
   rainfall: number;
 }
 
+type LiveStatus = "NO SESSION" | "LIVE" | "FINISHED" | "REPLAY";
+
 interface LiveApiResponse {
   isLive: boolean;
-  status: "NO SESSION" | "LIVE" | "FINISHED";
+  isReplay?: boolean;
+  status: LiveStatus;
   session?: LiveSessionInfo;
   positions?: OpenF1Position[];
   intervals?: OpenF1Interval[];
@@ -55,7 +58,8 @@ interface LiveApiResponse {
 
 export interface UseLiveSessionReturn {
   isLive: boolean;
-  status: "NO SESSION" | "LIVE" | "FINISHED";
+  isReplay: boolean;
+  status: LiveStatus;
   session: LiveSessionInfo | null;
   positions: OpenF1Position[];
   intervals: OpenF1Interval[];
@@ -75,10 +79,11 @@ export interface UseLiveSessionReturn {
 
 const POLL_LIVE_MS = 10_000;
 const POLL_IDLE_MS = 60_000;
+const POLL_REPLAY_MS = 30_000;
 const MAX_BACKOFF_MS = 60_000;
 const BASE_BACKOFF_MS = 10_000;
 
-export function useLiveSession(): UseLiveSessionReturn {
+export function useLiveSession(replaySessionKey: number | null = null): UseLiveSessionReturn {
   const [data, setData] = useState<LiveApiResponse>({
     isLive: false,
     status: "NO SESSION",
@@ -100,8 +105,11 @@ export function useLiveSession(): UseLiveSessionReturn {
   const fetchLiveData = useCallback(async () => {
     try {
       const focused = focusedRef.current;
-      const url = focused ? `/api/live?focusedDriver=${focused}` : "/api/live";
-      const res = await fetch(url);
+      const params = new URLSearchParams();
+      if (replaySessionKey) params.set("session", String(replaySessionKey));
+      if (focused) params.set("focusedDriver", String(focused));
+      const qs = params.toString();
+      const res = await fetch(qs ? `/api/live?${qs}` : "/api/live");
       if (!res.ok) {
         throw new Error(`HTTP ${res.status}`);
       }
@@ -116,7 +124,11 @@ export function useLiveSession(): UseLiveSessionReturn {
 
       errorCountRef.current = 0;
 
-      const interval = json.isLive ? POLL_LIVE_MS : POLL_IDLE_MS;
+      const interval = replaySessionKey
+        ? POLL_REPLAY_MS
+        : json.isLive
+          ? POLL_LIVE_MS
+          : POLL_IDLE_MS;
       timerRef.current = setTimeout(fetchLiveData, interval);
     } catch (err) {
       if (!mountedRef.current) return;
@@ -133,7 +145,7 @@ export function useLiveSession(): UseLiveSessionReturn {
       );
       timerRef.current = setTimeout(fetchLiveData, backoff);
     }
-  }, []);
+  }, [replaySessionKey]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -149,6 +161,7 @@ export function useLiveSession(): UseLiveSessionReturn {
 
   return {
     isLive: data.isLive,
+    isReplay: data.isReplay ?? false,
     status: data.status,
     session: data.session ?? null,
     positions: data.positions ?? [],

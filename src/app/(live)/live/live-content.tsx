@@ -1,10 +1,13 @@
 "use client";
 
 import { useMemo, useEffect, useRef } from "react";
+import Link from "next/link";
 import { getNextEvent } from "@/lib/constants/circuits";
 import { CountdownTimer } from "@/components/shared/countdown-timer";
+import { ReplayBanner } from "@/components/live/replay-banner";
 import { TEAMS } from "@/lib/constants";
 import { useLiveSession, type LapStats } from "@/hooks/use-live-session";
+import { useLiveStream } from "@/hooks/use-live-stream";
 import type {
   OpenF1Position,
   OpenF1Interval,
@@ -796,7 +799,7 @@ function RaceControlFeed({
 
 // ─── Idle / no-session view ────────────────────────────────────────────
 
-function IdleView() {
+function IdleView({ lastRaceSessionKey }: { lastRaceSessionKey: number | null }) {
   const event = useMemo(() => getNextEvent(), []);
   const nextRace = event?.circuit;
   return (
@@ -861,6 +864,32 @@ function IdleView() {
             </div>
           </div>
         )}
+
+        {lastRaceSessionKey && (
+          <div style={{ marginTop: 32, borderTop: `1px solid ${F1.line}`, paddingTop: 24 }}>
+            <Mono style={{ fontSize: 10, color: F1.fg3, letterSpacing: "0.18em" }}>
+              WHILE YOU WAIT — REPLAY THE TIMING SCREEN FROM THE LAST RACE
+            </Mono>
+            <div className="flex justify-center" style={{ marginTop: 14 }}>
+              <Link
+                href={`/live?replay=${lastRaceSessionKey}`}
+                className="inline-flex items-center gap-2"
+                style={{
+                  background: F1.red,
+                  color: F1.ink,
+                  padding: "11px 22px",
+                  fontFamily: "var(--font-mono)",
+                  fontSize: 11,
+                  fontWeight: 700,
+                  letterSpacing: "0.18em",
+                  textDecoration: "none",
+                }}
+              >
+                ▶ REPLAY LAST RACE
+              </Link>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -868,75 +897,138 @@ function IdleView() {
 
 // ─── Main ──────────────────────────────────────────────────────────────
 
-export function LiveContent() {
-  const {
-    isLive,
-    status,
-    session,
-    positions,
-    intervals,
-    drivers,
-    stints,
-    lapStats,
-    raceControl,
-    teamRadio,
-    focusedCarData,
-    focusedDriverNumber,
-    setFocusedDriverNumber,
-    weather,
-    loading,
-    lastUpdated,
-  } = useLiveSession();
+interface LiveContentProps {
+  /** When set, load this past session's OpenF1 data (replay mode). */
+  replaySessionKey?: number | null;
+  /** Most recent completed race key, for the idle "replay last race" button. */
+  lastRaceSessionKey?: number | null;
+}
 
-  const showLiveData = status === "LIVE" || status === "FINISHED";
+export function LiveContent({
+  replaySessionKey = null,
+  lastRaceSessionKey = null,
+}: LiveContentProps) {
+  const isReplayRoute = replaySessionKey !== null;
+
+  // OpenF1-based session: drives replay, recently-finished, and the idle countdown.
+  const live = useLiveSession(replaySessionKey);
+  // F1 SignalR SSE for TRUE live data — disabled in replay mode (uses OpenF1 history).
+  const stream = useLiveStream(!isReplayRoute);
+
+  // Focus state lives in the OpenF1 hook (it also drives the telemetry fetch); we
+  // reuse it for row highlighting in both modes.
+  const { focusedDriverNumber, setFocusedDriverNumber } = live;
+
+  // Prefer the real-time SSE feed whenever it is actively delivering data.
+  const usingStream = stream.state === "live" && stream.data !== null;
+
+  // Unified view model from whichever source is active.
+  const view = useMemo(() => {
+    if (usingStream && stream.data) {
+      const s = stream.data;
+      return {
+        positions: s.positions,
+        intervals: s.intervals,
+        drivers: s.drivers,
+        stints: s.stints,
+        lapStats: s.lapStats,
+        raceControl: s.raceControl,
+        teamRadio: [] as OpenF1TeamRadio[],
+        weather: s.weather,
+        currentLap: s.currentLap,
+        focusedCarData: null as OpenF1CarData | null,
+        sessionName: s.session?.name ?? "LIVE SESSION",
+        sessionType: s.session?.type ?? "",
+        circuitShortName: s.session?.circuitShortName ?? "",
+        countryName: s.session?.countryName ?? "",
+        feedLabel: "F1 LIVE TIMING",
+        lastUpdated: stream.lastUpdated,
+        isLive: true,
+        hasSession: s.session !== null || s.positions.length > 0,
+        loading: false,
+      };
+    }
+    const currentLap =
+      live.lapStats.length > 0
+        ? Math.max(...live.lapStats.map((l) => l.lapNumber))
+        : null;
+    return {
+      positions: live.positions,
+      intervals: live.intervals,
+      drivers: live.drivers,
+      stints: live.stints,
+      lapStats: live.lapStats,
+      raceControl: live.raceControl,
+      teamRadio: live.teamRadio,
+      weather: live.weather,
+      currentLap,
+      focusedCarData: live.focusedCarData,
+      sessionName: live.session?.name ?? "",
+      sessionType: live.session?.type ?? "",
+      circuitShortName: live.session?.circuitShortName ?? "",
+      countryName: live.session?.countryName ?? "",
+      feedLabel: live.isReplay ? "REPLAY · OPENF1" : "OPENF1",
+      lastUpdated: live.lastUpdated,
+      isLive: live.isLive,
+      hasSession: live.session !== null,
+      loading: live.loading,
+    };
+  }, [usingStream, stream.data, stream.lastUpdated, live]);
+
+  // Show the timing screen when SSE is live, or OpenF1 has a session (live/finished/replay).
+  const showLiveData =
+    usingStream ||
+    live.status === "LIVE" ||
+    live.status === "FINISHED" ||
+    live.status === "REPLAY";
 
   const focusedDriver = useMemo(
     () =>
       focusedDriverNumber !== null
-        ? (drivers.find((d) => d.driver_number === focusedDriverNumber) ?? null)
+        ? (view.drivers.find((d) => d.driver_number === focusedDriverNumber) ?? null)
         : null,
-    [drivers, focusedDriverNumber]
+    [view.drivers, focusedDriverNumber]
   );
 
   const focusedTeamColor = focusedDriver
     ? teamColorFromDriverTeam(focusedDriver.team_name)
     : F1.red;
 
-  const currentLap = useMemo(() => {
-    if (lapStats.length === 0) return null;
-    return Math.max(...lapStats.map((l) => l.lapNumber));
-  }, [lapStats]);
-
   // Auto-focus the leader ONCE, after data first arrives. A ref guard means the
-  // user can later deselect/select a different driver without it snapping back to
-  // the leader on every poll.
+  // user can later deselect/select a different driver without it snapping back.
   const autoFocusedRef = useRef(false);
   useEffect(() => {
     if (!showLiveData) return;
     if (autoFocusedRef.current) return;
     if (focusedDriverNumber !== null) return;
-    const leader = [...positions].sort((a, b) => a.position - b.position)[0];
+    const leader = [...view.positions].sort((a, b) => a.position - b.position)[0];
     if (leader) {
       autoFocusedRef.current = true;
       setFocusedDriverNumber(leader.driver_number);
     }
-  }, [showLiveData, positions, focusedDriverNumber, setFocusedDriverNumber]);
+  }, [showLiveData, view.positions, focusedDriverNumber, setFocusedDriverNumber]);
 
   return (
     <div style={{ background: F1.bg, color: F1.fg, position: "relative" }}>
       <BroadcastGrid color={F1.line} size={64} opacity={0.14} />
 
-      {showLiveData && session ? (
+      {showLiveData && (view.hasSession || view.positions.length > 0) ? (
         <>
+          {live.isReplay && (
+            <ReplayBanner
+              sessionName={view.sessionName || "PAST SESSION"}
+              countryName={view.countryName}
+            />
+          )}
           <TopBroadcastBar
-            isLive={isLive}
-            sessionName={session.name}
-            sessionType={session.type}
-            countryName={session.countryName}
-            circuit={session.circuitShortName}
-            currentLap={currentLap}
-            airTemp={weather?.air_temperature ?? null}
-            trackTemp={weather?.track_temperature ?? null}
+            isLive={view.isLive}
+            sessionName={view.sessionName}
+            sessionType={view.sessionType}
+            countryName={view.countryName}
+            circuit={view.circuitShortName}
+            currentLap={view.currentLap}
+            airTemp={view.weather?.air_temperature ?? null}
+            trackTemp={view.weather?.track_temperature ?? null}
           />
 
           {/* Main grid — single column on mobile, tower + side panel on desktop */}
@@ -948,7 +1040,7 @@ export function LiveContent() {
             }}
           >
             <div style={{ background: F1.bg, padding: 0 }}>
-              {loading && positions.length === 0 ? (
+              {view.loading && view.positions.length === 0 ? (
                 <div style={{ padding: 24 }}>
                   <Mono style={{ fontSize: 11, color: F1.fg3, letterSpacing: "0.18em" }}>
                     LOADING TIMING DATA…
@@ -956,11 +1048,11 @@ export function LiveContent() {
                 </div>
               ) : (
                 <TimingTower
-                  positions={positions}
-                  intervals={intervals}
-                  drivers={drivers}
-                  stints={stints}
-                  lapStats={lapStats}
+                  positions={view.positions}
+                  intervals={view.intervals}
+                  drivers={view.drivers}
+                  stints={view.stints}
+                  lapStats={view.lapStats}
                   focusedDriverNumber={focusedDriverNumber}
                   onSelect={setFocusedDriverNumber}
                 />
@@ -969,15 +1061,15 @@ export function LiveContent() {
 
             <div style={{ background: F1.bg }}>
               <TelemetryBlock
-                carData={focusedCarData}
+                carData={view.focusedCarData}
                 driver={focusedDriver}
                 teamColor={focusedTeamColor}
               />
               <div style={{ borderTop: `1px solid ${F1.line}` }}>
                 <RaceControlFeed
-                  raceControl={raceControl}
-                  teamRadio={teamRadio}
-                  drivers={drivers}
+                  raceControl={view.raceControl}
+                  teamRadio={view.teamRadio}
+                  drivers={view.drivers}
                 />
               </div>
             </div>
@@ -993,8 +1085,8 @@ export function LiveContent() {
             }}
           >
             <Mono style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.24em" }}>
-              FEED · OPENF1 · SESSION KEY {session.key}
-              {lastUpdated && ` · UPDATED ${formatTimeSince(lastUpdated)}`}
+              FEED · {view.feedLabel}
+              {view.lastUpdated && ` · UPDATED ${formatTimeSince(view.lastUpdated)}`}
             </Mono>
             <Mono style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.24em" }}>
               CLICK A DRIVER ROW TO FOCUS TELEMETRY
@@ -1002,7 +1094,7 @@ export function LiveContent() {
           </div>
         </>
       ) : (
-        <IdleView />
+        <IdleView lastRaceSessionKey={lastRaceSessionKey} />
       )}
     </div>
   );

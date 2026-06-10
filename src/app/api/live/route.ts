@@ -21,38 +21,52 @@ export async function GET(req: Request) {
     const focusedDriverNumber = focusedDriverParam
       ? Number.parseInt(focusedDriverParam, 10)
       : null;
+    // Replay mode: load a specific past session by key (demo / review anytime).
+    const sessionOverrideParam = url.searchParams.get("session");
+    const sessionOverride = sessionOverrideParam
+      ? Number.parseInt(sessionOverrideParam, 10)
+      : null;
 
     const now = new Date();
     const year = now.getFullYear();
 
-    // no-store: the session list must be fresh so a newly-started session is
-    // detected immediately rather than up to an hour later (ISR cache).
-    const sessions = await getSessions({ year }, true);
+    let session: Awaited<ReturnType<typeof getSessions>>[number] | undefined;
+    let activeSession: typeof session;
 
-    const activeSession = sessions.find((s) => {
-      const start = new Date(s.date_start);
-      const end = s.date_end ? new Date(s.date_end) : null;
-      return start <= now && (!end || end >= now);
-    });
+    if (sessionOverride) {
+      // Fetch the exact session for replay.
+      const overrideSessions = await getSessions({ session_key: sessionOverride }, true);
+      session = overrideSessions[0];
+    } else {
+      // no-store: the session list must be fresh so a newly-started session is
+      // detected immediately rather than up to an hour later (ISR cache).
+      const sessions = await getSessions({ year }, true);
 
-    // Pick the MOST RECENT session that ended in the last 2h (sort by end desc —
-    // OpenF1 does not guarantee chronological order, so `find` could grab FP2
-    // instead of the race).
-    const recentSession = !activeSession
-      ? [...sessions]
-          .filter((s) => {
-            if (!s.date_end) return false;
-            const end = new Date(s.date_end);
-            const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);
-            return end >= twoHoursAgo && end <= now;
-          })
-          .sort(
-            (a, b) =>
-              new Date(b.date_end!).getTime() - new Date(a.date_end!).getTime()
-          )[0]
-      : null;
+      activeSession = sessions.find((s) => {
+        const start = new Date(s.date_start);
+        const end = s.date_end ? new Date(s.date_end) : null;
+        return start <= now && (!end || end >= now);
+      });
 
-    const session = activeSession || recentSession;
+      // Pick the MOST RECENT session that ended in the last 2h (sort by end desc —
+      // OpenF1 does not guarantee chronological order, so `find` could grab FP2
+      // instead of the race).
+      const recentSession = !activeSession
+        ? [...sessions]
+            .filter((s) => {
+              if (!s.date_end) return false;
+              const end = new Date(s.date_end);
+              const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);
+              return end >= twoHoursAgo && end <= now;
+            })
+            .sort(
+              (a, b) =>
+                new Date(b.date_end!).getTime() - new Date(a.date_end!).getTime()
+            )[0]
+        : null;
+
+      session = activeSession || recentSession || undefined;
+    }
 
     if (!session) {
       return NextResponse.json({ isLive: false, status: "NO SESSION" });
@@ -70,9 +84,11 @@ export async function GET(req: Request) {
       teamRadio,
       weather,
     ] = await Promise.all([
-      getPositions({ session_key: sessionKey }),
-      getIntervals({ session_key: sessionKey }),
-      getDrivers({ session_key: sessionKey }, true),
+      // Every call tolerates failure (e.g. an OpenF1 429) so one bad endpoint
+      // degrades that panel rather than blanking the whole timing screen.
+      getPositions({ session_key: sessionKey }).catch(() => []),
+      getIntervals({ session_key: sessionKey }).catch(() => []),
+      getDrivers({ session_key: sessionKey }, true).catch(() => []),
       getLaps({ session_key: sessionKey }, true).catch(() => []),
       getStints({ session_key: sessionKey }, true).catch(() => []),
       getRaceControl({ session_key: sessionKey }, true).catch(() => []),
@@ -163,8 +179,9 @@ export async function GET(req: Request) {
     );
 
     return NextResponse.json({
-      isLive: !!activeSession,
-      status: activeSession ? "LIVE" : "FINISHED",
+      isLive: !sessionOverride && !!activeSession,
+      isReplay: !!sessionOverride,
+      status: sessionOverride ? "REPLAY" : activeSession ? "LIVE" : "FINISHED",
       session: {
         key: session.session_key,
         name: session.session_name,

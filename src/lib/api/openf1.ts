@@ -93,6 +93,29 @@ export async function getLatestSession(
   return sessions.length > 0 ? sessions[sessions.length - 1] : null;
 }
 
+/**
+ * Resolve the session_key of the most recently COMPLETED race, for the live
+ * page's replay/demo button. Returns null if none found.
+ */
+export async function getLatestCompletedRaceKey(
+  year = new Date().getFullYear()
+): Promise<number | null> {
+  try {
+    const sessions = await getSessions({ year, session_type: "Race" }, true);
+    const now = Date.now();
+    const past = sessions
+      .filter((s) => new Date(s.date_start).getTime() < now)
+      .sort(
+        (a, b) =>
+          new Date(b.date_start).getTime() - new Date(a.date_start).getTime()
+      );
+    return past[0]?.session_key ?? null;
+  } catch (err) {
+    console.error("[f1lytics] getLatestCompletedRaceKey failed:", err);
+    return null;
+  }
+}
+
 // =============================================================================
 // Lap data
 // =============================================================================
