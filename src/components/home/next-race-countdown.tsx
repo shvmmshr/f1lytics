@@ -7,6 +7,13 @@ import { getNextEvent } from "@/lib/constants";
 import { format } from "date-fns";
 import { F1, Mono, LiveDot, Brackets } from "@/components/shared/broadcast";
 
+/** Parse a "YYYY-MM-DD" string as a local-midnight Date so the calendar day never
+ *  shifts across timezones (unlike `new Date("YYYY-MM-DD")`, which is parsed as UTC). */
+function parseLocalDate(dateStr: string): Date {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
 function getTimeRemaining(targetDate: Date) {
   const now = new Date();
   const diff = targetDate.getTime() - now.getTime();
@@ -24,7 +31,9 @@ export function NextRaceCountdown() {
   const event = getNextEvent();
   const nextRace = event?.circuit;
 
-  const targetTime = event ? new Date(`${event.eventDate}T14:00:00`).getTime() : null;
+  const targetTime = event
+    ? new Date(`${event.eventDate}T${event.eventTime}`).getTime()
+    : null;
 
   const [time, setTime] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
@@ -131,7 +140,7 @@ export function NextRaceCountdown() {
         >
           {nextRace.fullName.toUpperCase()} · {nextRace.city.toUpperCase()},{" "}
           {nextRace.country.toUpperCase()} ·{" "}
-          {format(new Date(`${event.eventDate}T12:00:00`), "MMM d, yyyy").toUpperCase()}
+          {format(parseLocalDate(event.eventDate), "MMM d, yyyy").toUpperCase()}
         </Mono>
 
         {/* Countdown — sharp-edged broadcast frames */}

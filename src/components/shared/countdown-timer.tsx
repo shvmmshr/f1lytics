@@ -15,31 +15,50 @@ interface CountdownTimerProps {
 }
 
 export function CountdownTimer({ targetDate, label }: CountdownTimerProps) {
-  // Initialize to targetDate so server renders all zeros; client corrects on mount
-  const [now, setNow] = useState(() => targetDate);
+  // Render nothing time-sensitive until mounted so server HTML and the first client
+  // render match (no zero-flash / hydration mismatch).
+  const [now, setNow] = useState<Date | null>(null);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setNow(new Date());
-    }, 1000);
-
-    const raf = requestAnimationFrame(() => {
-      setNow(new Date());
-    });
-
-    return () => {
-      clearInterval(interval);
-      cancelAnimationFrame(raf);
-    };
+    setNow(new Date());
+    const interval = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(interval);
   }, []);
 
-  const days = differenceInDays(targetDate, now);
-  const hours = differenceInHours(targetDate, now) % 24;
-  const minutes = differenceInMinutes(targetDate, now) % 60;
-  const seconds = differenceInSeconds(targetDate, now) % 60;
+  // diff > 0 means the event is still in the future
+  const diff = now ? targetDate.getTime() - now.getTime() : null;
+  const isPast = diff !== null && diff <= 0;
 
-  if (days < 0) return null;
+  const days = now ? Math.max(0, differenceInDays(targetDate, now)) : null;
+  const hours = now ? Math.max(0, differenceInHours(targetDate, now) % 24) : null;
+  const minutes = now ? Math.max(0, differenceInMinutes(targetDate, now) % 60) : null;
+  const seconds = now ? Math.max(0, differenceInSeconds(targetDate, now) % 60) : null;
 
+  const renderLabel = label && (
+    <Mono
+      className="mb-3 block uppercase"
+      style={{ fontSize: 11, color: F1.fg3, letterSpacing: "0.18em" }}
+    >
+      {label}
+    </Mono>
+  );
+
+  // Once the event has started, never show negative/zero counters — show a live state.
+  if (isPast) {
+    return (
+      <div>
+        {renderLabel}
+        <Mono
+          className="block uppercase"
+          style={{ fontSize: 14, color: F1.red, letterSpacing: "0.2em", fontWeight: 700 }}
+        >
+          ● SESSION IN PROGRESS
+        </Mono>
+      </div>
+    );
+  }
+
+  // `null` values (pre-mount) render as "--" placeholders to preserve layout.
   const blocks = [
     { value: days, label: "DAYS" },
     { value: hours, label: "HRS" },
@@ -49,14 +68,7 @@ export function CountdownTimer({ targetDate, label }: CountdownTimerProps) {
 
   return (
     <div>
-      {label && (
-        <Mono
-          className="mb-3 block uppercase"
-          style={{ fontSize: 11, color: F1.fg3, letterSpacing: "0.18em" }}
-        >
-          {label}
-        </Mono>
-      )}
+      {renderLabel}
       <div className="flex" style={{ gap: 1, background: F1.line }}>
         {blocks.map((block) => (
           <div
@@ -74,7 +86,7 @@ export function CountdownTimer({ targetDate, label }: CountdownTimerProps) {
                 lineHeight: 1,
               }}
             >
-              {String(block.value).padStart(2, "0")}
+              {block.value === null ? "--" : String(block.value).padStart(2, "0")}
             </div>
             <Mono
               className="block"

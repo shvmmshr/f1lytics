@@ -70,7 +70,7 @@ export default async function CalendarPage() {
     (c) => !c.cancelled && c.raceDate >= todayStr,
   );
   const countdown = nextRace
-    ? getCountdownParts(new Date(`${nextRace.raceDate}T15:00:00Z`))
+    ? getCountdownParts(new Date(`${nextRace.raceDate}T${nextRace.raceTime}`))
     : null;
 
   return (

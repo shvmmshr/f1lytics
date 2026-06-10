@@ -55,7 +55,9 @@ export function Hero({
 
   const event = getNextEvent();
   const nextRace = event?.circuit;
-  const targetTime = nextRace ? new Date(`${nextRace.raceDate}T15:00:00Z`).getTime() : null;
+  const targetTime = nextRace
+    ? new Date(`${nextRace.raceDate}T${nextRace.raceTime}`).getTime()
+    : null;
   const [tick, setTick] = useState<ReturnType<typeof getCountdown> | null>(null);
 
   useEffect(() => {
