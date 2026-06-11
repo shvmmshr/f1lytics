@@ -1,339 +1,117 @@
 import { ImageResponse } from "next/og";
+import { readFile } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
+import { CIRCUIT_LIST } from "@/lib/constants/circuits";
+import { DRIVER_LIST } from "@/lib/constants/drivers";
+import { TEAM_LIST } from "@/lib/constants/teams";
 
-export const runtime = "edge";
-
-export const alt = "F1lytics · 2026 Formula 1 stats, standings, and results";
+export const alt = "F1lytics · Formula 1 2026, decoded";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-export default function OGImage() {
+const RED = "#E10600";
+const INK = "#08080A";
+
+// Bundled fonts (Satori only knows fonts handed to it as ArrayBuffers; it
+// ignores CSS font-family + next/font). These mirror the site: Antonio for the
+// condensed display headline, JetBrains Mono for the broadcast labels.
+// Read from disk via import.meta.url so Next bundles the .ttf and it works at
+// both build-time prerender and request time (fetch() of a relative asset URL
+// fails during the build, which has no server to resolve it against).
+function loadFont(file: string) {
+  return readFile(fileURLToPath(new URL(`./_fonts/${file}`, import.meta.url)));
+}
+
+export default async function OGImage() {
+  const [antonioBoldData, antonioSemiData, monoBoldData, monoMedData] =
+    await Promise.all([
+      loadFont("Antonio-Bold.ttf"),
+      loadFont("Antonio-SemiBold.ttf"),
+      loadFont("JetBrainsMono-Bold.ttf"),
+      loadFont("JetBrainsMono-Medium.ttf"),
+    ]);
+
+  const races = CIRCUIT_LIST.filter((c) => !c.cancelled).length;
+  const sprints = CIRCUIT_LIST.filter((c) => !c.cancelled && c.isSprint).length;
+  const stats: [string, string][] = [
+    ["ROUNDS", String(races)],
+    ["DRIVERS", String(DRIVER_LIST.length)],
+    ["TEAMS", String(TEAM_LIST.length)],
+    ["SPRINTS", String(sprints)],
+  ];
+
   return new ImageResponse(
     (
       <div
         style={{
-          background: "#0A0A0B",
           width: "100%",
           height: "100%",
           display: "flex",
           flexDirection: "column",
-          fontFamily: "system-ui, sans-serif",
           position: "relative",
+          background: INK,
+          fontFamily: "Mono",
           overflow: "hidden",
         }}
       >
-        {/* === Background layers === */}
-
-        {/* Deep radial gradient base */}
+        {/* Soft red glow, off-centre right (matches the hero's ambient red). */}
         <div
           style={{
             position: "absolute",
-            inset: 0,
+            top: "8%",
+            left: "34%",
+            width: 760,
+            height: 520,
             background:
-              "radial-gradient(ellipse 120% 80% at 30% 50%, rgba(225,6,0,0.08) 0%, transparent 60%), radial-gradient(ellipse 80% 120% at 80% 30%, rgba(225,6,0,0.05) 0%, transparent 50%)",
-          }}
-        />
-
-        {/* Perspective grid floor */}
-        <div
-          style={{
-            position: "absolute",
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: 280,
-            background:
-              "linear-gradient(to top, rgba(225,6,0,0.06) 0%, transparent 100%)",
+              "radial-gradient(ellipse at center, rgba(225,6,0,0.16) 0%, rgba(225,6,0,0.05) 42%, transparent 70%)",
             display: "flex",
           }}
         />
 
-        {/* Horizontal speed lines — left side */}
-        {[60, 140, 195, 310, 400, 470, 530].map((top, i) => (
+        {/* Faint broadcast grid lines */}
+        {[160, 320, 480].map((top) => (
           <div
-            key={`line-l-${i}`}
+            key={`h-${top}`}
             style={{
               position: "absolute",
-              top,
               left: 0,
-              width: [280, 180, 320, 220, 160, 260, 200][i],
-              height: 1,
-              background: `linear-gradient(to right, rgba(225,6,0,${[0.3, 0.15, 0.25, 0.12, 0.2, 0.08, 0.18][i]}) 0%, transparent 100%)`,
-            }}
-          />
-        ))}
-
-        {/* Horizontal speed lines — right side */}
-        {[80, 160, 250, 350, 420, 500].map((top, i) => (
-          <div
-            key={`line-r-${i}`}
-            style={{
-              position: "absolute",
-              top,
               right: 0,
-              width: [200, 260, 150, 300, 180, 220][i],
+              top,
               height: 1,
-              background: `linear-gradient(to left, rgba(225,6,0,${[0.2, 0.1, 0.25, 0.08, 0.15, 0.12][i]}) 0%, transparent 100%)`,
+              background: "rgba(255,255,255,0.035)",
+              display: "flex",
             }}
           />
         ))}
 
-        {/* Diagonal racing stripe — top left */}
-        <div
-          style={{
-            position: "absolute",
-            top: -40,
-            left: -20,
-            width: 3,
-            height: 200,
-            background: "rgba(225,6,0,0.4)",
-            transform: "rotate(35deg)",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            top: -30,
-            left: -5,
-            width: 1,
-            height: 160,
-            background: "rgba(225,6,0,0.2)",
-            transform: "rotate(35deg)",
-          }}
-        />
-
-        {/* Diagonal racing stripe — bottom right */}
-        <div
-          style={{
-            position: "absolute",
-            bottom: -40,
-            right: 40,
-            width: 3,
-            height: 200,
-            background: "rgba(225,6,0,0.3)",
-            transform: "rotate(35deg)",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            bottom: -30,
-            right: 55,
-            width: 1,
-            height: 160,
-            background: "rgba(225,6,0,0.15)",
-            transform: "rotate(35deg)",
-          }}
-        />
-
-        {/* Checkered flag pattern — top right corner */}
+        {/* Checkered corner, top right */}
         <div
           style={{
             position: "absolute",
             top: 0,
             right: 0,
-            width: 120,
-            height: 120,
+            width: 132,
+            height: 132,
             display: "flex",
             flexWrap: "wrap",
-            opacity: 0.04,
+            opacity: 0.05,
           }}
         >
           {Array.from({ length: 36 }).map((_, i) => (
             <div
-              key={`check-${i}`}
+              key={i}
               style={{
-                width: 20,
-                height: 20,
+                width: 22,
+                height: 22,
+                display: "flex",
                 background:
-                  (Math.floor(i / 6) + (i % 6)) % 2 === 0
-                    ? "white"
-                    : "transparent",
+                  (Math.floor(i / 6) + (i % 6)) % 2 === 0 ? "#FFFFFF" : "transparent",
               }}
             />
           ))}
         </div>
 
-        {/* Central red glow — main */}
-        <div
-          style={{
-            position: "absolute",
-            top: "40%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            width: 700,
-            height: 400,
-            background:
-              "radial-gradient(ellipse, rgba(225,6,0,0.12) 0%, rgba(225,6,0,0.04) 40%, transparent 70%)",
-          }}
-        />
-
-        {/* === Content === */}
-
-        {/* Top bar — season badge */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            padding: "48px 64px 0",
-            gap: 12,
-          }}
-        >
-          {/* Red dot */}
-          <div
-            style={{
-              width: 8,
-              height: 8,
-              borderRadius: "50%",
-              background: "#E10600",
-              boxShadow: "0 0 12px rgba(225,6,0,0.6)",
-            }}
-          />
-          <span
-            style={{
-              fontSize: 14,
-              fontWeight: 700,
-              color: "rgba(250,250,250,0.5)",
-              letterSpacing: "0.2em",
-              textTransform: "uppercase",
-            }}
-          >
-            2026 Season
-          </span>
-        </div>
-
-        {/* Main title */}
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            padding: "32px 64px 0",
-            position: "relative",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "baseline",
-            }}
-          >
-            <span
-              style={{
-                fontSize: 120,
-                fontWeight: 900,
-                color: "#FAFAFA",
-                letterSpacing: "-0.04em",
-                lineHeight: 1,
-              }}
-            >
-              F1
-            </span>
-            <span
-              style={{
-                fontSize: 120,
-                fontWeight: 900,
-                color: "#E10600",
-                letterSpacing: "-0.04em",
-                lineHeight: 1,
-              }}
-            >
-              LYTICS
-            </span>
-          </div>
-
-          {/* Red accent bar under title */}
-          <div
-            style={{
-              width: 100,
-              height: 4,
-              background:
-                "linear-gradient(to right, #E10600, rgba(225,6,0,0.3))",
-              borderRadius: 2,
-              marginTop: 8,
-            }}
-          />
-
-          {/* Description */}
-          <p
-            style={{
-              fontSize: 22,
-              color: "rgba(250,250,250,0.55)",
-              marginTop: 24,
-              fontWeight: 400,
-              lineHeight: 1.5,
-              maxWidth: 540,
-            }}
-          >
-            Standings, race results, driver and team stats, telemetry, and the
-            full 2026 Formula 1 season.
-          </p>
-        </div>
-
-        {/* Bottom bar */}
-        <div
-          style={{
-            position: "absolute",
-            bottom: 0,
-            left: 0,
-            right: 0,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "0 64px 40px",
-          }}
-        >
-          {/* Feature pills */}
-          <div style={{ display: "flex", gap: 16 }}>
-            {["Standings", "Race Results", "Telemetry", "Live Timing"].map(
-              (label) => (
-                <div
-                  key={label}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
-                    padding: "6px 16px",
-                    borderRadius: 20,
-                    border: "1px solid rgba(255,255,255,0.08)",
-                    background: "rgba(255,255,255,0.03)",
-                  }}
-                >
-                  <div
-                    style={{
-                      width: 4,
-                      height: 4,
-                      borderRadius: "50%",
-                      background: "#E10600",
-                    }}
-                  />
-                  <span
-                    style={{
-                      fontSize: 13,
-                      color: "rgba(250,250,250,0.45)",
-                      fontWeight: 500,
-                      letterSpacing: "0.02em",
-                    }}
-                  >
-                    {label}
-                  </span>
-                </div>
-              )
-            )}
-          </div>
-
-          {/* URL */}
-          <span
-            style={{
-              fontSize: 14,
-              color: "rgba(250,250,250,0.3)",
-              fontWeight: 500,
-              letterSpacing: "0.05em",
-            }}
-          >
-            f1lytics.com
-          </span>
-        </div>
-
-        {/* Top edge red line */}
+        {/* Top red edge line */}
         <div
           style={{
             position: "absolute",
@@ -341,25 +119,211 @@ export default function OGImage() {
             left: 0,
             right: 0,
             height: 3,
-            background:
-              "linear-gradient(to right, transparent, #E10600 30%, #E10600 70%, transparent)",
+            background: `linear-gradient(to right, transparent, ${RED} 22%, ${RED} 72%, transparent)`,
+            display: "flex",
           }}
         />
 
-        {/* Bottom edge subtle line */}
+        {/* Corner brackets (broadcast frame) */}
+        <div style={{ position: "absolute", top: 28, left: 28, width: 30, height: 3, background: RED, display: "flex" }} />
+        <div style={{ position: "absolute", top: 28, left: 28, width: 3, height: 30, background: RED, display: "flex" }} />
+        <div style={{ position: "absolute", bottom: 28, right: 28, width: 30, height: 3, background: RED, display: "flex" }} />
+        <div style={{ position: "absolute", bottom: 28, right: 28, width: 3, height: 30, background: RED, display: "flex" }} />
+
+        {/* ===== Content ===== */}
         <div
           style={{
-            position: "absolute",
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: 1,
-            background:
-              "linear-gradient(to right, transparent, rgba(225,6,0,0.3) 30%, rgba(225,6,0,0.3) 70%, transparent)",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+            width: "100%",
+            height: "100%",
+            padding: "62px 70px",
+            position: "relative",
           }}
-        />
+        >
+          {/* Eyebrow */}
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <div style={{ width: 46, height: 2, background: RED, display: "flex" }} />
+            <div
+              style={{
+                marginLeft: 16,
+                fontFamily: "Mono",
+                fontWeight: 700,
+                fontSize: 19,
+                letterSpacing: 6,
+                color: RED,
+                display: "flex",
+              }}
+            >
+              2026 SEASON · TELEMETRY &amp; ANALYSIS
+            </div>
+          </div>
+
+          {/* Headline */}
+          <div style={{ display: "flex", flexDirection: "column", marginTop: -8 }}>
+            <div
+              style={{
+                fontFamily: "Antonio",
+                fontWeight: 700,
+                fontSize: 142,
+                lineHeight: 0.9,
+                letterSpacing: -2,
+                color: "#FAFAFA",
+                display: "flex",
+              }}
+            >
+              FORMULA 1
+            </div>
+            <div style={{ display: "flex", alignItems: "flex-end" }}>
+              <div
+                style={{
+                  fontFamily: "Antonio",
+                  fontWeight: 700,
+                  fontSize: 142,
+                  lineHeight: 0.9,
+                  letterSpacing: -2,
+                  color: RED,
+                  display: "flex",
+                }}
+              >
+                DECODED
+              </div>
+              <div
+                style={{
+                  fontFamily: "Antonio",
+                  fontWeight: 700,
+                  fontSize: 142,
+                  lineHeight: 0.9,
+                  color: "#FAFAFA",
+                  display: "flex",
+                }}
+              >
+                .
+              </div>
+            </div>
+
+            {/* Subtitle */}
+            <div
+              style={{
+                marginTop: 26,
+                maxWidth: 760,
+                fontFamily: "Mono",
+                fontWeight: 500,
+                fontSize: 23,
+                lineHeight: 1.5,
+                color: "rgba(250,250,250,0.62)",
+                display: "flex",
+              }}
+            >
+              Standings, race results, driver &amp; team stats, telemetry and the
+              full Formula 1 season, all in one place.
+            </div>
+          </div>
+
+          {/* Bottom: stat strip + wordmark */}
+          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
+            {/* Stat strip */}
+            <div
+              style={{
+                display: "flex",
+                border: "1px solid rgba(255,255,255,0.1)",
+                background: "rgba(255,255,255,0.02)",
+              }}
+            >
+              {stats.map(([label, value], i) => (
+                <div
+                  key={label}
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    padding: "14px 26px 16px",
+                    borderLeft: i === 0 ? "none" : "1px solid rgba(255,255,255,0.1)",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontFamily: "Mono",
+                      fontWeight: 700,
+                      fontSize: 12,
+                      letterSpacing: 3,
+                      color: "rgba(250,250,250,0.4)",
+                      display: "flex",
+                    }}
+                  >
+                    {label}
+                  </div>
+                  <div
+                    style={{
+                      marginTop: 6,
+                      fontFamily: "Antonio",
+                      fontWeight: 700,
+                      fontSize: 50,
+                      lineHeight: 1,
+                      color: "#FAFAFA",
+                      display: "flex",
+                    }}
+                  >
+                    {value}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Wordmark */}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+              <div style={{ display: "flex", alignItems: "center" }}>
+                <div
+                  style={{
+                    fontFamily: "Antonio",
+                    fontWeight: 700,
+                    fontSize: 40,
+                    letterSpacing: -1,
+                    color: "#FAFAFA",
+                    display: "flex",
+                  }}
+                >
+                  F1
+                </div>
+                <div
+                  style={{
+                    fontFamily: "Antonio",
+                    fontWeight: 700,
+                    fontSize: 40,
+                    letterSpacing: -1,
+                    color: RED,
+                    display: "flex",
+                  }}
+                >
+                  LYTICS
+                </div>
+              </div>
+              <div
+                style={{
+                  marginTop: 6,
+                  fontFamily: "Mono",
+                  fontWeight: 500,
+                  fontSize: 15,
+                  letterSpacing: 3,
+                  color: "rgba(250,250,250,0.35)",
+                  display: "flex",
+                }}
+              >
+                f1lytics.com
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     ),
-    { ...size }
+    {
+      ...size,
+      fonts: [
+        { name: "Antonio", data: antonioBoldData, weight: 700, style: "normal" },
+        { name: "Antonio", data: antonioSemiData, weight: 600, style: "normal" },
+        { name: "Mono", data: monoBoldData, weight: 700, style: "normal" },
+        { name: "Mono", data: monoMedData, weight: 500, style: "normal" },
+      ],
+    }
   );
 }

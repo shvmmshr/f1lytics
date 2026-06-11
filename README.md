@@ -1,7 +1,7 @@
 <p align="center">
   <h1 align="center">F1LYTICS</h1>
   <p align="center">
-    A modern Formula 1 dashboard for the 2026 season — live timing, standings, driver analytics, and more.
+    A modern Formula 1 dashboard for the 2026 season: live timing, standings, driver analytics, telemetry, and more.
   </p>
 </p>
 
@@ -29,16 +29,19 @@
 
 ## Features
 
-- **Live Timing** — Real-time session data with position tracking, intervals, and gap analysis powered by OpenF1
-- **Driver Standings** — Full championship standings with points breakdown and position history charts
-- **Constructor Standings** — Team rankings with driver contribution breakdowns
-- **Race Results** — Detailed results for every Grand Prix including lap charts, tire strategies, and fastest laps
-- **Driver Profiles** — Career stats, recent form, and season performance for all 22 drivers
-- **Team Profiles** — Constructor details with driver lineups and historical performance
-- **Circuit Guide** — All 2026 circuits with track maps, lap records, and key stats
-- **Race Calendar** — Interactive timeline of the full 2026 season with countdown to next event (sprint-aware)
-- **Head-to-Head Compare** — Compare any two drivers across stats, qualifying pace, points progression, and recent form
-- **Responsive Design** — Fully optimized for desktop and mobile with smooth GSAP scroll animations
+- **Live Timing**: Real-time session timing straight from Formula 1's official live feed, with positions, gaps, intervals, tyre data, and race control messages.
+- **Race Review**: Replay the timing tower and full classification of any completed session, powered by OpenF1.
+- **Driver Standings**: Full championship standings with points breakdowns and position-history charts.
+- **Constructor Standings**: Team rankings with per-driver contribution breakdowns.
+- **Race Results**: Detailed results for every Grand Prix, including lap charts, tyre strategies, and fastest laps.
+- **Driver Profiles**: Career stats, recent form, and season performance for all 22 drivers.
+- **Team Profiles**: Constructor details with driver lineups and historical performance.
+- **Circuit Guide**: Every 2026 circuit with an interactive 3D globe, track maps, lap records, and key stats.
+- **Session Schedule**: FP1, FP2, FP3, qualifying, sprint, and race times shown in the visitor's local time, switchable to any timezone.
+- **Race Calendar**: An interactive timeline of the full 2026 season with a countdown to the next event (sprint-aware).
+- **Head-to-Head Compare**: Compare any two drivers across stats, qualifying pace, points progression, and recent form.
+- **F1 News**: Aggregated headlines from BBC Sport, Motorsport.com, Autosport, The Race, and PlanetF1.
+- **Responsive Design**: Fully optimized for desktop, tablet, and mobile, with smooth GSAP scroll animations.
 
 ## Tech Stack
 
@@ -50,7 +53,7 @@
 | Animations | [GSAP 3](https://gsap.com) + ScrollTrigger, [Framer Motion](https://motion.dev) |
 | Charts | [Recharts 3](https://recharts.org) |
 | 3D | [Three.js](https://threejs.org) + [React Three Fiber](https://r3f.docs.pmnd.rs) |
-| Data | [Jolpica-F1 API](https://github.com/jolpica/jolpica-f1), [OpenF1 API](https://openf1.org) |
+| Data | [Jolpica-F1 API](https://github.com/jolpica/jolpica-f1), [OpenF1 API](https://openf1.org), F1 live timing |
 | UI Components | [Radix UI](https://radix-ui.com), [Lucide Icons](https://lucide.dev) |
 | Analytics | [Vercel Analytics](https://vercel.com/analytics), [Vercel Speed Insights](https://vercel.com/docs/speed-insights) |
 | Deployment | [Vercel](https://vercel.com) |
@@ -71,7 +74,7 @@ pnpm dev
 
 Open [http://localhost:3000](http://localhost:3000) to view it.
 
-No environment variables are required — all data comes from public APIs.
+No environment variables are required. All data comes from free, public APIs.
 
 ## Project Structure
 
@@ -79,31 +82,33 @@ No environment variables are required — all data comes from public APIs.
 src/
 ├── app/
 │   ├── (marketing)/       # Landing page
-│   ├── (season)/          # Standings, calendar, drivers, teams, circuits, races
-│   ├── (live)/            # Live timing page
+│   ├── (season)/          # Standings, calendar, drivers, teams, circuits, races, news
+│   ├── (live)/            # Live timing and race review
 │   ├── (tools)/           # Head-to-head compare tool
-│   └── api/               # API routes (live data proxy, revalidation)
+│   └── api/               # Route handlers: live data, SSE relay, news, revalidation
 ├── components/
-│   ├── charts/            # Recharts visualizations (position, lap times, tire strategy)
-│   ├── home/              # Landing page sections (hero, countdown, features)
+│   ├── charts/            # Recharts visualizations (position, lap times, tyre strategy)
+│   ├── home/              # Landing page sections (hero, countdown, calendar, news)
 │   ├── layout/            # Navbar, footer, page transitions
-│   ├── shared/            # Reusable UI (badges, cards, headers)
-│   ├── three/             # Three.js 3D components
+│   ├── live/              # Live timing UI (replay banner and more)
+│   ├── shared/            # Reusable UI (badges, cards, headers, session schedule)
 │   └── ui/                # Base UI primitives (shadcn/ui)
-├── hooks/                 # Custom hooks (live session polling)
+├── hooks/                 # Live session polling and live-stream SSE hooks
 └── lib/
-    ├── api/               # API clients (Jolpica, OpenF1)
-    └── constants/         # Season data (circuits, drivers, teams)
+    ├── api/               # API clients (Jolpica, OpenF1, news)
+    └── constants/         # Season data (circuits, drivers, teams, schedules)
 ```
 
 ## Data Sources
 
 | Source | Usage |
 |--------|-------|
-| [Jolpica-F1 API](https://github.com/jolpica/jolpica-f1) | Historical data — standings, race results, qualifying, lap times |
-| [OpenF1 API](https://openf1.org) | Live session data — real-time positions, intervals, driver telemetry |
+| [Jolpica-F1 API](https://github.com/jolpica/jolpica-f1) | Historical data: standings, race results, qualifying, lap times |
+| [OpenF1 API](https://openf1.org) | Session data: positions, intervals, tyres, telemetry, weather |
+| F1 live timing | Real-time timing during sessions, relayed as Server-Sent Events |
+| RSS feeds | Aggregated F1 news from major motorsport outlets |
 
-Both APIs are free and require no authentication. Data is cached using Next.js ISR (Incremental Static Regeneration) with configurable revalidation intervals.
+All data sources are free and require no authentication. Responses are cached with Next.js ISR (Incremental Static Regeneration) using per-route revalidation intervals.
 
 ## Deployment
 
@@ -113,7 +118,7 @@ Deploy your own instance with one click:
 
 ## Contributing
 
-Contributions are welcome! Here's how:
+Contributions are welcome. Here is how:
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feat/amazing-feature`)
@@ -123,7 +128,7 @@ Contributions are welcome! Here's how:
 
 ## License
 
-This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
 ---
 
