@@ -83,7 +83,7 @@ export function NextRaceCountdown() {
         background: F1.bg,
         borderTop: `1px solid ${F1.line}`,
         borderBottom: `1px solid ${F1.line}`,
-        padding: "60px 32px",
+        padding: "clamp(36px, 6vw, 60px) clamp(16px, 4vw, 32px)",
         position: "relative",
       }}
     >
@@ -179,7 +179,7 @@ export function NextRaceCountdown() {
                   className="relative"
                   style={{
                     background: F1.bg,
-                    padding: "24px 12px 18px",
+                    padding: "clamp(14px, 3vw, 24px) 8px clamp(12px, 2.5vw, 18px)",
                     textAlign: "center",
                   }}
                 >

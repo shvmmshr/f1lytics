@@ -2,7 +2,7 @@
 
 import { Suspense, useRef, useState, useCallback, useMemo, useEffect } from "react";
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, Sphere, Html, Line } from "@react-three/drei";
+import { OrbitControls, Sphere, Line } from "@react-three/drei";
 import * as THREE from "three";
 
 export interface GlobeCircuit {
@@ -66,26 +66,29 @@ function ContinentOutlines({ radius }: { radius: number }) {
   );
 }
 
-/* ── Circuit marker with rich tooltip ── */
+/* ── Circuit marker — hovering reports the circuit upward so the info card can
+   be rendered as a pinned DOM panel (never overflows the canvas). ── */
 function CircuitMarker({
   circuit,
   radius,
+  onHover,
 }: {
   circuit: GlobeCircuit;
   radius: number;
+  onHover: (c: GlobeCircuit | null) => void;
 }) {
   const [hovered, setHovered] = useState(false);
   const position = latLngToVector3(circuit.lat, circuit.lng, radius);
-  // All circuits have a race; sprint weekends get an accent ring
   const color = "#3B82F6";
 
-  const handlePointerOver = useCallback(() => setHovered(true), []);
-  const handlePointerOut = useCallback(() => setHovered(false), []);
-
-  const formattedDate = new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-  }).format(new Date(`${circuit.raceDate}T00:00:00Z`));
+  const handlePointerOver = useCallback(() => {
+    setHovered(true);
+    onHover(circuit);
+  }, [circuit, onHover]);
+  const handlePointerOut = useCallback(() => {
+    setHovered(false);
+    onHover(null);
+  }, [onHover]);
 
   return (
     <group position={position}>
@@ -120,51 +123,93 @@ function CircuitMarker({
           />
         </mesh>
       )}
-
-      {/* Tooltip */}
-      {hovered && (
-        <Html
-          distanceFactor={3.5}
-          style={{ pointerEvents: "none", whiteSpace: "nowrap" }}
-        >
-          <div
-            className="rounded-lg border border-white/10 bg-[#0C0C0E]/95 px-4 py-3 shadow-xl backdrop-blur-md"
-            style={{ minWidth: 180 }}
-          >
-            {/* Round badge + name */}
-            <div className="flex items-center gap-2">
-              <span
-                className="flex h-6 w-6 items-center justify-center rounded-md text-[10px] font-bold text-white"
-                style={{ backgroundColor: color }}
-              >
-                R{circuit.round}
-              </span>
-              <span className="text-sm font-semibold text-white">
-                {circuit.fullName}
-              </span>
-            </div>
-
-            {/* Details row */}
-            <div className="mt-2 flex items-center gap-3 text-[11px] text-[#a1a1aa]">
-              <span>{circuit.country}</span>
-              <span className="opacity-30">|</span>
-              <span>{formattedDate}</span>
-              {circuit.isSprint && (
-                <>
-                  <span className="opacity-30">|</span>
-                  <span className="font-semibold text-yellow-400">Sprint Weekend</span>
-                </>
-              )}
-            </div>
-
-            {/* Circuit name */}
-            <div className="mt-1 text-[11px] text-[#71717a]">
-              {circuit.name}
-            </div>
-          </div>
-        </Html>
-      )}
     </group>
+  );
+}
+
+/* ── Info card (plain DOM) — pinned inside the globe box so it can't overflow.
+   Broadcast design language: sharp edges, mono, accent top-rule. ── */
+function CircuitInfoCard({ circuit }: { circuit: GlobeCircuit }) {
+  // Brand red, amber on sprint weekends.
+  const accent = circuit.isSprint ? "#EAB308" : "#FF1801";
+  const formattedDate = new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+  }).format(new Date(`${circuit.raceDate}T00:00:00Z`));
+
+  return (
+    <div
+      className="font-mono"
+      style={{
+        background: "rgba(8,8,10,0.97)",
+        border: "1px solid #27272A",
+        borderTop: `2px solid ${accent}`,
+        padding: "10px 13px 11px",
+        width: 240,
+        maxWidth: "100%",
+        boxShadow: "0 10px 30px rgba(0,0,0,0.65)",
+      }}
+    >
+      {/* Round badge + GP name */}
+      <div className="flex items-center gap-2.5">
+        <span
+          style={{
+            flexShrink: 0,
+            fontSize: 10,
+            fontWeight: 700,
+            letterSpacing: "0.12em",
+            color: "#FFFFFF",
+            background: "#18181b",
+            border: "1px solid #27272A",
+            padding: "2px 7px",
+          }}
+        >
+          R{String(circuit.round).padStart(2, "0")}
+        </span>
+        <span
+          style={{
+            fontSize: 13,
+            fontWeight: 600,
+            letterSpacing: "-0.01em",
+            color: "#FFFFFF",
+          }}
+        >
+          {circuit.fullName.replace(" Grand Prix", " GP")}
+        </span>
+      </div>
+
+      {/* Country · date (· sprint) */}
+      <div
+        style={{
+          marginTop: 8,
+          fontSize: 10,
+          letterSpacing: "0.14em",
+          color: "#A1A1AA",
+        }}
+      >
+        {circuit.country.toUpperCase()}
+        <span style={{ opacity: 0.35, margin: "0 7px" }}>·</span>
+        {formattedDate.toUpperCase()}
+        {circuit.isSprint && (
+          <>
+            <span style={{ opacity: 0.35, margin: "0 7px" }}>·</span>
+            <span style={{ color: "#EAB308", fontWeight: 700 }}>SPRINT</span>
+          </>
+        )}
+      </div>
+
+      {/* Circuit name */}
+      <div
+        style={{
+          marginTop: 5,
+          fontSize: 10,
+          letterSpacing: "0.08em",
+          color: "#71717a",
+        }}
+      >
+        {circuit.name.toUpperCase()}
+      </div>
+    </div>
   );
 }
 
@@ -182,7 +227,13 @@ function GlobeAtmosphere() {
   );
 }
 
-function Globe({ circuits }: { circuits: GlobeCircuit[] }) {
+function Globe({
+  circuits,
+  onHover,
+}: {
+  circuits: GlobeCircuit[];
+  onHover: (c: GlobeCircuit | null) => void;
+}) {
   const groupRef = useRef<THREE.Group>(null);
   const R = 1;
 
@@ -206,20 +257,31 @@ function Globe({ circuits }: { circuits: GlobeCircuit[] }) {
 
       {/* Circuit markers */}
       {circuits.map((circuit) => (
-        <CircuitMarker key={circuit.id} circuit={circuit} radius={R + 0.008} />
+        <CircuitMarker
+          key={circuit.id}
+          circuit={circuit}
+          radius={R + 0.008}
+          onHover={onHover}
+        />
       ))}
     </group>
   );
 }
 
-function SceneContent({ circuits }: { circuits: GlobeCircuit[] }) {
+function SceneContent({
+  circuits,
+  onHover,
+}: {
+  circuits: GlobeCircuit[];
+  onHover: (c: GlobeCircuit | null) => void;
+}) {
   return (
     <>
       <ambientLight intensity={0.4} />
       <directionalLight position={[3, 4, 2]} intensity={0.6} />
       <pointLight position={[-2, 1, -1]} color="#EF4444" intensity={0.2} />
 
-      <Globe circuits={circuits} />
+      <Globe circuits={circuits} onHover={onHover} />
 
       <OrbitControls
         enableZoom
@@ -244,6 +306,7 @@ function LoadingFallback() {
 }
 
 export function CircuitGlobe({ circuits }: CircuitGlobeProps) {
+  const [hovered, setHovered] = useState<GlobeCircuit | null>(null);
   return (
     <section
       style={{
@@ -275,7 +338,7 @@ export function CircuitGlobe({ circuits }: CircuitGlobeProps) {
           </span>
         </div>
         <div
-          className="h-[450px] w-full overflow-hidden"
+          className="relative h-[450px] w-full overflow-hidden"
           style={{ background: "#0C0C0E", border: "1px solid #27272A" }}
         >
           <Suspense fallback={<LoadingFallback />}>
@@ -285,10 +348,21 @@ export function CircuitGlobe({ circuits }: CircuitGlobeProps) {
               gl={{ alpha: true, antialias: true }}
             >
               <Suspense fallback={null}>
-                <SceneContent circuits={circuits} />
+                <SceneContent circuits={circuits} onHover={setHovered} />
               </Suspense>
             </Canvas>
           </Suspense>
+
+          {/* Hover info card — pinned to the bottom-left of the box. The left/
+              right insets bound its width so it can never spill outside. */}
+          {hovered && (
+            <div
+              className="pointer-events-none absolute"
+              style={{ bottom: 12, left: 12, right: 12, zIndex: 10 }}
+            >
+              <CircuitInfoCard circuit={hovered} />
+            </div>
+          )}
         </div>
       </div>
     </section>

@@ -73,7 +73,7 @@ export default async function CalendarPage() {
         {/* Header */}
         <div
           className="relative"
-          style={{ padding: "40px 32px 28px", borderBottom: `1px solid ${F1.line}` }}
+          style={{ padding: "40px clamp(16px, 4vw, 32px) 28px", borderBottom: `1px solid ${F1.line}` }}
         >
           <div className="flex items-center gap-3.5">
             <Mono style={{ color: F1.red, fontSize: 11, letterSpacing: "0.24em" }}>
@@ -88,7 +88,7 @@ export default async function CalendarPage() {
             className="font-display uppercase m-0 mt-3"
             style={{
               fontWeight: 700,
-              fontSize: "clamp(56px, 8vw, 96px)",
+              fontSize: "clamp(36px, 8vw, 96px)",
               lineHeight: 0.9,
               letterSpacing: "-0.04em",
             }}
@@ -100,16 +100,15 @@ export default async function CalendarPage() {
         {/* Featured next race */}
         {nextRace && (
           <div
-            className="relative grid"
+            className="relative grid grid-cols-1 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]"
             style={{
-              gridTemplateColumns: "minmax(0, 1.1fr) minmax(0, 1fr)",
               gap: 0,
               borderBottom: `1px solid ${F1.line}`,
             }}
           >
             <div
               className="relative overflow-hidden"
-              style={{ padding: 32, background: F1.bg2 }}
+              style={{ padding: "clamp(20px, 5vw, 32px)", background: F1.bg2 }}
             >
               <RacingStripes color={F1.red} opacity={0.05} size={20} />
               <div
@@ -145,11 +144,12 @@ export default async function CalendarPage() {
               <div
                 className="font-display uppercase"
                 style={{
-                  fontSize: "clamp(56px, 7vw, 84px)",
+                  fontSize: "clamp(34px, 7vw, 84px)",
                   fontWeight: 700,
                   letterSpacing: "-0.04em",
                   lineHeight: 0.85,
                   marginTop: 4,
+                  wordBreak: "break-word",
                 }}
               >
                 {nextRace.city.toUpperCase()}
@@ -169,8 +169,8 @@ export default async function CalendarPage() {
               </div>
 
               <div
-                className="grid mt-6"
-                style={{ gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}
+                className="grid grid-cols-2 sm:grid-cols-4 mt-6"
+                style={{ gap: 10 }}
               >
                 {[
                   ["DATE", formatDateMonthDay(nextRace.raceDate)],
@@ -298,7 +298,7 @@ export default async function CalendarPage() {
         )}
 
         {/* Calendar grid */}
-        <div className="relative" style={{ padding: "32px" }}>
+        <div className="relative" style={{ padding: "32px clamp(16px, 4vw, 32px)" }}>
           <SectionHeader
             label="FULL SEASON"
             right={

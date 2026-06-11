@@ -260,13 +260,15 @@ export interface OpenF1Stint {
   tyre_age_at_start: number;
 }
 
-/** Gap/interval data from OpenF1 */
+/** Gap/interval data from OpenF1.
+ *  Note: OpenF1 returns a STRING ("+1 LAP" / "+2 LAPS") for lapped cars, not a
+ *  number — hence the `string` member. Consumers must handle it (see formatGap). */
 export interface OpenF1Interval {
   session_key: number;
   driver_number: number;
   date: string;
-  gap_to_leader: number | null;
-  interval: number | null;
+  gap_to_leader: number | string | null;
+  interval: number | string | null;
 }
 
 /** Car location (x/y/z coordinates) from OpenF1 */

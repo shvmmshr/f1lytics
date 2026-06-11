@@ -232,7 +232,7 @@ export default async function RacePage({ params }: RacePageProps) {
         {circuit.cancelled && (
           <div
             style={{
-              padding: "10px 32px",
+              padding: "10px clamp(16px, 4vw, 32px)",
               background: F1.red,
               color: F1.fg,
               textAlign: "center",
@@ -249,7 +249,7 @@ export default async function RacePage({ params }: RacePageProps) {
           className="relative overflow-hidden"
           style={{
             borderBottom: `1px solid ${F1.line}`,
-            padding: "44px 32px 36px",
+            padding: "44px clamp(16px, 4vw, 32px) 36px",
             background: `linear-gradient(135deg, ${F1.red}1a 0%, transparent 60%)`,
           }}
         >
@@ -279,7 +279,7 @@ export default async function RacePage({ params }: RacePageProps) {
             </h1>
             <Mono
               className="block mt-3"
-              style={{ fontSize: 13, color: F1.fg2, letterSpacing: "0.16em" }}
+              style={{ fontSize: 13, color: F1.fg2, letterSpacing: "0.16em", wordBreak: "break-word" }}
             >
               {circuit.name.toUpperCase()} · {circuit.city.toUpperCase()},{" "}
               {circuit.country.toUpperCase()} · {formatRaceDate(circuit.raceDate).toUpperCase()}
@@ -291,7 +291,7 @@ export default async function RacePage({ params }: RacePageProps) {
         {weekendSchedule && (
           <section
             className="relative"
-            style={{ padding: "40px 32px", borderBottom: `1px solid ${F1.line}` }}
+            style={{ padding: "40px clamp(16px, 4vw, 32px)", borderBottom: `1px solid ${F1.line}` }}
           >
             <div className="mx-auto" style={{ maxWidth: 1400 }}>
               <SectionHeader label="WEEKEND SCHEDULE" />
@@ -305,15 +305,14 @@ export default async function RacePage({ params }: RacePageProps) {
         {/* PODIUM */}
         <section
           className="relative"
-          style={{ padding: "40px 32px", borderBottom: `1px solid ${F1.line}` }}
+          style={{ padding: "40px clamp(16px, 4vw, 32px)", borderBottom: `1px solid ${F1.line}` }}
         >
           <div className="mx-auto" style={{ maxWidth: 1400 }}>
             <SectionHeader label="PODIUM" />
             {podium.length > 0 ? (
               <div
-                className="grid"
+                className="grid grid-cols-1 sm:grid-cols-3"
                 style={{
-                  gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
                   gap: 1,
                   background: F1.line,
                   border: `1px solid ${F1.line}`,
@@ -393,7 +392,7 @@ export default async function RacePage({ params }: RacePageProps) {
         {/* FULL RESULTS */}
         <section
           className="relative"
-          style={{ padding: "40px 32px", borderBottom: `1px solid ${F1.line}` }}
+          style={{ padding: "40px clamp(16px, 4vw, 32px)", borderBottom: `1px solid ${F1.line}` }}
         >
           <div className="mx-auto" style={{ maxWidth: 1400 }}>
             <SectionHeader
@@ -407,15 +406,13 @@ export default async function RacePage({ params }: RacePageProps) {
               }
             />
             {results.length > 0 ? (
-              <div
+              <div className="overflow-x-auto"
                 style={{
                   background: F1.bg2,
                   border: `1px solid ${F1.line}`,
-                  overflow: "hidden",
                 }}
               >
-                <div className="overflow-x-auto">
-                  <table
+                <table
                     className="w-full"
                     style={{ borderCollapse: "collapse", minWidth: 860 }}
                   >
@@ -549,7 +546,6 @@ export default async function RacePage({ params }: RacePageProps) {
                       })}
                     </tbody>
                   </table>
-                </div>
               </div>
             ) : (
               <Mono style={{ color: F1.fg3, fontSize: 12, letterSpacing: "0.14em" }}>
@@ -564,14 +560,13 @@ export default async function RacePage({ params }: RacePageProps) {
         {/* TELEMETRY META */}
         <section
           className="relative"
-          style={{ padding: "40px 32px", borderBottom: `1px solid ${F1.line}` }}
+          style={{ padding: "40px clamp(16px, 4vw, 32px)", borderBottom: `1px solid ${F1.line}` }}
         >
           <div className="mx-auto" style={{ maxWidth: 1400 }}>
             <SectionHeader label="OPENF1 TELEMETRY" />
             <div
-              className="grid"
+              className="grid grid-cols-1 sm:grid-cols-3"
               style={{
-                gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
                 gap: 1,
                 background: F1.line,
                 border: `1px solid ${F1.line}`,
@@ -631,7 +626,7 @@ export default async function RacePage({ params }: RacePageProps) {
         </section>
 
         {/* CHARTS */}
-        <section className="relative" style={{ padding: "40px 32px 60px" }}>
+        <section className="relative" style={{ padding: "40px clamp(16px, 4vw, 32px) 60px" }}>
           <div className="mx-auto" style={{ maxWidth: 1400 }}>
             <div className="space-y-10">
               <div>

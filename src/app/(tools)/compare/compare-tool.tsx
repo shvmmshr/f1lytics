@@ -129,7 +129,7 @@ function CompareBar({
         {/* Left value */}
         <div
           className="flex items-center gap-1.5 justify-end"
-          style={{ width: 72 }}
+          style={{ width: 56 }}
         >
           {aWins && (
             <span style={{ color: colorA, fontSize: 11 }} aria-hidden>
@@ -181,7 +181,7 @@ function CompareBar({
         </div>
 
         {/* Right value */}
-        <div className="flex items-center gap-1.5" style={{ width: 72 }}>
+        <div className="flex items-center gap-1.5" style={{ width: 56 }}>
           <Mono
             style={{
               fontSize: 18,
@@ -215,7 +215,7 @@ function RecentFormChips({ form }: { form: RecentFormEntry[] }) {
   }
 
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex flex-wrap items-center gap-1">
       {form.map((entry) => {
         let bgColor: string;
         let label: string;
@@ -710,9 +710,8 @@ function DriverComparison({ stats }: { stats: Record<string, DriverStat> }) {
 
       {/* VS hero — 1fr / 100px / 1fr */}
       <div
-        className="grid"
+        className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_100px_minmax(0,1fr)]"
         style={{
-          gridTemplateColumns: "minmax(0, 1fr) 100px minmax(0, 1fr)",
           background: F1.line,
           gap: 1,
           border: `1px solid ${F1.line}`,
@@ -1090,9 +1089,8 @@ function TeamComparison({ stats }: { stats: Record<string, ConstructorStat> }) {
 
       {/* VS hero */}
       <div
-        className="grid"
+        className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_100px_minmax(0,1fr)]"
         style={{
-          gridTemplateColumns: "minmax(0, 1fr) 100px minmax(0, 1fr)",
           background: F1.line,
           gap: 1,
           border: `1px solid ${F1.line}`,

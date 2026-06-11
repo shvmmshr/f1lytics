@@ -236,13 +236,13 @@ export default async function ComparePage() {
         <BroadcastGrid color={F1.line} size={64} opacity={0.18} />
         <div
           className="relative"
-          style={{ padding: "40px 32px 28px", borderBottom: `1px solid ${F1.line}` }}
+          style={{ padding: "40px clamp(16px, 4vw, 32px) 28px", borderBottom: `1px solid ${F1.line}` }}
         >
-          <div className="flex items-center gap-3.5">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3.5">
             <Mono style={{ color: F1.red, fontSize: 11, letterSpacing: "0.24em" }}>
               SECTION 07
             </Mono>
-            <span style={{ width: 40, height: 1, background: F1.line }} />
+            <span className="hidden sm:block" style={{ width: 40, height: 1, background: F1.line }} />
             <Mono style={{ color: F1.fg3, fontSize: 11, letterSpacing: "0.18em" }}>
               HEAD‑TO‑HEAD · DRIVERS · CONSTRUCTORS
             </Mono>
@@ -251,18 +251,18 @@ export default async function ComparePage() {
             className="font-display uppercase m-0 mt-3"
             style={{
               fontWeight: 700,
-              fontSize: "clamp(56px, 8vw, 96px)",
-              lineHeight: 0.9,
+              fontSize: "clamp(40px, 8vw, 96px)",
+              lineHeight: 0.95,
               letterSpacing: "-0.04em",
             }}
           >
             COMPARE<span style={{ color: F1.red }}>.</span>
           </h1>
-          <div className="mt-3" style={{ fontSize: 16, color: F1.fg2, maxWidth: 540 }}>
+          <div className="mt-3" style={{ fontSize: "clamp(14px, 4vw, 16px)", color: F1.fg2, maxWidth: 540 }}>
             Two drivers. Two teams. Side‑by‑side telemetry across every metric of the season.
           </div>
         </div>
-        <div style={{ padding: "32px" }}>
+        <div style={{ padding: "32px clamp(16px, 4vw, 32px)" }}>
           <CompareTool driverStats={driverStats} constructorStats={constructorStats} />
         </div>
       </div>

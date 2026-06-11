@@ -32,8 +32,14 @@ import {
 
 // ─── Helpers ───────────────────────────────────────────────────────────
 
-function formatGap(gap: number | null | undefined): string {
+function formatGap(gap: number | string | null | undefined): string {
   if (gap === null || gap === undefined) return "—";
+  // OpenF1 overloads gap_to_leader with a string like "+1 LAP" for lapped
+  // cars — show it verbatim rather than calling .toFixed() on a string.
+  if (typeof gap === "string") {
+    const trimmed = gap.trim();
+    return trimmed === "" ? "—" : trimmed;
+  }
   return `+${gap.toFixed(3)}`;
 }
 
@@ -100,8 +106,11 @@ function TopBroadcastBar({
   trackTemp: number | null;
 }) {
   return (
+    // Mobile: two stacked rows (pill+title, then the 4 tiles). At lg the two
+    // wrappers below become `contents`, promoting their children into this grid
+    // so the desktop single-row 6-column layout is unchanged.
     <div
-      className="grid items-stretch"
+      className="flex flex-col lg:grid lg:items-stretch"
       style={{
         gridTemplateColumns:
           "auto minmax(0, 1fr) repeat(4, minmax(0, 110px))",
@@ -109,68 +118,75 @@ function TopBroadcastBar({
         borderBottom: `1px solid ${F1.line}`,
       }}
     >
-      {/* LIVE pill */}
-      <div
-        className="flex items-center gap-2"
-        style={{
-          padding: "0 18px",
-          background: isLive ? F1.red : F1.bg2,
-          color: isLive ? F1.ink : F1.fg2,
-          clipPath: "polygon(0 0, 100% 0, 92% 100%, 0 100%)",
-          minHeight: 64,
-        }}
-      >
-        <LiveDot color={isLive ? F1.ink : F1.fg3} size={8} />
-        <Mono
+      <div className="flex items-stretch lg:contents">
+        {/* LIVE pill */}
+        <div
+          className="flex items-center gap-2"
           style={{
-            fontSize: 12,
-            letterSpacing: "0.18em",
-            fontWeight: 700,
+            padding: "0 18px",
+            background: isLive ? F1.red : F1.bg2,
+            color: isLive ? F1.ink : F1.fg2,
+            clipPath: "polygon(0 0, 100% 0, 92% 100%, 0 100%)",
+            minHeight: 64,
           }}
         >
-          {isLive ? "LIVE" : "FINISHED"}
-        </Mono>
-      </div>
+          <LiveDot color={isLive ? F1.ink : F1.fg3} size={8} />
+          <Mono
+            style={{
+              fontSize: 12,
+              letterSpacing: "0.18em",
+              fontWeight: 700,
+            }}
+          >
+            {isLive ? "LIVE" : "FINISHED"}
+          </Mono>
+        </div>
 
-      {/* Session title */}
-      <div
-        className="flex flex-col justify-center"
-        style={{
-          padding: "8px 24px",
-          borderRight: `1px solid ${F1.line}`,
-        }}
-      >
-        <Mono style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.24em" }}>
-          {sessionType.toUpperCase()} · {countryName.toUpperCase()}
-        </Mono>
-        <span
-          className="font-display"
+        {/* Session title */}
+        <div
+          className="flex flex-1 flex-col justify-center min-w-0"
           style={{
-            fontSize: 24,
-            fontWeight: 700,
-            letterSpacing: "-0.02em",
-            lineHeight: 1.05,
-            marginTop: 2,
+            padding: "8px 24px",
+            borderRight: `1px solid ${F1.line}`,
           }}
         >
-          {sessionName.toUpperCase()}
-        </span>
+          <Mono style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.24em" }}>
+            {sessionType.toUpperCase()} · {countryName.toUpperCase()}
+          </Mono>
+          <span
+            className="font-display truncate"
+            style={{
+              fontSize: 24,
+              fontWeight: 700,
+              letterSpacing: "-0.02em",
+              lineHeight: 1.05,
+              marginTop: 2,
+            }}
+          >
+            {sessionName.toUpperCase()}
+          </span>
+        </div>
       </div>
 
-      {/* Lap */}
-      <TopTile label="LAP" value={currentLap !== null ? `${currentLap}` : "—"} />
-      {/* Circuit */}
-      <TopTile label="CIRCUIT" value={circuit.toUpperCase()} small />
-      {/* Air */}
-      <TopTile
-        label="AIR"
-        value={airTemp !== null ? `${airTemp.toFixed(0)}°C` : "—°C"}
-      />
-      {/* Track */}
-      <TopTile
-        label="TRACK"
-        value={trackTemp !== null ? `${trackTemp.toFixed(0)}°C` : "—°C"}
-      />
+      <div
+        className="grid grid-cols-2 sm:grid-cols-4 lg:contents"
+        style={{ borderTop: `1px solid ${F1.line}` }}
+      >
+        {/* Lap */}
+        <TopTile label="LAP" value={currentLap !== null ? `${currentLap}` : "—"} />
+        {/* Circuit */}
+        <TopTile label="CIRCUIT" value={circuit.toUpperCase()} small />
+        {/* Air */}
+        <TopTile
+          label="AIR"
+          value={airTemp !== null ? `${airTemp.toFixed(0)}°C` : "—°C"}
+        />
+        {/* Track */}
+        <TopTile
+          label="TRACK"
+          value={trackTemp !== null ? `${trackTemp.toFixed(0)}°C` : "—°C"}
+        />
+      </div>
     </div>
   );
 }
@@ -807,13 +823,13 @@ function IdleView({ lastRaceSessionKey }: { lastRaceSessionKey: number | null })
   const event = useMemo(() => getNextEvent(), []);
   const nextRace = event?.circuit;
   return (
-    <div className="relative" style={{ padding: "60px 32px" }}>
+    <div className="relative" style={{ padding: "clamp(32px, 8vw, 60px) clamp(16px, 4vw, 32px)" }}>
       <div
         className="relative max-w-3xl mx-auto"
         style={{
           background: F1.bg2,
           border: `1px solid ${F1.line}`,
-          padding: "48px 32px",
+          padding: "clamp(28px, 6vw, 48px) clamp(16px, 4vw, 32px)",
           textAlign: "center",
         }}
       >
@@ -872,7 +888,7 @@ function IdleView({ lastRaceSessionKey }: { lastRaceSessionKey: number | null })
         {lastRaceSessionKey && (
           <div style={{ marginTop: 32, borderTop: `1px solid ${F1.line}`, paddingTop: 24 }}>
             <Mono style={{ fontSize: 10, color: F1.fg3, letterSpacing: "0.18em" }}>
-              WHILE YOU WAIT — REPLAY THE TIMING SCREEN FROM THE LAST RACE
+              WHILE YOU WAIT — REVIEW THE TIMING SCREEN FROM THE LAST RACE
             </Mono>
             <div className="flex justify-center" style={{ marginTop: 14 }}>
               <Link
@@ -889,7 +905,7 @@ function IdleView({ lastRaceSessionKey }: { lastRaceSessionKey: number | null })
                   textDecoration: "none",
                 }}
               >
-                ▶ REPLAY LAST RACE
+                ▶ REVIEW LAST RACE
               </Link>
             </div>
           </div>
@@ -971,7 +987,7 @@ export function LiveContent({
       sessionType: live.session?.type ?? "",
       circuitShortName: live.session?.circuitShortName ?? "",
       countryName: live.session?.countryName ?? "",
-      feedLabel: live.isReplay ? "REPLAY · OPENF1" : "OPENF1",
+      feedLabel: live.isReplay ? "REVIEW · OPENF1" : "OPENF1",
       lastUpdated: live.lastUpdated,
       isLive: live.isLive,
       hasSession: live.session !== null,

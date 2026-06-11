@@ -55,15 +55,43 @@ function stripCdata(value: string): string {
   return value.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1").trim();
 }
 
+/** Named entities feeds emit beyond the basic set (smart quotes, dashes, …). */
+const NAMED_ENTITIES: Record<string, string> = {
+  apos: "'",
+  nbsp: " ",
+  lsquo: "‘",
+  rsquo: "’",
+  ldquo: "“",
+  rdquo: "”",
+  hellip: "…",
+  ndash: "–",
+  mdash: "—",
+  trade: "™",
+  copy: "©",
+  reg: "®",
+  deg: "°",
+};
+
 function decodeEntities(value: string): string {
-  return value
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#0?39;/g, "'")
-    .replace(/&apos;/g, "'")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&");
+  return (
+    value
+      // Numeric entities (decimal &#8217; and hex &#x2019;) — covers curly
+      // quotes, dashes, ellipses, accented letters, etc. without a huge table.
+      .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) =>
+        String.fromCodePoint(parseInt(hex, 16))
+      )
+      .replace(/&#(\d+);/g, (_, dec) => String.fromCodePoint(parseInt(dec, 10)))
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"')
+      .replace(/&([a-z]+);/gi, (match, name) =>
+        name.toLowerCase() in NAMED_ENTITIES
+          ? NAMED_ENTITIES[name.toLowerCase()]
+          : match
+      )
+      // &amp; last so a literal "&amp;lt;" doesn't get double-decoded above.
+      .replace(/&amp;/g, "&")
+  );
 }
 
 /** Extract the text content of the first `<tag>` (namespace-agnostic). */

@@ -69,3 +69,47 @@ export const WEEKEND_SCHEDULES: Record<string, WeekendSchedule> = {
 export function getWeekendSchedule(raceDate: string): WeekendSchedule | undefined {
   return WEEKEND_SCHEDULES[raceDate];
 }
+
+/**
+ * Approximate broadcast duration of each session type, in ms. Generous so the
+ * "live" window covers the full session plus the cool-down/podium, without
+ * bleeding into the next one. Used purely to decide whether something is
+ * on-track right now (e.g. the navbar LIVE indicator) — not for exact timing.
+ */
+const SESSION_DURATIONS_MS: Record<keyof WeekendSchedule, number> = {
+  fp1: 75 * 60_000,
+  fp2: 75 * 60_000,
+  fp3: 75 * 60_000,
+  sprintQualifying: 60 * 60_000,
+  sprint: 75 * 60_000,
+  qualifying: 75 * 60_000,
+  race: 150 * 60_000,
+};
+
+export interface ActiveSession {
+  /** Race-date key of the weekend this session belongs to. */
+  raceDate: string;
+  /** Which session is currently running. */
+  session: keyof WeekendSchedule;
+}
+
+/**
+ * Return the session (FP1/FP2/FP3/SQ/Sprint/Quali/Race) that is on-track at
+ * `nowMs`, or null if nothing is live. Schedule-based (no network), so it can
+ * gate UI like the navbar LIVE dot purely from the baked calendar.
+ */
+export function getActiveSession(nowMs: number): ActiveSession | null {
+  for (const raceDate of Object.keys(WEEKEND_SCHEDULES)) {
+    const sched = WEEKEND_SCHEDULES[raceDate];
+    for (const key of Object.keys(sched) as (keyof WeekendSchedule)[]) {
+      const iso = sched[key];
+      if (!iso) continue;
+      const start = new Date(iso).getTime();
+      const end = start + SESSION_DURATIONS_MS[key];
+      if (nowMs >= start && nowMs <= end) {
+        return { raceDate, session: key };
+      }
+    }
+  }
+  return null;
+}

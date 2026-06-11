@@ -22,7 +22,7 @@ export function SeasonCalendarStrip() {
         background: F1.bg,
         borderTop: `1px solid ${F1.line}`,
         borderBottom: `1px solid ${F1.line}`,
-        padding: "60px 32px",
+        padding: "clamp(36px, 6vw, 60px) clamp(16px, 4vw, 32px)",
       }}
     >
       <div className="mx-auto" style={{ maxWidth: 1280 }}>
@@ -40,6 +40,7 @@ export function SeasonCalendarStrip() {
           ariaLabel="2026 season calendar"
           className="hairline-cells snap-x snap-mandatory"
           style={{ border: `1px solid ${F1.line}` }}
+          centerSelector="[data-next-race]"
         >
           {CIRCUIT_LIST.map((circuit) => {
             const isCancelled = circuit.cancelled === true;
@@ -51,9 +52,10 @@ export function SeasonCalendarStrip() {
             return (
               <div
                 key={circuit.id}
+                {...(isNext ? { "data-next-race": "" } : {})}
                 className="snap-start flex-shrink-0"
                 style={{
-                  minWidth: 196,
+                  minWidth: "clamp(164px, 46vw, 196px)",
                   background: F1.bg,
                   padding: "14px 16px",
                   borderTop: `2px solid ${accent}`,

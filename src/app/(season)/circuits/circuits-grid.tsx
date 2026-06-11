@@ -25,7 +25,7 @@ export function CircuitsGrid({ children }: CircuitsGridProps) {
       ref={ref}
       className="grid hairline-cells"
       style={{
-        gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+        gridTemplateColumns: "repeat(auto-fill, minmax(min(300px, 100%), 1fr))",
         borderTop: `1px solid ${F1.line}`,
       }}
     >

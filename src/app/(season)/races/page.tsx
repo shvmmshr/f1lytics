@@ -63,7 +63,7 @@ export default async function RacesPage() {
 
         <div
           className="relative"
-          style={{ padding: "40px 32px 28px", borderBottom: `1px solid ${F1.line}` }}
+          style={{ padding: "40px clamp(16px, 4vw, 32px) 28px", borderBottom: `1px solid ${F1.line}` }}
         >
           <div className="flex items-center gap-3.5">
             <Mono style={{ color: F1.red, fontSize: 11, letterSpacing: "0.24em" }}>
@@ -78,7 +78,7 @@ export default async function RacesPage() {
             className="font-display uppercase m-0 mt-3"
             style={{
               fontWeight: 700,
-              fontSize: "clamp(56px, 8vw, 96px)",
+              fontSize: "clamp(36px, 8vw, 96px)",
               lineHeight: 0.9,
               letterSpacing: "-0.04em",
             }}
@@ -93,7 +93,7 @@ export default async function RacesPage() {
         <div
           className="grid hairline-cells"
           style={{
-            gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))",
+            gridTemplateColumns: "repeat(auto-fill, minmax(min(340px, 100%), 1fr))",
             borderTop: `1px solid ${F1.line}`,
             borderBottom: `1px solid ${F1.line}`,
           }}

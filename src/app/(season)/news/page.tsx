@@ -65,7 +65,7 @@ export default async function NewsPage() {
         {/* Header */}
         <div
           className="relative"
-          style={{ padding: "40px 32px 28px", borderBottom: `1px solid ${F1.line}` }}
+          style={{ padding: "40px clamp(16px, 4vw, 32px) 28px", borderBottom: `1px solid ${F1.line}` }}
         >
           <div className="flex items-center gap-3.5">
             <Mono style={{ color: F1.red, fontSize: 11, letterSpacing: "0.24em" }}>
@@ -80,7 +80,7 @@ export default async function NewsPage() {
             className="font-display uppercase m-0 mt-3"
             style={{
               fontWeight: 700,
-              fontSize: "clamp(56px, 8vw, 96px)",
+              fontSize: "clamp(36px, 8vw, 96px)",
               lineHeight: 0.9,
               letterSpacing: "-0.04em",
             }}
@@ -90,7 +90,7 @@ export default async function NewsPage() {
         </div>
 
         {items.length === 0 ? (
-          <div className="relative" style={{ padding: 32 }}>
+          <div className="relative" style={{ padding: "32px clamp(16px, 4vw, 32px)" }}>
             <Mono style={{ fontSize: 12, color: F1.fg3, letterSpacing: "0.18em" }}>
               NEWS FEED UNAVAILABLE — TRY AGAIN SHORTLY.
             </Mono>
@@ -101,7 +101,7 @@ export default async function NewsPage() {
             {featured && (
               <div
                 className="relative"
-                style={{ padding: "32px 32px 40px", borderBottom: `1px solid ${F1.line}` }}
+                style={{ padding: "32px clamp(16px, 4vw, 32px) 40px", borderBottom: `1px solid ${F1.line}` }}
               >
                 <div className="flex items-center gap-3.5" style={{ marginBottom: 20 }}>
                   <Mono
@@ -234,7 +234,7 @@ export default async function NewsPage() {
             )}
 
             {/* ALL STORIES — chronological, breathing room */}
-            <div className="relative" style={{ padding: 32 }}>
+            <div className="relative" style={{ padding: "32px clamp(16px, 4vw, 32px)" }}>
               <div className="flex items-center gap-3.5" style={{ marginBottom: 20 }}>
                 <Mono
                   style={{
@@ -254,7 +254,7 @@ export default async function NewsPage() {
               <div
                 className="grid"
                 style={{
-                  gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+                  gridTemplateColumns: "repeat(auto-fill, minmax(min(300px, 100%), 1fr))",
                   gap: 20,
                 }}
               >

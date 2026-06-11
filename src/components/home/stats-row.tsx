@@ -37,15 +37,13 @@ export function StatsRow() {
         background: F1.bg,
         borderTop: `1px solid ${F1.line}`,
         borderBottom: `1px solid ${F1.line}`,
-        padding: "60px 32px",
+        padding: "clamp(36px, 6vw, 60px) clamp(16px, 4vw, 32px)",
       }}
     >
       <div
-        className="mx-auto"
+        className="mx-auto grid grid-cols-2 sm:grid-cols-4"
         style={{
           maxWidth: 1280,
-          display: "grid",
-          gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
           gap: 1,
           background: F1.line,
           border: `1px solid ${F1.line}`,
@@ -56,7 +54,7 @@ export function StatsRow() {
             key={stat.label}
             style={{
               background: F1.bg,
-              padding: "32px 20px",
+              padding: "clamp(20px, 4vw, 32px) 16px",
               textAlign: "center",
             }}
           >
@@ -66,7 +64,7 @@ export function StatsRow() {
               }}
               className="font-display tabular-nums"
               style={{
-                fontSize: "clamp(48px, 6vw, 72px)",
+                fontSize: "clamp(40px, 6vw, 72px)",
                 fontWeight: 700,
                 color: F1.fg,
                 letterSpacing: "-0.04em",

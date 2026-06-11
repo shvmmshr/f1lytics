@@ -196,7 +196,7 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
             style={{
               right: -40,
               top: -60,
-              fontSize: 640,
+              fontSize: "clamp(180px, 55vw, 640px)",
               fontWeight: 700,
               lineHeight: 0.8,
               color: team.color,
@@ -210,7 +210,7 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
           {/* Breadcrumb */}
           <div
             className="relative flex items-center gap-3"
-            style={{ padding: "20px 32px 0" }}
+            style={{ padding: "20px clamp(16px, 4vw, 32px) 0" }}
           >
             <Mono style={{ fontSize: 10, color: F1.fg3, letterSpacing: "0.18em" }}>
               <Link href="/" className="hover:text-white transition-colors">F1LYTICS</Link>
@@ -227,8 +227,8 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
           <div
             className="relative grid grid-cols-1 sm:grid-cols-[minmax(220px,300px)_minmax(0,1fr)]"
             style={{
-              gap: 32,
-              padding: "32px 32px 40px",
+              gap: "clamp(20px, 4vw, 32px)",
+              padding: "32px clamp(16px, 4vw, 32px) 40px",
               alignItems: "end",
             }}
           >
@@ -394,7 +394,7 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
         {/* MAIN CONTENT — season results + side panel */}
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,380px)] hairline-cells">
           {/* SEASON FORM (race results) */}
-          <div style={{ background: F1.bg, padding: "28px 32px" }}>
+          <div style={{ background: F1.bg, padding: "28px clamp(16px, 4vw, 32px)" }}>
             <SectionHeader
               label="SEASON FORM · 2026"
               right={
@@ -411,7 +411,8 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
                 </Mono>
               </div>
             ) : (
-              <div className="mt-6">
+              <div className="mt-6 overflow-x-auto">
+                <div style={{ minWidth: 480 }}>
                 {/* Header row */}
                 <div
                   className="grid items-center"
@@ -520,6 +521,7 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
                     </div>
                   );
                 })}
+                </div>
               </div>
             )}
 
@@ -534,10 +536,12 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
                     </Mono>
                   }
                 />
+                <div className="overflow-x-auto mt-6">
                 <div
-                  className="grid mt-6"
+                  className="grid"
                   style={{
-                    gridTemplateColumns: `repeat(${historicalStandings.length + 1}, minmax(0, 1fr))`,
+                    gridTemplateColumns: `repeat(${historicalStandings.length + 1}, minmax(90px, 1fr))`,
+                    minWidth: (historicalStandings.length + 1) * 90,
                     gap: 1,
                     background: F1.line,
                     border: `1px solid ${F1.line}`,
@@ -578,12 +582,13 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
                     </Mono>
                   </div>
                 </div>
+                </div>
               </div>
             )}
           </div>
 
           {/* SIDE PANEL — teammate H2H + team card */}
-          <div style={{ background: F1.bg, padding: "28px 24px" }}>
+          <div style={{ background: F1.bg, padding: "28px clamp(16px, 4vw, 24px)" }}>
             {teammate && (
               <>
                 <SectionHeader label="TEAMMATE H2H" />

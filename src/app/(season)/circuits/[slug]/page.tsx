@@ -96,7 +96,7 @@ export default async function CircuitPage({ params }: CircuitPageProps) {
         {circuit.cancelled && (
           <div
             style={{
-              padding: "10px 32px",
+              padding: "10px clamp(16px, 4vw, 32px)",
               background: F1.red,
               color: F1.fg,
               textAlign: "center",
@@ -113,7 +113,7 @@ export default async function CircuitPage({ params }: CircuitPageProps) {
           className="relative"
           style={{
             borderBottom: `1px solid ${F1.line}`,
-            padding: "44px 32px 36px",
+            padding: "44px clamp(16px, 4vw, 32px) 36px",
           }}
         >
           <div className="relative mx-auto" style={{ maxWidth: 1400 }}>
@@ -146,9 +146,8 @@ export default async function CircuitPage({ params }: CircuitPageProps) {
             </div>
 
             <div
-              className="grid"
+              className="grid grid-cols-1 sm:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]"
               style={{
-                gridTemplateColumns: "minmax(0, 2fr) minmax(0, 3fr)",
                 gap: 1,
                 background: F1.line,
                 border: `1px solid ${F1.line}`,
@@ -171,7 +170,7 @@ export default async function CircuitPage({ params }: CircuitPageProps) {
               </div>
 
               {/* Identity */}
-              <div style={{ background: F1.bg, padding: "28px 32px" }}>
+              <div style={{ background: F1.bg, padding: "28px clamp(16px, 4vw, 32px)" }}>
                 <h1
                   className="font-display uppercase m-0"
                   style={{
@@ -202,7 +201,7 @@ export default async function CircuitPage({ params }: CircuitPageProps) {
                 <div
                   className="grid mt-7"
                   style={{
-                    gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(min(140px, 100%), 1fr))",
                     gap: 1,
                     background: F1.line,
                     border: `1px solid ${F1.line}`,
@@ -277,7 +276,7 @@ export default async function CircuitPage({ params }: CircuitPageProps) {
         {/* RESULTS / PREVIEW */}
         <section
           className="relative"
-          style={{ padding: "40px 32px", borderBottom: `1px solid ${F1.line}` }}
+          style={{ padding: "40px clamp(16px, 4vw, 32px)", borderBottom: `1px solid ${F1.line}` }}
         >
           <div className="mx-auto" style={{ maxWidth: 1400 }}>
             <SectionHeader
@@ -294,10 +293,10 @@ export default async function CircuitPage({ params }: CircuitPageProps) {
                 style={{
                   background: F1.bg2,
                   border: `1px solid ${F1.line}`,
-                  overflow: "hidden",
                 }}
               >
-                <table className="w-full" style={{ borderCollapse: "collapse" }}>
+                <div className="overflow-x-auto">
+                <table className="w-full" style={{ borderCollapse: "collapse", minWidth: 340 }}>
                   <thead>
                     <tr style={{ background: F1.bg, borderBottom: `1px solid ${F1.line}` }}>
                       {["POS", "DRIVER", "TEAM", "TIME"].map((h, i) => (
@@ -360,6 +359,7 @@ export default async function CircuitPage({ params }: CircuitPageProps) {
                     ))}
                   </tbody>
                 </table>
+                </div>
               </div>
             ) : (
               <div
@@ -394,10 +394,9 @@ export default async function CircuitPage({ params }: CircuitPageProps) {
         {/* PREV / NEXT */}
         <section className="relative" style={{ padding: "32px 32px 60px" }}>
           <div
-            className="mx-auto grid"
+            className="mx-auto grid grid-cols-1 sm:grid-cols-2"
             style={{
               maxWidth: 1400,
-              gridTemplateColumns: "1fr 1fr",
               gap: 1,
               background: F1.line,
               border: `1px solid ${F1.line}`,
@@ -418,7 +417,7 @@ export default async function CircuitPage({ params }: CircuitPageProps) {
                     PREV · ROUND {String(prev.round).padStart(2, "0")}
                   </Mono>
                   <div
-                    className="font-display truncate"
+                    className="font-display line-clamp-2"
                     style={{
                       fontSize: 14,
                       fontWeight: 500,
@@ -448,7 +447,7 @@ export default async function CircuitPage({ params }: CircuitPageProps) {
                     NEXT · ROUND {String(next.round).padStart(2, "0")}
                   </Mono>
                   <div
-                    className="font-display truncate"
+                    className="font-display line-clamp-2"
                     style={{
                       fontSize: 14,
                       fontWeight: 500,

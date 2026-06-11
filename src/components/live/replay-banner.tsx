@@ -38,7 +38,7 @@ export function ReplayBanner({ sessionName, countryName }: ReplayBannerProps) {
             color: F1.ink,
           }}
         >
-          REPLAY · {sessionName.toUpperCase()}
+          REVIEW · {sessionName.toUpperCase()}
           {countryName ? ` · ${countryName.toUpperCase()}` : ""}
         </Mono>
       </div>
@@ -53,7 +53,7 @@ export function ReplayBanner({ sessionName, countryName }: ReplayBannerProps) {
           textDecoration: "none",
         }}
       >
-        ✕ EXIT REPLAY
+        ✕ EXIT REVIEW
       </Link>
     </div>
   );

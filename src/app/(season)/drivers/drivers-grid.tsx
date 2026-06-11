@@ -20,7 +20,7 @@ export function DriversGrid({ children }: { children: React.ReactNode }) {
       ref={ref}
       className="grid hairline-cells"
       style={{
-        gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+        gridTemplateColumns: "repeat(auto-fill, minmax(min(280px, 100%), 1fr))",
       }}
     >
       {children}

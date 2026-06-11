@@ -182,7 +182,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
           style={{
             borderBottom: `1px solid ${F1.line}`,
             background: `linear-gradient(135deg, ${team.color}26 0%, ${team.color}08 30%, transparent 60%)`,
-            padding: "44px 32px 36px",
+            padding: "44px clamp(16px, 4vw, 32px) 36px",
           }}
         >
           {/* Giant watermark team name */}
@@ -216,9 +216,8 @@ export default async function TeamPage({ params }: TeamPageProps) {
             </div>
 
             <div
-              className="grid"
+              className="grid grid-cols-1 md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]"
               style={{
-                gridTemplateColumns: "minmax(0, 1.4fr) minmax(0, 1fr)",
                 gap: 32,
                 alignItems: "stretch",
               }}
@@ -312,9 +311,8 @@ export default async function TeamPage({ params }: TeamPageProps) {
 
             {/* DETAILS STRIP */}
             <div
-              className="grid mt-9"
+              className="grid grid-cols-1 sm:grid-cols-3 mt-9"
               style={{
-                gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
                 gap: 1,
                 background: F1.line,
                 border: `1px solid ${F1.line}`,
@@ -350,14 +348,13 @@ export default async function TeamPage({ params }: TeamPageProps) {
         {/* DRIVERS */}
         <section
           className="relative"
-          style={{ padding: "40px 32px", borderBottom: `1px solid ${F1.line}` }}
+          style={{ padding: "40px clamp(16px, 4vw, 32px)", borderBottom: `1px solid ${F1.line}` }}
         >
           <div className="mx-auto" style={{ maxWidth: 1400 }}>
             <SectionHeader label="DRIVERS" accent={team.color} />
             <div
-              className="grid"
+              className="grid grid-cols-1 lg:grid-cols-2"
               style={{
-                gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))",
                 gap: 1,
                 background: F1.line,
                 border: `1px solid ${F1.line}`,
@@ -454,14 +451,16 @@ export default async function TeamPage({ params }: TeamPageProps) {
         {historicalStandings.length > 0 && (
           <section
             className="relative"
-            style={{ padding: "40px 32px", borderBottom: `1px solid ${F1.line}` }}
+            style={{ padding: "40px clamp(16px, 4vw, 32px)", borderBottom: `1px solid ${F1.line}` }}
           >
             <div className="mx-auto" style={{ maxWidth: 1400 }}>
               <SectionHeader label="CONSTRUCTOR TIMELINE" accent={team.color} />
+              <div className="overflow-x-auto">
               <div
                 className="grid"
                 style={{
-                  gridTemplateColumns: `repeat(${historicalStandings.length + 1}, minmax(0, 1fr))`,
+                  gridTemplateColumns: `repeat(${historicalStandings.length + 1}, minmax(90px, 1fr))`,
+                  minWidth: (historicalStandings.length + 1) * 90,
                   gap: 1,
                   background: F1.line,
                   border: `1px solid ${F1.line}`,
@@ -558,6 +557,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
                   </Mono>
                 </div>
               </div>
+              </div>
             </div>
           </section>
         )}
@@ -565,19 +565,19 @@ export default async function TeamPage({ params }: TeamPageProps) {
         {/* RACE RESULTS */}
         <section
           className="relative"
-          style={{ padding: "40px 32px", borderBottom: `1px solid ${F1.line}` }}
+          style={{ padding: "40px clamp(16px, 4vw, 32px)", borderBottom: `1px solid ${F1.line}` }}
         >
           <div className="mx-auto" style={{ maxWidth: 1400 }}>
             <SectionHeader label="2026 RACE RESULTS" accent={team.color} />
             {raceData.length > 0 ? (
               <div
+                className="overflow-x-auto"
                 style={{
                   background: F1.bg2,
                   border: `1px solid ${F1.line}`,
-                  overflow: "hidden",
                 }}
               >
-                <table className="w-full" style={{ borderCollapse: "collapse" }}>
+                <table className="w-full" style={{ borderCollapse: "collapse", minWidth: 480 }}>
                   <thead>
                     <tr style={{ background: F1.bg, borderBottom: `1px solid ${F1.line}` }}>
                       <th
@@ -724,7 +724,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
 
         {/* POINTS PROGRESSION */}
         {raceData.length > 0 && (
-          <section className="relative" style={{ padding: "40px 32px 60px" }}>
+          <section className="relative" style={{ padding: "40px clamp(16px, 4vw, 32px) 60px" }}>
             <div className="mx-auto" style={{ maxWidth: 1400 }}>
               <SectionHeader label="POINTS PROGRESSION" accent={team.color} />
               <div

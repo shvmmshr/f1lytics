@@ -97,12 +97,18 @@ export function useLiveSession(replaySessionKey: number | null = null): UseLiveS
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mountedRef = useRef(true);
   const focusedRef = useRef<number | null>(null);
+  // Bumped whenever the mode changes (e.g. entering replay). The component is
+  // re-rendered, not remounted, on a replay nav, so mountedRef stays true and a
+  // stale in-flight idle poll could otherwise overwrite the replay data with
+  // "NO SESSION". Each fetch captures the current gen and bails if superseded.
+  const reqGenRef = useRef(0);
 
   useEffect(() => {
     focusedRef.current = focusedDriverNumber;
   }, [focusedDriverNumber]);
 
   const fetchLiveData = useCallback(async () => {
+    const myGen = reqGenRef.current;
     try {
       const focused = focusedRef.current;
       const params = new URLSearchParams();
@@ -115,7 +121,8 @@ export function useLiveSession(replaySessionKey: number | null = null): UseLiveS
       }
 
       const json: LiveApiResponse = await res.json();
-      if (!mountedRef.current) return;
+      // Drop the response if unmounted or a newer mode (replay) superseded us.
+      if (!mountedRef.current || myGen !== reqGenRef.current) return;
 
       setData(json);
       setError(json.error ?? null);
@@ -131,7 +138,7 @@ export function useLiveSession(replaySessionKey: number | null = null): UseLiveS
           : POLL_IDLE_MS;
       timerRef.current = setTimeout(fetchLiveData, interval);
     } catch (err) {
-      if (!mountedRef.current) return;
+      if (!mountedRef.current || myGen !== reqGenRef.current) return;
 
       errorCountRef.current += 1;
       const message =
@@ -149,6 +156,8 @@ export function useLiveSession(replaySessionKey: number | null = null): UseLiveS
 
   useEffect(() => {
     mountedRef.current = true;
+    // New mode → invalidate any fetch still in flight from the previous one.
+    reqGenRef.current += 1;
     fetchLiveData();
 
     return () => {

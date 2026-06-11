@@ -14,11 +14,15 @@ export function ScrollRow({
   className,
   style,
   ariaLabel = "Scrollable row",
+  centerSelector,
 }: {
   children: React.ReactNode;
   className?: string;
   style?: React.CSSProperties;
   ariaLabel?: string;
+  /** CSS selector for a child to center horizontally on first mount (e.g. the
+   *  active/next item). Centered instantly so there's no left→center flash. */
+  centerSelector?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [canLeft, setCanLeft] = useState(false);
@@ -43,6 +47,24 @@ export function ScrollRow({
       ro.disconnect();
     };
   }, [update]);
+
+  // Center the active item once on mount. rect-delta math avoids offsetParent
+  // ambiguity and accounts for any pre-existing scroll. clamped so the first/
+  // last items don't leave the row scrolled into empty space.
+  useEffect(() => {
+    if (!centerSelector) return;
+    const el = ref.current;
+    if (!el) return;
+    const target = el.querySelector<HTMLElement>(centerSelector);
+    if (!target) return;
+    const elRect = el.getBoundingClientRect();
+    const tRect = target.getBoundingClientRect();
+    const current = tRect.left - elRect.left;
+    const desired = el.clientWidth / 2 - tRect.width / 2;
+    const next = el.scrollLeft + (current - desired);
+    el.scrollLeft = Math.max(0, Math.min(next, el.scrollWidth - el.clientWidth));
+    update();
+  }, [centerSelector, update]);
 
   const page = (dir: 1 | -1) => {
     const el = ref.current;

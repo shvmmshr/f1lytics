@@ -297,6 +297,20 @@
   box-shadow: 0 0 0 1px var(--color-line);
 }
 
+/* Standings driver-row grid. Inline styles can't switch templates at a
+   breakpoint, so the column layout lives here: 3 columns on mobile (POS,
+   name+team, PTS — the colour strip, CODE and WINS cells are hidden via
+   `hidden md:block`), widening to the full 6-column layout from md up. */
+.standings-grid {
+  grid-template-columns: 38px minmax(0, 1fr) 52px;
+  gap: 10px;
+}
+@media (min-width: 768px) {
+  .standings-grid {
+    grid-template-columns: 44px 6px 56px minmax(0, 1fr) 80px 60px;
+  }
+}
+
 /* Animated navbar hover underline (scaleX from left). */
 .nav-underline::after {
   content: "";

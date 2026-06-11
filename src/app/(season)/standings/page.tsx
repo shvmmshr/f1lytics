@@ -82,7 +82,7 @@ export default async function StandingsPage() {
         {/* Page header */}
         <div
           className="relative"
-          style={{ padding: "40px 32px 28px", borderBottom: `1px solid ${F1.line}` }}
+          style={{ padding: "40px clamp(16px, 4vw, 32px) 28px", borderBottom: `1px solid ${F1.line}` }}
         >
           <div className="flex items-center gap-3.5">
             <Mono style={{ color: F1.red, fontSize: 11, letterSpacing: "0.24em" }}>
@@ -97,7 +97,7 @@ export default async function StandingsPage() {
             className="font-display uppercase m-0 mt-3"
             style={{
               fontWeight: 700,
-              fontSize: "clamp(56px, 8vw, 96px)",
+              fontSize: "clamp(36px, 8vw, 96px)",
               lineHeight: 0.9,
               letterSpacing: "-0.04em",
             }}
@@ -114,11 +114,10 @@ export default async function StandingsPage() {
           {/* DRIVERS table */}
           <div style={{ background: F1.bg, padding: 0 }}>
             <div
-              className="grid items-center"
+              className="standings-grid grid items-center"
               style={{
-                gridTemplateColumns: "44px 6px 56px minmax(0, 1fr) 80px 60px",
                 gap: 10,
-                padding: "12px 24px",
+                padding: "12px clamp(14px, 3vw, 24px)",
                 borderBottom: `1px solid ${F1.line}`,
                 background: F1.bg2,
               }}
@@ -126,6 +125,9 @@ export default async function StandingsPage() {
               {["POS", "", "CODE", "DRIVER · TEAM", "PTS", "WINS"].map((h, i) => (
                 <Mono
                   key={i}
+                  // Hide colour strip (1), CODE (2) and WINS (5) on mobile so the
+                  // name column gets real room; show from md up.
+                  className={i === 1 || i === 2 || i === 5 ? "hidden md:block" : ""}
                   style={{
                     fontSize: 9,
                     color: F1.fg3,
@@ -151,11 +153,10 @@ export default async function StandingsPage() {
               return (
                 <div
                   key={d.id}
-                  className="relative grid items-center"
+                  className="standings-grid relative grid items-center"
                   style={{
-                    gridTemplateColumns: "44px 6px 56px minmax(0, 1fr) 80px 60px",
                     gap: 10,
-                    padding: "14px 24px",
+                    padding: "14px clamp(14px, 3vw, 24px)",
                     borderBottom: `1px solid ${F1.line}`,
                     background: i % 2 === 0 ? F1.bg : F1.bg2,
                     overflow: "hidden",
@@ -184,6 +185,7 @@ export default async function StandingsPage() {
                     <PosPill pos={d.position} size={d.position <= 3 ? "md" : "sm"} />
                   </span>
                   <span
+                    className="hidden md:block"
                     style={{
                       width: 4,
                       height: 36,
@@ -193,6 +195,7 @@ export default async function StandingsPage() {
                     }}
                   />
                   <Mono
+                    className="hidden md:block"
                     style={{
                       fontSize: 14,
                       fontWeight: 700,
@@ -209,7 +212,11 @@ export default async function StandingsPage() {
                         fontSize: 22,
                         fontWeight: 600,
                         letterSpacing: "-0.01em",
-                        lineHeight: 1,
+                        // lineHeight 1 + truncate's overflow:hidden clips
+                        // descenders (the g in "George", "Sergio"). Loosen the
+                        // line box and pad the bottom so they clear the clip.
+                        lineHeight: 1.2,
+                        paddingBottom: 2,
                       }}
                     >
                       {d.first} {d.last.toUpperCase()}
@@ -232,6 +239,7 @@ export default async function StandingsPage() {
                     </StatValue>
                   </div>
                   <Mono
+                    className="hidden md:block"
                     style={{
                       fontSize: 14,
                       color: d.wins ? F1.amber : F1.fg3,

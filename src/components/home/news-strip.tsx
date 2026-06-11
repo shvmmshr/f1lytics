@@ -20,7 +20,7 @@ export async function NewsStrip() {
         background: F1.bg,
         borderTop: `1px solid ${F1.line}`,
         borderBottom: `1px solid ${F1.line}`,
-        padding: "60px 32px",
+        padding: "clamp(36px, 6vw, 60px) clamp(16px, 4vw, 32px)",
       }}
     >
       <div className="mx-auto" style={{ maxWidth: 1280 }}>

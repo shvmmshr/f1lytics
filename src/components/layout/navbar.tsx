@@ -8,6 +8,7 @@ import { gsap } from "@/lib/gsap";
 import { cn } from "@/lib/utils";
 import { F1, LiveDot, Mono } from "@/components/shared/broadcast";
 import { getNextEvent, CIRCUIT_LIST } from "@/lib/constants";
+import { getActiveSession } from "@/lib/constants/sessions";
 
 const NAV_ITEMS = [
   { label: "STANDINGS", href: "/standings" },
@@ -36,6 +37,17 @@ export function Navbar() {
 
   const event = getNextEvent();
   const nextRace = event?.circuit;
+
+  // The LIVE dot must blink ONLY when a session (FP1/FP2/FP3/quali/sprint/race)
+  // is actually on-track. Schedule-derived client-side; false until mounted so
+  // server and client first render agree (no hydration mismatch).
+  const [sessionLive, setSessionLive] = useState(false);
+  useEffect(() => {
+    const check = () => setSessionLive(getActiveSession(Date.now()) !== null);
+    check();
+    const id = setInterval(check, 30_000);
+    return () => clearInterval(id);
+  }, []);
 
   useGSAP(
     () => {
@@ -210,7 +222,7 @@ export function Navbar() {
                         }}
                       />
                     )}
-                    {item.live && <LiveDot size={6} />}
+                    {item.live && sessionLive && <LiveDot size={6} />}
                     {item.label}
                   </Link>
                 </li>
@@ -331,7 +343,7 @@ export function Navbar() {
                         : "3px solid transparent",
                     }}
                   >
-                    {item.live && <LiveDot size={8} />}
+                    {item.live && sessionLive && <LiveDot size={8} />}
                     {item.label}
                   </Link>
                 </li>

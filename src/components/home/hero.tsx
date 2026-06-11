@@ -165,7 +165,7 @@ export function Hero({
           <div
             ref={subRef}
             className="mt-8"
-            style={{ maxWidth: 520, fontSize: 18, lineHeight: 1.5, color: F1.fg2, opacity: 0 }}
+            style={{ maxWidth: 520, fontSize: "clamp(15px, 4vw, 18px)", lineHeight: 1.5, color: F1.fg2, opacity: 0 }}
           >
             Standings, race analysis, telemetry and the full 2026 season — in one place.
           </div>
@@ -205,36 +205,36 @@ export function Hero({
           {/* Stat row */}
           <div
             ref={statsRef}
-            className="grid"
-            style={{
-              marginTop: 64,
-              gridTemplateColumns: "repeat(4, 1fr)",
-              gap: 0,
-              borderTop: `1px solid ${F1.line}`,
-              paddingTop: 24,
-              opacity: 0,
-            }}
+            style={{ marginTop: "clamp(32px, 6vw, 64px)", opacity: 0 }}
           >
-            {[
-              ["ROUND", `${event ? String(event.circuit.round).padStart(2, "0") : "—"}/${CIRCUIT_LIST.length}`],
-              ["DRIVERS", String(DRIVER_LIST.length)],
-              ["TEAMS", String(TEAM_LIST.length)],
-              ["CIRCUITS", String(CIRCUIT_LIST.filter((c) => !c.cancelled).length)],
-            ].map(([l, v], i) => (
-              <div
-                key={i}
-                style={{
-                  borderRight: i < 3 ? `1px solid ${F1.line}` : "none",
-                  paddingLeft: i ? 20 : 0,
-                  paddingRight: 20,
-                }}
-              >
-                <DataLabel>{l}</DataLabel>
-                <div style={{ marginTop: 8 }}>
-                  <StatValue size={36}>{v}</StatValue>
+            <div
+              className="grid grid-cols-2 sm:grid-cols-4"
+              style={{
+                gap: 1,
+                background: F1.line,
+                borderTop: `1px solid ${F1.line}`,
+              }}
+            >
+              {[
+                ["ROUND", `${event ? String(event.circuit.round).padStart(2, "0") : "—"}/${CIRCUIT_LIST.length}`],
+                ["DRIVERS", String(DRIVER_LIST.length)],
+                ["TEAMS", String(TEAM_LIST.length)],
+                ["CIRCUITS", String(CIRCUIT_LIST.filter((c) => !c.cancelled).length)],
+              ].map(([l, v], i) => (
+                <div
+                  key={i}
+                  style={{
+                    background: F1.bg,
+                    padding: "16px clamp(12px, 2vw, 20px) 18px",
+                  }}
+                >
+                  <DataLabel>{l}</DataLabel>
+                  <div style={{ marginTop: 8 }}>
+                    <StatValue size={36}>{v}</StatValue>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
 
