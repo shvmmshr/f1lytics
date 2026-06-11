@@ -3,8 +3,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { getRaceResults } from "@/lib/api/jolpica";
 import { CIRCUIT_LIST } from "@/lib/constants";
+import { getWeekendSchedule } from "@/lib/constants/sessions";
 import { PageTransition } from "@/components/layout/page-transition";
 import { CountdownTimer } from "@/components/shared/countdown-timer";
+import { SessionSchedule } from "@/components/shared/session-schedule";
 import { CalendarGrid } from "./calendar-grid";
 import {
   F1,
@@ -208,6 +210,16 @@ export default async function CalendarPage() {
                   targetDate={new Date(`${nextRace.raceDate}T${nextRace.raceTime}`)}
                 />
               </div>
+
+              {/* Session times in the viewer's timezone */}
+              {(() => {
+                const weekendSchedule = getWeekendSchedule(nextRace.raceDate);
+                return weekendSchedule ? (
+                  <div className="mt-6" style={{ maxWidth: 480 }}>
+                    <SessionSchedule schedule={weekendSchedule} />
+                  </div>
+                ) : null;
+              })()}
             </div>
 
             <div

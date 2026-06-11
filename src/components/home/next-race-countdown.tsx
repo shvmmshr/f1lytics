@@ -4,8 +4,10 @@ import { useRef, useState, useEffect } from "react";
 import { useGSAP } from "@gsap/react";
 import { staggerEntrance } from "@/lib/gsap";
 import { getNextEvent } from "@/lib/constants";
+import { getWeekendSchedule } from "@/lib/constants/sessions";
 import { format } from "date-fns";
 import { F1, Mono, LiveDot, Brackets } from "@/components/shared/broadcast";
+import { SessionSchedule } from "@/components/shared/session-schedule";
 
 /** Parse a "YYYY-MM-DD" string as a local-midnight Date so the calendar day never
  *  shifts across timezones (unlike `new Date("YYYY-MM-DD")`, which is parsed as UTC). */
@@ -60,6 +62,8 @@ export function NextRaceCountdown() {
   );
 
   if (!event || !nextRace) return null;
+
+  const weekendSchedule = getWeekendSchedule(nextRace.raceDate);
 
   const inProgress =
     time !== null &&
@@ -204,6 +208,13 @@ export function NextRaceCountdown() {
             </div>
           ))}
         </div>
+        )}
+
+        {/* Full weekend session times in the viewer's timezone */}
+        {weekendSchedule && (
+          <div className="mt-8" style={{ maxWidth: 720 }}>
+            <SessionSchedule schedule={weekendSchedule} />
+          </div>
         )}
       </div>
     </section>

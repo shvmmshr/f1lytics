@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { getRaceResults } from "@/lib/api/jolpica";
 import { getLaps, getPositions, getRaceControl, getSessions, getStints } from "@/lib/api/openf1";
 import { CIRCUIT_LIST, TEAMS, getApiRound, getCircuitBySlug } from "@/lib/constants";
+import { getWeekendSchedule } from "@/lib/constants/sessions";
+import { SessionSchedule } from "@/components/shared/session-schedule";
 import { PageTransition } from "@/components/layout/page-transition";
 import { PositionBadge } from "@/components/shared/position-badge";
 import {
@@ -114,6 +116,7 @@ export default async function RacePage({ params }: RacePageProps) {
   if (!circuit) notFound();
 
   const raceDate = new Date(`${circuit.raceDate}T00:00:00Z`);
+  const weekendSchedule = getWeekendSchedule(circuit.raceDate);
 
   let race = null as Awaited<ReturnType<typeof getRaceResults>>[number] | null;
   let laps: Awaited<ReturnType<typeof getLaps>> = [];
@@ -283,6 +286,21 @@ export default async function RacePage({ params }: RacePageProps) {
             </Mono>
           </div>
         </section>
+
+        {/* WEEKEND SCHEDULE — session times in the viewer's timezone */}
+        {weekendSchedule && (
+          <section
+            className="relative"
+            style={{ padding: "40px 32px", borderBottom: `1px solid ${F1.line}` }}
+          >
+            <div className="mx-auto" style={{ maxWidth: 1400 }}>
+              <SectionHeader label="WEEKEND SCHEDULE" />
+              <div style={{ maxWidth: 640 }}>
+                <SessionSchedule schedule={weekendSchedule} />
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* PODIUM */}
         <section
