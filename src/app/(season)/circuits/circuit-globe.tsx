@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useRef, useState, useCallback, useMemo, useEffect } from "react";
-import { Canvas } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls, Sphere, Line } from "@react-three/drei";
 import * as THREE from "three";
 
@@ -227,14 +227,71 @@ function GlobeAtmosphere() {
   );
 }
 
+/* Projects the hovered marker's 3D position to screen pixels each frame and
+   positions the DOM info card imperatively, clamped inside the container so it
+   tracks the marker but never overflows. */
+function HoverCardPositioner({
+  groupRef,
+  hovered,
+  containerRef,
+  cardRef,
+}: {
+  groupRef: React.RefObject<THREE.Group | null>;
+  hovered: GlobeCircuit | null;
+  containerRef: React.RefObject<HTMLDivElement | null>;
+  cardRef: React.RefObject<HTMLDivElement | null>;
+}) {
+  const { camera } = useThree();
+  const localPos = useMemo(
+    () => (hovered ? latLngToVector3(hovered.lat, hovered.lng, 1.008) : null),
+    [hovered]
+  );
+
+  useFrame(() => {
+    const card = cardRef.current;
+    const container = containerRef.current;
+    const group = groupRef.current;
+    if (!card || !container || !group || !localPos) return;
+
+    const world = localPos.clone().applyMatrix4(group.matrixWorld);
+
+    // Hide when the marker is on the far hemisphere (facing away from camera).
+    const facing = world.clone().normalize().dot(camera.position.clone().normalize());
+    if (facing <= 0.02) {
+      card.style.visibility = "hidden";
+      return;
+    }
+    card.style.visibility = "visible";
+
+    const ndc = world.clone().project(camera);
+    const w = container.clientWidth;
+    const h = container.clientHeight;
+    const x = (ndc.x * 0.5 + 0.5) * w;
+    const y = (-ndc.y * 0.5 + 0.5) * h;
+
+    const cardW = card.offsetWidth || 240;
+    const cardH = card.offsetHeight || 80;
+    const pad = 10;
+    let left = x - cardW / 2;
+    let top = y - cardH - 16; // prefer above the marker
+    if (top < pad) top = y + 16; // no room above → below
+    left = Math.max(pad, Math.min(left, w - cardW - pad));
+    top = Math.max(pad, Math.min(top, h - cardH - pad));
+    card.style.transform = `translate(${left}px, ${top}px)`;
+  });
+
+  return null;
+}
+
 function Globe({
   circuits,
   onHover,
+  groupRef,
 }: {
   circuits: GlobeCircuit[];
   onHover: (c: GlobeCircuit | null) => void;
+  groupRef: React.RefObject<THREE.Group | null>;
 }) {
-  const groupRef = useRef<THREE.Group>(null);
   const R = 1;
 
   return (
@@ -271,17 +328,30 @@ function Globe({
 function SceneContent({
   circuits,
   onHover,
+  hovered,
+  containerRef,
+  cardRef,
 }: {
   circuits: GlobeCircuit[];
   onHover: (c: GlobeCircuit | null) => void;
+  hovered: GlobeCircuit | null;
+  containerRef: React.RefObject<HTMLDivElement | null>;
+  cardRef: React.RefObject<HTMLDivElement | null>;
 }) {
+  const groupRef = useRef<THREE.Group>(null);
   return (
     <>
       <ambientLight intensity={0.4} />
       <directionalLight position={[3, 4, 2]} intensity={0.6} />
       <pointLight position={[-2, 1, -1]} color="#EF4444" intensity={0.2} />
 
-      <Globe circuits={circuits} onHover={onHover} />
+      <Globe circuits={circuits} onHover={onHover} groupRef={groupRef} />
+      <HoverCardPositioner
+        groupRef={groupRef}
+        hovered={hovered}
+        containerRef={containerRef}
+        cardRef={cardRef}
+      />
 
       <OrbitControls
         enableZoom
@@ -307,6 +377,8 @@ function LoadingFallback() {
 
 export function CircuitGlobe({ circuits }: CircuitGlobeProps) {
   const [hovered, setHovered] = useState<GlobeCircuit | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
   return (
     <section
       style={{
@@ -338,6 +410,7 @@ export function CircuitGlobe({ circuits }: CircuitGlobeProps) {
           </span>
         </div>
         <div
+          ref={containerRef}
           className="relative h-[450px] w-full overflow-hidden"
           style={{ background: "#0C0C0E", border: "1px solid #27272A" }}
         >
@@ -348,17 +421,32 @@ export function CircuitGlobe({ circuits }: CircuitGlobeProps) {
               gl={{ alpha: true, antialias: true }}
             >
               <Suspense fallback={null}>
-                <SceneContent circuits={circuits} onHover={setHovered} />
+                <SceneContent
+                  circuits={circuits}
+                  onHover={setHovered}
+                  hovered={hovered}
+                  containerRef={containerRef}
+                  cardRef={cardRef}
+                />
               </Suspense>
             </Canvas>
           </Suspense>
 
-          {/* Hover info card — pinned to the bottom-left of the box. The left/
-              right insets bound its width so it can never spill outside. */}
+          {/* Hover info card — follows the marker (positioned imperatively by
+              HoverCardPositioner) and is clamped inside the box, so it appears
+              next to the hovered point without ever overflowing. Starts off-
+              screen so it never flashes at the origin before the first frame. */}
           {hovered && (
             <div
+              ref={cardRef}
               className="pointer-events-none absolute"
-              style={{ bottom: 12, left: 12, right: 12, zIndex: 10 }}
+              style={{
+                top: 0,
+                left: 0,
+                zIndex: 10,
+                transform: "translate(-1000px, -1000px)",
+                willChange: "transform",
+              }}
             >
               <CircuitInfoCard circuit={hovered} />
             </div>
