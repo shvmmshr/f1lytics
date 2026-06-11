@@ -6,6 +6,7 @@ import { gsap } from "@/lib/gsap";
 import Image from "next/image";
 import Link from "next/link";
 import { getNextEvent, TEAMS, CIRCUIT_LIST, DRIVER_LIST, TEAM_LIST } from "@/lib/constants";
+import { getWeekendSchedule } from "@/lib/constants/sessions";
 import {
   F1,
   LiveDot,
@@ -15,6 +16,7 @@ import {
   DataLabel,
   StatValue,
 } from "@/components/shared/broadcast";
+import { SessionSchedule } from "@/components/shared/session-schedule";
 
 type Standing = {
   position: number;
@@ -55,6 +57,7 @@ export function Hero({
 
   const event = getNextEvent();
   const nextRace = event?.circuit;
+  const weekendSchedule = nextRace ? getWeekendSchedule(nextRace.raceDate) : undefined;
   // Count down to the actual next event — on sprint weekends that's the
   // sprint, not the Sunday race.
   const targetTime = event
@@ -328,6 +331,16 @@ export function Hero({
                       </Mono>
                     </div>
                   ))}
+                </div>
+              )}
+
+              {/* Compact weekend schedule in the viewer's local time */}
+              {weekendSchedule && (
+                <div
+                  className="mt-4 pt-4"
+                  style={{ borderTop: `1px solid ${F1.line}` }}
+                >
+                  <SessionSchedule schedule={weekendSchedule} variant="compact" />
                 </div>
               )}
             </div>

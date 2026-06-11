@@ -144,78 +144,79 @@ export function NextRaceCountdown() {
           {format(parseLocalDate(event.eventDate), "MMM d, yyyy").toUpperCase()}
         </Mono>
 
-        {/* Countdown — sharp-edged broadcast frames */}
-        {inProgress ? (
-          <div className="flex items-center gap-3 mt-10">
-            <LiveDot size={8} />
-            <Mono
-              style={{
-                fontSize: 14,
-                color: F1.red,
-                letterSpacing: "0.22em",
-                fontWeight: 700,
-              }}
-            >
-              SESSION IN PROGRESS
-            </Mono>
-          </div>
-        ) : (
-        <div
-          className="grid mt-10"
-          style={{
-            gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
-            gap: 1,
-            background: F1.line,
-            border: `1px solid ${F1.line}`,
-            maxWidth: 720,
-          }}
-        >
-          {units.map((unit) => (
-            <div
-              key={unit.label}
-              data-countdown-unit
-              className="relative"
-              style={{
-                background: F1.bg,
-                padding: "24px 16px 18px",
-                textAlign: "center",
-              }}
-            >
-              <Brackets color={F1.fg4} size={8} />
-              <span
-                className="font-display block tabular-nums"
-                style={{
-                  fontSize: "clamp(48px, 7vw, 84px)",
-                  fontWeight: 700,
-                  lineHeight: 1,
-                  letterSpacing: "-0.04em",
-                  color: F1.fg,
-                }}
-              >
-                {unit.value === null ? "--" : String(unit.value).padStart(2, "0")}
-              </span>
+        {/* Countdown + full weekend schedule, side by side so they fill the
+            width instead of stranding the right half of the section. */}
+        <div className="grid lg:grid-cols-2 gap-6 lg:gap-8 mt-10 items-start">
+          {/* Countdown — sharp-edged broadcast frames */}
+          {inProgress ? (
+            <div className="flex items-center gap-3">
+              <LiveDot size={8} />
               <Mono
                 style={{
-                  fontSize: 10,
-                  color: F1.fg3,
-                  letterSpacing: "0.24em",
-                  marginTop: 10,
-                  display: "block",
+                  fontSize: 14,
+                  color: F1.red,
+                  letterSpacing: "0.22em",
+                  fontWeight: 700,
                 }}
               >
-                {unit.label}
+                SESSION IN PROGRESS
               </Mono>
             </div>
-          ))}
-        </div>
-        )}
+          ) : (
+            <div
+              className="grid"
+              style={{
+                gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+                gap: 1,
+                background: F1.line,
+                border: `1px solid ${F1.line}`,
+              }}
+            >
+              {units.map((unit) => (
+                <div
+                  key={unit.label}
+                  data-countdown-unit
+                  className="relative"
+                  style={{
+                    background: F1.bg,
+                    padding: "24px 12px 18px",
+                    textAlign: "center",
+                  }}
+                >
+                  <Brackets color={F1.fg4} size={8} />
+                  <span
+                    className="font-display block tabular-nums"
+                    style={{
+                      fontSize: "clamp(40px, 5vw, 72px)",
+                      fontWeight: 700,
+                      lineHeight: 1,
+                      letterSpacing: "-0.04em",
+                      color: F1.fg,
+                    }}
+                  >
+                    {unit.value === null ? "--" : String(unit.value).padStart(2, "0")}
+                  </span>
+                  <Mono
+                    style={{
+                      fontSize: 10,
+                      color: F1.fg3,
+                      letterSpacing: "0.24em",
+                      marginTop: 10,
+                      display: "block",
+                    }}
+                  >
+                    {unit.label}
+                  </Mono>
+                </div>
+              ))}
+            </div>
+          )}
 
-        {/* Full weekend session times in the viewer's timezone */}
-        {weekendSchedule && (
-          <div className="mt-8" style={{ maxWidth: 720 }}>
+          {/* Full weekend session times in the viewer's timezone */}
+          {weekendSchedule && (
             <SessionSchedule schedule={weekendSchedule} />
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </section>
   );

@@ -40,10 +40,18 @@ function allTimezones(): string[] {
   }
 }
 
+/** Browsers still report some legacy IANA names; show the modern city. */
+const CITY_ALIASES: Record<string, string> = {
+  Calcutta: "Kolkata",
+  Saigon: "Ho Chi Minh",
+  Katmandu: "Kathmandu",
+};
+
 /** "Asia/Kolkata" → "Kolkata, Asia (GMT+5:30)" */
 function zoneLabel(zone: string, when: Date): string {
   const parts = zone.split("/");
-  const city = (parts[parts.length - 1] ?? zone).replaceAll("_", " ");
+  const rawCity = (parts[parts.length - 1] ?? zone).replaceAll("_", " ");
+  const city = CITY_ALIASES[rawCity] ?? rawCity;
   const region = parts.length > 1 ? parts[0].replaceAll("_", " ") : "";
   let offset = "";
   try {
@@ -96,22 +104,86 @@ function useTimezone() {
   return { zone, select };
 }
 
-const SESSION_ORDER: { key: keyof WeekendSchedule; label: string }[] = [
-  { key: "fp1", label: "PRACTICE 1" },
-  { key: "fp2", label: "PRACTICE 2" },
-  { key: "fp3", label: "PRACTICE 3" },
-  { key: "sprintQualifying", label: "SPRINT QUALI" },
-  { key: "sprint", label: "SPRINT" },
-  { key: "qualifying", label: "QUALIFYING" },
-  { key: "race", label: "RACE" },
+const SESSION_ORDER: { key: keyof WeekendSchedule; label: string; short: string }[] = [
+  { key: "fp1", label: "PRACTICE 1", short: "FP1" },
+  { key: "fp2", label: "PRACTICE 2", short: "FP2" },
+  { key: "fp3", label: "PRACTICE 3", short: "FP3" },
+  { key: "sprintQualifying", label: "SPRINT QUALI", short: "SQ" },
+  { key: "sprint", label: "SPRINT", short: "SPR" },
+  { key: "qualifying", label: "QUALIFYING", short: "QUAL" },
+  { key: "race", label: "RACE", short: "RACE" },
 ];
+
+/** Shared timezone dropdown, used by both the full and compact layouts. */
+function TimezoneSelect({
+  zone,
+  zones,
+  onSelect,
+  compact = false,
+}: {
+  zone: string | null;
+  zones: { sample: Date; popular: string[]; rest: string[] };
+  onSelect: (next: string) => void;
+  compact?: boolean;
+}) {
+  return (
+    <select
+      aria-label="Timezone for session times"
+      value={zone ?? ""}
+      onChange={(e) => onSelect(e.target.value)}
+      disabled={!zone}
+      className="font-mono"
+      style={{
+        background: F1.bg2,
+        color: F1.fg2,
+        border: `1px solid ${F1.line}`,
+        fontSize: compact ? 10 : 11,
+        // Extra right padding leaves room for the native dropdown arrow so it
+        // never overlaps the "(GMT+5:30)" text.
+        padding: compact ? "3px 24px 3px 8px" : "5px 28px 5px 10px",
+        maxWidth: compact ? 190 : 240,
+        cursor: "pointer",
+      }}
+    >
+      {!zone ? (
+        <option value="">Detecting…</option>
+      ) : (
+        <>
+          <option value={zone}>{zoneLabel(zone, zones.sample)}</option>
+          <option value="auto">Reset to my local time</option>
+          <optgroup label="Popular">
+            {zones.popular.map((z) => (
+              <option key={z} value={z}>
+                {zoneLabel(z, zones.sample)}
+              </option>
+            ))}
+          </optgroup>
+          <optgroup label="All timezones">
+            {zones.rest.map((z) => (
+              <option key={z} value={z}>
+                {zoneLabel(z, zones.sample)}
+              </option>
+            ))}
+          </optgroup>
+        </>
+      )}
+    </select>
+  );
+}
 
 interface SessionScheduleProps {
   schedule: WeekendSchedule;
   title?: string;
+  /** "full" = bordered row list with header (default). "compact" = small
+   *  horizontal strip for the hero, below the countdown. */
+  variant?: "full" | "compact";
 }
 
-export function SessionSchedule({ schedule, title = "WEEKEND SCHEDULE" }: SessionScheduleProps) {
+export function SessionSchedule({
+  schedule,
+  title = "WEEKEND SCHEDULE",
+  variant = "full",
+}: SessionScheduleProps) {
   const { zone, select } = useTimezone();
   const [now, setNow] = useState<number | null>(null);
 
@@ -170,6 +242,85 @@ export function SessionSchedule({ schedule, title = "WEEKEND SCHEDULE" }: Sessio
         }).format(new Date(ts))
       : "--:--";
 
+  const fmtWeekday = (ts: number) =>
+    zone
+      ? new Intl.DateTimeFormat("en-US", { timeZone: zone, weekday: "short" })
+          .format(new Date(ts))
+          .toUpperCase()
+      : "---";
+
+  // ── Compact: a small horizontal strip for the hero, below the countdown ──
+  if (variant === "compact") {
+    return (
+      <div>
+        <div
+          className="flex items-center justify-between gap-2 mb-2.5"
+        >
+          <Mono style={{ fontSize: 8, color: F1.fg3, letterSpacing: "0.22em", fontWeight: 700 }}>
+            WEEKEND · YOUR TIME
+          </Mono>
+          <TimezoneSelect zone={zone} zones={zones} onSelect={select} compact />
+        </div>
+        <div className="flex" style={{ gap: 1, background: F1.line }}>
+          {sessions.map((s, i) => {
+            const isDone = now !== null && s.ts + SESSION_MS <= now;
+            const isNext = i === nextIdx;
+            const isRace = s.key === "race";
+            const isSprintFamily = s.key === "sprint" || s.key === "sprintQualifying";
+            const accent = isRace ? F1.red : isSprintFamily ? F1.amber : F1.fg3;
+            return (
+              <div
+                key={s.key}
+                className="text-center"
+                style={{
+                  flex: 1,
+                  background: isNext ? "rgba(255,255,255,0.04)" : F1.bg,
+                  padding: "7px 2px",
+                  opacity: isDone ? 0.5 : 1,
+                }}
+              >
+                <Mono
+                  style={{
+                    fontSize: 8,
+                    color: isDone ? F1.fg4 : accent,
+                    letterSpacing: "0.1em",
+                    fontWeight: 700,
+                    display: "block",
+                  }}
+                >
+                  {s.short}
+                </Mono>
+                <Mono
+                  className="tabular-nums"
+                  style={{
+                    fontSize: 12,
+                    color: isDone ? F1.fg3 : F1.fg,
+                    fontWeight: isRace || isNext ? 700 : 500,
+                    display: "block",
+                    marginTop: 3,
+                  }}
+                >
+                  {fmtTime(s.ts)}
+                </Mono>
+                <Mono
+                  style={{
+                    fontSize: 7,
+                    color: F1.fg4,
+                    letterSpacing: "0.12em",
+                    display: "block",
+                    marginTop: 2,
+                  }}
+                >
+                  {fmtWeekday(s.ts)}
+                </Mono>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ border: `1px solid ${F1.line}`, background: F1.bg }}>
       {/* Header: title + timezone picker */}
@@ -186,45 +337,7 @@ export function SessionSchedule({ schedule, title = "WEEKEND SCHEDULE" }: Sessio
           <Mono style={{ fontSize: 9, color: F1.fg4, letterSpacing: "0.18em" }}>
             TIMEZONE
           </Mono>
-          <select
-            aria-label="Timezone for session times"
-            value={zone ?? ""}
-            onChange={(e) => select(e.target.value)}
-            disabled={!zone}
-            className="font-mono"
-            style={{
-              background: F1.bg2,
-              color: F1.fg2,
-              border: `1px solid ${F1.line}`,
-              fontSize: 11,
-              padding: "5px 8px",
-              maxWidth: 220,
-              cursor: "pointer",
-            }}
-          >
-            {!zone ? (
-              <option value="">Detecting…</option>
-            ) : (
-              <>
-                <option value={zone}>{zoneLabel(zone, zones.sample)}</option>
-                <option value="auto">Reset to my local time</option>
-                <optgroup label="Popular">
-                  {zones.popular.map((z) => (
-                    <option key={z} value={z}>
-                      {zoneLabel(z, zones.sample)}
-                    </option>
-                  ))}
-                </optgroup>
-                <optgroup label="All timezones">
-                  {zones.rest.map((z) => (
-                    <option key={z} value={z}>
-                      {zoneLabel(z, zones.sample)}
-                    </option>
-                  ))}
-                </optgroup>
-              </>
-            )}
-          </select>
+          <TimezoneSelect zone={zone} zones={zones} onSelect={select} />
         </div>
       </div>
 
