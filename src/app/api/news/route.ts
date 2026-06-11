@@ -1,18 +1,27 @@
 import { NextResponse } from "next/server";
 import { fetchAllNews } from "@/lib/api/news";
 
-// ISR: refresh the aggregated feed every 15 minutes.
-export const revalidate = 900;
+export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
+  const url = new URL(req.url);
+  const limit = Math.min(
+    Number.parseInt(url.searchParams.get("limit") ?? "40", 10) || 40,
+    60,
+  );
+  // ?fresh=1 bypasses the cache for a true live read — use it on the deployed
+  // site to confirm whether Vercel's servers can actually reach the feeds.
+  const fresh = url.searchParams.get("fresh") === "1";
   try {
-    const url = new URL(req.url);
-    const limit = Math.min(
-      Number.parseInt(url.searchParams.get("limit") ?? "40", 10) || 40,
-      60,
-    );
-    const items = await fetchAllNews(limit);
-    return NextResponse.json({ items, fetchedAt: new Date().toISOString() });
+    const items = await fetchAllNews(limit, { noCache: fresh });
+    const sources = [...new Set(items.map((i) => i.source))];
+    return NextResponse.json({
+      count: items.length,
+      sources,
+      fresh,
+      fetchedAt: new Date().toISOString(),
+      items,
+    });
   } catch (err) {
     console.error("[f1lytics/news] route error:", err);
     return NextResponse.json(

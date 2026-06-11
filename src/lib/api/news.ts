@@ -204,19 +204,40 @@ export function scoreImportance(item: NewsItem, corroboration = 0): number {
  * newest first. Items deduped by headline get `corroboration` bumped so the
  * importance score can reward multi-source stories.
  */
-export async function fetchAllNews(maxItems = 40): Promise<NewsItem[]> {
+export async function fetchAllNews(
+  maxItems = 40,
+  opts: { noCache?: boolean } = {},
+): Promise<NewsItem[]> {
   const settled = await Promise.allSettled(
     FEEDS.map(async (feed) => {
       const res = await fetch(feed.url, {
-        next: { revalidate: REVALIDATE_SECONDS },
+        // noCache path is for the live diagnostic (?fresh=1); normal path is ISR.
+        ...(opts.noCache
+          ? { cache: "no-store" as const }
+          : { next: { revalidate: REVALIDATE_SECONDS } }),
+        // Per-feed timeout: a single hung feed must not stall the whole render
+        // past the serverless function limit (which would blank ALL news).
+        signal: AbortSignal.timeout(8000),
         headers: {
-          // Some feeds (e.g. The Race) 301/serve-empty without a browser-like UA.
-          "User-Agent": "Mozilla/5.0 (compatible; F1lytics/1.0; +https://f1lytics.com)",
+          // A browser-like UA: some feeds 301/serve-empty (or, from datacenter
+          // IPs, return a bot-challenge page) without one.
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
           Accept: "application/rss+xml, application/xml, text/xml, */*",
         },
       });
       if (!res.ok) throw new Error(`${feed.name}: HTTP ${res.status}`);
-      return parseFeed(await res.text(), feed);
+      const text = await res.text();
+      // A 200 that isn't a feed (e.g. a Cloudflare/bot challenge served to
+      // datacenter IPs) parses to zero items silently — flag it instead.
+      if (!/<(?:rss|feed|item|rdf)\b/i.test(text)) {
+        throw new Error(
+          `${feed.name}: 200 but non-feed response (${text.length}b) — likely IP/bot block`,
+        );
+      }
+      const items = parseFeed(text, feed);
+      if (items.length === 0) throw new Error(`${feed.name}: 0 items parsed`);
+      return items;
     }),
   );
 
