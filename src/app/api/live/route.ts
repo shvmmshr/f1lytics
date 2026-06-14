@@ -27,20 +27,45 @@ const SESSION_LABELS: Record<keyof WeekendSchedule, { name: string; type: string
   race: { name: "RACE", type: "Race" },
 };
 
+/** F1's streaming status — the real-time authority for "is a session live now".
+ *  Free, no auth. Returns "Offline" on any failure (fail closed). */
+async function getStreamingStatus(): Promise<string> {
+  try {
+    const res = await fetch(
+      "https://livetiming.formula1.com/static/StreamingStatus.json",
+      { cache: "no-store" },
+    );
+    if (!res.ok) return "Offline";
+    const text = await res.text();
+    // Served with a UTF-8 BOM, which breaks JSON.parse.
+    const parsed = JSON.parse(text.replace(/^﻿/, "")) as { Status?: string };
+    return parsed.Status ?? "Offline";
+  } catch {
+    return "Offline";
+  }
+}
+
 /**
- * Schedule-only fallback for the live window. Both free real-time feeds are now
- * gated DURING a session: OpenF1 paywalls all access (even past sessions) until
- * the session ends, and F1's SignalR live-timing feed is behind Basic/Bearer
- * auth. The baked weekend schedule needs no network and can't be paywalled, so
- * we use it to tell the page "a session is on track right now" (status
- * LIVE_LOCKED) instead of a misleading "NO SESSION". Returns null when nothing
- * is scheduled to be live at this moment.
+ * Fallback for the live window. Both free real-time feeds are gated DURING a
+ * session: OpenF1 paywalls all access (even past sessions) until ~30 min after
+ * it ends, and the SSE relay may not reach F1 from serverless. When a session
+ * IS genuinely live we surface status LIVE_LOCKED instead of a misleading "NO
+ * SESSION".
+ *
+ * Authority for "is it live" is F1's StreamingStatus — NOT the baked schedule,
+ * whose generous window would otherwise keep claiming "in progress" for up to
+ * 30 min after the race actually ends. The schedule only supplies the label
+ * (which session / circuit). Returns null when F1 says nothing is streaming.
  */
-function scheduledLiveResponse() {
+async function scheduledLiveResponse() {
+  if ((await getStreamingStatus()) !== "Available") return null;
   const active = getActiveSession(Date.now());
-  if (!active) return null;
-  const circuit = CIRCUIT_LIST.find((c) => c.raceDate === active.raceDate);
-  const label = SESSION_LABELS[active.session];
+  const circuit = active
+    ? CIRCUIT_LIST.find((c) => c.raceDate === active.raceDate)
+    : undefined;
+  const label = active
+    ? SESSION_LABELS[active.session]
+    : { name: "LIVE SESSION", type: "" };
   return NextResponse.json({
     isLive: true,
     status: "LIVE_LOCKED",
@@ -112,9 +137,9 @@ export async function GET(req: Request) {
     }
 
     if (!session) {
-      // OpenF1 returned a list but nothing's running/recent. If the baked
-      // schedule says a session IS on track, surface the locked-live state.
-      return scheduledLiveResponse() ?? NextResponse.json({ isLive: false, status: "NO SESSION" });
+      // OpenF1 returned a list but nothing's running/recent. If F1 says a
+      // session IS streaming, surface the locked-live state.
+      return (await scheduledLiveResponse()) ?? NextResponse.json({ isLive: false, status: "NO SESSION" });
     }
 
     const sessionKey = session.session_key;
@@ -258,7 +283,7 @@ export async function GET(req: Request) {
     // Expected during a live session: OpenF1 401s ("Live F1 session in progress")
     // until the session ends. Don't spam stack traces for it — fall back to the
     // schedule so the page shows the locked-live state, not a generic error.
-    const locked = scheduledLiveResponse();
+    const locked = await scheduledLiveResponse();
     if (locked) return locked;
     console.error("Live API error:", error);
     return NextResponse.json({
