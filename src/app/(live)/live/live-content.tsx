@@ -915,6 +915,72 @@ function IdleView({ lastRaceSessionKey }: { lastRaceSessionKey: number | null })
   );
 }
 
+// ─── Loading / connecting view (shown until the first state resolves) ────
+
+function LoadingView({ replay }: { replay: boolean }) {
+  return (
+    <div className="relative" style={{ padding: "clamp(32px, 8vw, 60px) clamp(16px, 4vw, 32px)" }}>
+      <div
+        className="relative max-w-3xl mx-auto"
+        style={{
+          background: F1.bg2,
+          border: `1px solid ${F1.line}`,
+          padding: "clamp(28px, 6vw, 48px) clamp(16px, 4vw, 32px)",
+          textAlign: "center",
+        }}
+      >
+        <Brackets color={F1.fg3} size={14} weight={2} />
+        <div className="flex items-center justify-center gap-3" style={{ marginBottom: 18 }}>
+          <LiveDot color={F1.fg3} size={10} />
+          <Mono
+            style={{
+              fontSize: 11,
+              color: F1.fg3,
+              letterSpacing: "0.24em",
+              fontWeight: 700,
+            }}
+          >
+            {replay ? "LOADING RACE REVIEW" : "CONNECTING TO TIMING FEED"}
+          </Mono>
+        </div>
+        <h2
+          className="font-display"
+          style={{
+            fontSize: "clamp(40px, 6vw, 72px)",
+            fontWeight: 700,
+            letterSpacing: "-0.04em",
+            lineHeight: 0.9,
+            margin: 0,
+            color: F1.fg2,
+          }}
+        >
+          STAND BY<span className="animate-pulse" style={{ color: F1.red }}>…</span>
+        </h2>
+        {/* Skeleton tower rows to signal the timing screen is on its way. */}
+        <div style={{ marginTop: 30 }}>
+          {[0, 1, 2, 3, 4].map((i) => (
+            <div
+              key={i}
+              className="animate-pulse flex items-center"
+              style={{
+                gap: 12,
+                padding: "10px 8px",
+                borderBottom: `1px solid ${F1.line}`,
+                opacity: 1 - i * 0.16,
+              }}
+            >
+              <span style={{ width: 28, height: 20, background: F1.bg3 }} />
+              <span style={{ width: 4, height: 24, background: F1.bg3 }} />
+              <span style={{ flex: 1, height: 14, background: F1.bg3 }} />
+              <span style={{ width: 56, height: 14, background: F1.bg3 }} />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Live-but-locked view (session on track, free data feeds gated) ──────
 
 function LiveLockedView({
@@ -1114,6 +1180,12 @@ export function LiveContent({
     live.status === "FINISHED" ||
     live.status === "REPLAY";
 
+  // First-paint guard: until we actually know the state, show a loading screen
+  // instead of flashing OFF-AIR. In replay we wait for OpenF1's first fetch; live
+  // we also wait for the SSE relay to resolve (connecting → live | offline).
+  const initializing =
+    live.loading || (!isReplayRoute && stream.state === "connecting");
+
   const focusedDriver = useMemo(
     () =>
       focusedDriverNumber !== null
@@ -1225,6 +1297,8 @@ export function LiveContent({
             </Mono>
           </div>
         </>
+      ) : initializing ? (
+        <LoadingView replay={isReplayRoute} />
       ) : live.status === "LIVE_LOCKED" ? (
         <LiveLockedView session={live.session} lastRaceSessionKey={lastRaceSessionKey} />
       ) : (
