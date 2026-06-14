@@ -915,6 +915,118 @@ function IdleView({ lastRaceSessionKey }: { lastRaceSessionKey: number | null })
   );
 }
 
+// ─── Live-but-locked view (session on track, free data feeds gated) ──────
+
+function LiveLockedView({
+  session,
+  lastRaceSessionKey,
+}: {
+  session: {
+    name: string;
+    type: string;
+    circuitShortName: string;
+    countryName: string;
+  } | null;
+  lastRaceSessionKey: number | null;
+}) {
+  const where = session?.circuitShortName || session?.countryName || "";
+  return (
+    <div className="relative" style={{ padding: "clamp(32px, 8vw, 60px) clamp(16px, 4vw, 32px)" }}>
+      <div
+        className="relative max-w-3xl mx-auto"
+        style={{
+          background: F1.bg2,
+          border: `1px solid ${F1.line}`,
+          padding: "clamp(28px, 6vw, 48px) clamp(16px, 4vw, 32px)",
+          textAlign: "center",
+        }}
+      >
+        <Brackets color={F1.red} size={14} weight={2} />
+        <div className="flex items-center justify-center gap-3" style={{ marginBottom: 18 }}>
+          <LiveDot color={F1.red} size={10} />
+          <Mono
+            style={{
+              fontSize: 11,
+              color: F1.red,
+              letterSpacing: "0.24em",
+              fontWeight: 700,
+            }}
+          >
+            ON AIR · SESSION IN PROGRESS
+          </Mono>
+        </div>
+        <h2
+          className="font-display"
+          style={{
+            fontSize: "clamp(40px, 6vw, 72px)",
+            fontWeight: 700,
+            letterSpacing: "-0.04em",
+            lineHeight: 0.9,
+            margin: 0,
+          }}
+        >
+          {(session?.name || "LIVE").toUpperCase()}
+          <span style={{ color: F1.red }}>.</span>
+        </h2>
+        {where && (
+          <div
+            className="font-display"
+            style={{
+              fontSize: 24,
+              fontWeight: 600,
+              letterSpacing: "-0.02em",
+              marginTop: 10,
+            }}
+          >
+            {where.toUpperCase()}
+          </div>
+        )}
+        <div
+          style={{ marginTop: 22, maxWidth: 540, marginLeft: "auto", marginRight: "auto" }}
+        >
+          <Mono
+            style={{
+              fontSize: 11,
+              color: F1.fg3,
+              letterSpacing: "0.06em",
+              lineHeight: 1.8,
+            }}
+          >
+            FORMULA 1 LOCKS ALL FREE LIVE-TIMING DATA WHILE A SESSION IS RUNNING.
+            THE FULL TIMING TOWER AND REVIEW UNLOCK THE MOMENT THIS SESSION ENDS.
+          </Mono>
+        </div>
+
+        {lastRaceSessionKey && (
+          <div style={{ marginTop: 32, borderTop: `1px solid ${F1.line}`, paddingTop: 24 }}>
+            <Mono style={{ fontSize: 10, color: F1.fg3, letterSpacing: "0.18em" }}>
+              WHILE YOU WAIT — REVIEW THE TIMING SCREEN FROM THE LAST RACE
+            </Mono>
+            <div className="flex justify-center" style={{ marginTop: 14 }}>
+              <Link
+                href={`/live?replay=${lastRaceSessionKey}`}
+                className="inline-flex items-center gap-2"
+                style={{
+                  background: F1.red,
+                  color: F1.ink,
+                  padding: "11px 22px",
+                  fontFamily: "var(--font-mono)",
+                  fontSize: 11,
+                  fontWeight: 700,
+                  letterSpacing: "0.18em",
+                  textDecoration: "none",
+                }}
+              >
+                ▶ REVIEW LAST RACE
+              </Link>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── Main ──────────────────────────────────────────────────────────────
 
 interface LiveContentProps {
@@ -1113,6 +1225,8 @@ export function LiveContent({
             </Mono>
           </div>
         </>
+      ) : live.status === "LIVE_LOCKED" ? (
+        <LiveLockedView session={live.session} lastRaceSessionKey={lastRaceSessionKey} />
       ) : (
         <IdleView lastRaceSessionKey={lastRaceSessionKey} />
       )}

@@ -36,11 +36,15 @@ export interface LiveWeather {
   rainfall: number;
 }
 
-type LiveStatus = "NO SESSION" | "LIVE" | "FINISHED" | "REPLAY";
+// LIVE_LOCKED: a session is on track per the baked schedule, but every free
+// data feed paywalls/blocks access during the session (OpenF1 401, F1 SignalR
+// auth-walled, static .jsonStream 403). We know WHAT is live, just not the data.
+type LiveStatus = "NO SESSION" | "LIVE" | "FINISHED" | "REPLAY" | "LIVE_LOCKED";
 
 interface LiveApiResponse {
   isLive: boolean;
   isReplay?: boolean;
+  dataLocked?: boolean;
   status: LiveStatus;
   session?: LiveSessionInfo;
   positions?: OpenF1Position[];

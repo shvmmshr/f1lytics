@@ -11,8 +11,51 @@ import {
   getCarData,
   getWeather,
 } from "@/lib/api/openf1";
+import { getActiveSession, type WeekendSchedule } from "@/lib/constants/sessions";
+import { CIRCUIT_LIST } from "@/lib/constants/circuits";
 
 export const dynamic = "force-dynamic";
+
+/** Friendly display name + broadcast type per schedule session key. */
+const SESSION_LABELS: Record<keyof WeekendSchedule, { name: string; type: string }> = {
+  fp1: { name: "PRACTICE 1", type: "Practice" },
+  fp2: { name: "PRACTICE 2", type: "Practice" },
+  fp3: { name: "PRACTICE 3", type: "Practice" },
+  sprintQualifying: { name: "SPRINT QUALIFYING", type: "Qualifying" },
+  sprint: { name: "SPRINT", type: "Race" },
+  qualifying: { name: "QUALIFYING", type: "Qualifying" },
+  race: { name: "RACE", type: "Race" },
+};
+
+/**
+ * Schedule-only fallback for the live window. Both free real-time feeds are now
+ * gated DURING a session: OpenF1 paywalls all access (even past sessions) until
+ * the session ends, and F1's SignalR live-timing feed is behind Basic/Bearer
+ * auth. The baked weekend schedule needs no network and can't be paywalled, so
+ * we use it to tell the page "a session is on track right now" (status
+ * LIVE_LOCKED) instead of a misleading "NO SESSION". Returns null when nothing
+ * is scheduled to be live at this moment.
+ */
+function scheduledLiveResponse() {
+  const active = getActiveSession(Date.now());
+  if (!active) return null;
+  const circuit = CIRCUIT_LIST.find((c) => c.raceDate === active.raceDate);
+  const label = SESSION_LABELS[active.session];
+  return NextResponse.json({
+    isLive: true,
+    status: "LIVE_LOCKED",
+    dataLocked: true,
+    session: {
+      key: 0,
+      name: label.name,
+      type: label.type,
+      circuitShortName: circuit?.name ?? "",
+      countryName: circuit?.country ?? "",
+      dateStart: "",
+      dateEnd: null,
+    },
+  });
+}
 
 export async function GET(req: Request) {
   try {
@@ -69,7 +112,9 @@ export async function GET(req: Request) {
     }
 
     if (!session) {
-      return NextResponse.json({ isLive: false, status: "NO SESSION" });
+      // OpenF1 returned a list but nothing's running/recent. If the baked
+      // schedule says a session IS on track, surface the locked-live state.
+      return scheduledLiveResponse() ?? NextResponse.json({ isLive: false, status: "NO SESSION" });
     }
 
     const sessionKey = session.session_key;
@@ -210,6 +255,11 @@ export async function GET(req: Request) {
         : null,
     });
   } catch (error) {
+    // Expected during a live session: OpenF1 401s ("Live F1 session in progress")
+    // until the session ends. Don't spam stack traces for it — fall back to the
+    // schedule so the page shows the locked-live state, not a generic error.
+    const locked = scheduledLiveResponse();
+    if (locked) return locked;
     console.error("Live API error:", error);
     return NextResponse.json({
       isLive: false,
