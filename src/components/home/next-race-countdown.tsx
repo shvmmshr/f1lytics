@@ -1,8 +1,9 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState } from "react";
 import { useGSAP } from "@gsap/react";
 import { staggerEntrance } from "@/lib/gsap";
+import { useCountdownTick } from "@/hooks/use-countdown-tick";
 import { getNextEvent } from "@/lib/constants";
 import { getWeekendSchedule } from "@/lib/constants/sessions";
 import { format } from "date-fns";
@@ -16,16 +17,8 @@ function parseLocalDate(dateStr: string): Date {
   return new Date(year, month - 1, day);
 }
 
-function getTimeRemaining(targetDate: Date) {
-  const now = new Date();
-  const diff = targetDate.getTime() - now.getTime();
-  if (diff <= 0) return { days: 0, hours: 0, minutes: 0, seconds: 0 };
-  return {
-    days: Math.floor(diff / (1000 * 60 * 60 * 24)),
-    hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
-    minutes: Math.floor((diff / (1000 * 60)) % 60),
-    seconds: Math.floor((diff / 1000) % 60),
-  };
+function pad(n: number) {
+  return String(n).padStart(2, "0");
 }
 
 export function NextRaceCountdown() {
@@ -37,21 +30,28 @@ export function NextRaceCountdown() {
     ? new Date(`${event.eventDate}T${event.eventTime}`).getTime()
     : null;
 
-  // null until mounted — server HTML shows "--" placeholders, no zero-flash.
-  const [time, setTime] = useState<ReturnType<typeof getTimeRemaining> | null>(null);
+  // Digit spans show "--" in server HTML, then the shared ticker writes them via
+  // refs once per second — no per-second re-render of this section.
+  const daysRef = useRef<HTMLSpanElement>(null);
+  const hoursRef = useRef<HTMLSpanElement>(null);
+  const minsRef = useRef<HTMLSpanElement>(null);
+  const secsRef = useRef<HTMLSpanElement>(null);
 
-  useEffect(() => {
-    if (targetTime === null) return;
-    const target = new Date(targetTime);
-    const interval = setInterval(() => {
-      setTime(getTimeRemaining(target));
-    }, 1000);
-    const raf = requestAnimationFrame(() => setTime(getTimeRemaining(target)));
-    return () => {
-      clearInterval(interval);
-      cancelAnimationFrame(raf);
-    };
-  }, [targetTime]);
+  // Only state left: the live→countdown swap. Flipped at most once (when the
+  // session actually starts), not every tick.
+  const [inProgress, setInProgress] = useState(false);
+  const inProgressRef = useRef(false);
+
+  useCountdownTick(targetTime, ({ d, h, m, s, done }) => {
+    if (daysRef.current) daysRef.current.textContent = pad(d);
+    if (hoursRef.current) hoursRef.current.textContent = pad(h);
+    if (minsRef.current) minsRef.current.textContent = pad(m);
+    if (secsRef.current) secsRef.current.textContent = pad(s);
+    if (done !== inProgressRef.current) {
+      inProgressRef.current = done;
+      setInProgress(done);
+    }
+  });
 
   useGSAP(
     () => {
@@ -65,15 +65,11 @@ export function NextRaceCountdown() {
 
   const weekendSchedule = getWeekendSchedule(nextRace.raceDate);
 
-  const inProgress =
-    time !== null &&
-    time.days + time.hours + time.minutes + time.seconds === 0;
-
   const units = [
-    { value: time?.days ?? null, label: "DAYS" },
-    { value: time?.hours ?? null, label: "HOURS" },
-    { value: time?.minutes ?? null, label: "MINS" },
-    { value: time?.seconds ?? null, label: "SECS" },
+    { ref: daysRef, label: "DAYS" },
+    { ref: hoursRef, label: "HOURS" },
+    { ref: minsRef, label: "MINS" },
+    { ref: secsRef, label: "SECS" },
   ];
 
   return (
@@ -185,6 +181,7 @@ export function NextRaceCountdown() {
                 >
                   <Brackets color={F1.fg4} size={8} />
                   <span
+                    ref={unit.ref}
                     className="font-display block tabular-nums"
                     style={{
                       fontSize: "clamp(40px, 5vw, 72px)",
@@ -194,7 +191,7 @@ export function NextRaceCountdown() {
                       color: F1.fg,
                     }}
                   >
-                    {unit.value === null ? "--" : String(unit.value).padStart(2, "0")}
+                    --
                   </span>
                   <Mono
                     style={{

@@ -183,7 +183,6 @@ export default async function DriversPage() {
                       fill
                       className="object-cover object-top"
                       sizes="88px"
-                      unoptimized
                     />
                   </div>
                   <div className="min-w-0 flex-1 pb-2">

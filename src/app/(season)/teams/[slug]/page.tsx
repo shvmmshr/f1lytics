@@ -240,7 +240,6 @@ export default async function TeamPage({ params }: TeamPageProps) {
                     width={56}
                     height={56}
                     className="object-contain"
-                    unoptimized
                   />
                 </div>
                 <div className="min-w-0">
@@ -388,8 +387,8 @@ export default async function TeamPage({ params }: TeamPageProps) {
                         src={d.image}
                         alt={`${d.firstName} ${d.lastName}`}
                         fill
+                        sizes="60px"
                         className="object-cover object-top"
-                        unoptimized
                       />
                     </div>
                     <div className="min-w-0 flex-1">

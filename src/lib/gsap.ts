@@ -62,17 +62,22 @@ export function staggerEntrance(selector: string, container: HTMLElement) {
         clearProps: "opacity,transform",
       }),
   });
-  ScrollTrigger.refresh();
+  // ScrollTrigger.refresh() forces a synchronous full-page layout recalc. It is
+  // called once globally after the hero entrance settles (see hero.tsx), not on
+  // every staggerEntrance() call, which is what made it expensive on mount.
 
   gsap.delayedCall(1.2, () => {
     const stranded = targets.filter(
       (el) => Number(gsap.getProperty(el, "opacity")) < 1
     );
+    if (stranded.length === 0) return; // common case — nothing left hidden
+    // Batch all layout reads in one pass before filtering, so we don't interleave
+    // getBoundingClientRect() reads with anything that could dirty layout.
     // Only elements still in (or above) the viewport count as stranded —
     // below-fold cards keep their scroll reveal.
-    const visible = stranded.filter(
-      (el) => el.getBoundingClientRect().top < window.innerHeight
-    );
+    const vh = window.innerHeight;
+    const tops = stranded.map((el) => el.getBoundingClientRect().top);
+    const visible = stranded.filter((_, i) => tops[i] < vh);
     if (visible.length > 0)
       gsap.to(visible, {
         opacity: 1,

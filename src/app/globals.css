@@ -261,6 +261,22 @@
   animation: ticker 60s linear infinite;
 }
 
+/* Scroll progress bar: driven by the scroll position on the compositor thread
+   where supported, so it costs no main-thread work (no scroll listener, no
+   React render). JS fallback in scroll-progress.tsx covers older browsers. */
+@keyframes scroll-progress-fill {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+@supports (animation-timeline: scroll()) {
+  .scroll-progress-bar {
+    animation: scroll-progress-fill linear;
+    animation-timeline: scroll();
+    animation-range: 0% 100%;
+  }
+}
+
 @keyframes checkered-fade {
   0% {
     opacity: 0;

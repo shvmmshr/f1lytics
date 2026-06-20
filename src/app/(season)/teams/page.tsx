@@ -155,7 +155,6 @@ export default async function TeamsPage() {
                         width={26}
                         height={26}
                         className="object-contain"
-                        unoptimized
                       />
                     </div>
                   </div>
@@ -246,7 +245,6 @@ export default async function TeamsPage() {
                           alt={`${d.firstName} ${d.lastName}`}
                           fill
                           className="object-cover object-top"
-                          unoptimized
                         />
                       </div>
                       <div className="min-w-0 flex-1">

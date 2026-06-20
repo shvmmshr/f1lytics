@@ -108,7 +108,6 @@ export default function CircuitsPage() {
                   className="object-contain p-6 transition-opacity"
                   style={{ filter: "brightness(0) invert(1)", opacity: 0.85 }}
                   sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
-                  unoptimized
                 />
                 <div
                   className="absolute"

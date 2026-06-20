@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useGSAP } from "@gsap/react";
-import { gsap } from "@/lib/gsap";
+import { gsap, ScrollTrigger } from "@/lib/gsap";
+import { useCountdownTick } from "@/hooks/use-countdown-tick";
 import Image from "next/image";
 import Link from "next/link";
 import { getNextEvent, TEAMS, CIRCUIT_LIST, DRIVER_LIST, TEAM_LIST } from "@/lib/constants";
@@ -24,17 +25,6 @@ type Standing = {
   teamId: string;
   points: number;
 };
-
-function getCountdown(target: Date) {
-  const diff = target.getTime() - Date.now();
-  if (diff <= 0) return { d: 0, h: 0, m: 0, s: 0 };
-  return {
-    d: Math.floor(diff / 86_400_000),
-    h: Math.floor((diff / 3_600_000) % 24),
-    m: Math.floor((diff / 60_000) % 60),
-    s: Math.floor((diff / 1000) % 60),
-  };
-}
 
 function pad(n: number) {
   return String(n).padStart(2, "0");
@@ -63,18 +53,25 @@ export function Hero({
   const targetTime = event
     ? new Date(`${event.eventDate}T${event.eventTime}`).getTime()
     : null;
-  const [tick, setTick] = useState<ReturnType<typeof getCountdown> | null>(null);
 
-  useEffect(() => {
-    if (targetTime === null) return;
-    const target = new Date(targetTime);
-    const raf = requestAnimationFrame(() => setTick(getCountdown(target)));
-    const id = setInterval(() => setTick(getCountdown(target)), 1000);
-    return () => {
-      clearInterval(id);
-      cancelAnimationFrame(raf);
-    };
-  }, [targetTime]);
+  // Countdown digits are written straight to the DOM via refs once per second,
+  // bypassing React entirely — ticking through state would reconcile the whole
+  // Hero subtree every second.
+  const cdHeaderD = useRef<HTMLSpanElement>(null);
+  const cdHeaderH = useRef<HTMLSpanElement>(null);
+  const cdDays = useRef<HTMLSpanElement>(null);
+  const cdHours = useRef<HTMLSpanElement>(null);
+  const cdMins = useRef<HTMLSpanElement>(null);
+  const cdSecs = useRef<HTMLSpanElement>(null);
+
+  useCountdownTick(targetTime, ({ d, h, m, s }) => {
+    if (cdHeaderD.current) cdHeaderD.current.textContent = String(d);
+    if (cdHeaderH.current) cdHeaderH.current.textContent = pad(h);
+    if (cdDays.current) cdDays.current.textContent = pad(d);
+    if (cdHours.current) cdHours.current.textContent = pad(h);
+    if (cdMins.current) cdMins.current.textContent = pad(m);
+    if (cdSecs.current) cdSecs.current.textContent = pad(s);
+  });
 
   useGSAP(
     () => {
@@ -84,7 +81,10 @@ export function Hero({
         .to(subRef.current, { y: 0, opacity: 1, duration: 0.5 }, 0.5)
         .to(ctaRef.current, { y: 0, opacity: 1, duration: 0.5 }, 0.65)
         .to(tickerRef.current, { y: 0, opacity: 1, duration: 0.5 }, 0.6)
-        .to(statsRef.current, { y: 0, opacity: 1, duration: 0.5 }, 0.8);
+        .to(statsRef.current, { y: 0, opacity: 1, duration: 0.5 }, 0.8)
+        // Refresh ScrollTrigger once, after the entrance settles and layout is
+        // stable, instead of on every staggerEntrance() call across the page.
+        .call(() => ScrollTrigger.refresh(), undefined, ">");
     },
     { scope: heroRef }
   );
@@ -258,11 +258,9 @@ export function Hero({
                     UP NEXT · ROUND {String(nextRace.round).padStart(2, "0")}
                   </Mono>
                 </span>
-                {tick && (
-                  <Mono style={{ color: F1.fg3, fontSize: 10, letterSpacing: "0.16em" }}>
-                    IN {tick.d}D {pad(tick.h)}H
-                  </Mono>
-                )}
+                <Mono style={{ color: F1.fg3, fontSize: 10, letterSpacing: "0.16em" }}>
+                  IN <span ref={cdHeaderD}>--</span>D <span ref={cdHeaderH}>--</span>H
+                </Mono>
               </div>
               <div
                 className="font-display"
@@ -288,51 +286,52 @@ export function Hero({
                 {nextRace.fullName.toUpperCase()}
               </div>
 
-              {/* Countdown digits */}
-              {tick && (
-                <div
-                  className="flex"
-                  style={{
-                    marginTop: 18,
-                    gap: 10,
-                    fontFamily: "var(--font-display)",
-                  }}
-                >
-                  {[
-                    [pad(tick.d), "DAYS"],
-                    [pad(tick.h), "HRS"],
-                    [pad(tick.m), "MIN"],
-                    [pad(tick.s), "SEC"],
-                  ].map(([v, l], i) => (
-                    <div key={i} style={{ flex: 1, textAlign: "center" }}>
-                      <div
-                        style={{
-                          background: F1.bg,
-                          padding: "6px 0",
-                          fontSize: 30,
-                          fontWeight: 700,
-                          color: F1.fg,
-                          letterSpacing: "-0.02em",
-                          fontVariantNumeric: "tabular-nums",
-                        }}
-                      >
-                        {v}
-                      </div>
-                      <Mono
-                        style={{
-                          fontSize: 8,
-                          color: F1.fg3,
-                          letterSpacing: "0.2em",
-                          marginTop: 4,
-                          display: "block",
-                        }}
-                      >
-                        {l}
-                      </Mono>
+              {/* Countdown digits — rendered with "--" placeholders (matching SSR)
+                  and filled by the shared ticker via refs, no re-render. */}
+              <div
+                className="flex"
+                style={{
+                  marginTop: 18,
+                  gap: 10,
+                  fontFamily: "var(--font-display)",
+                }}
+              >
+                {(
+                  [
+                    [cdDays, "DAYS"],
+                    [cdHours, "HRS"],
+                    [cdMins, "MIN"],
+                    [cdSecs, "SEC"],
+                  ] as const
+                ).map(([ref, l]) => (
+                  <div key={l} style={{ flex: 1, textAlign: "center" }}>
+                    <div
+                      style={{
+                        background: F1.bg,
+                        padding: "6px 0",
+                        fontSize: 30,
+                        fontWeight: 700,
+                        color: F1.fg,
+                        letterSpacing: "-0.02em",
+                        fontVariantNumeric: "tabular-nums",
+                      }}
+                    >
+                      <span ref={ref}>--</span>
                     </div>
-                  ))}
-                </div>
-              )}
+                    <Mono
+                      style={{
+                        fontSize: 8,
+                        color: F1.fg3,
+                        letterSpacing: "0.2em",
+                        marginTop: 4,
+                        display: "block",
+                      }}
+                    >
+                      {l}
+                    </Mono>
+                  </div>
+                ))}
+              </div>
 
               {/* Compact weekend schedule in the viewer's local time */}
               {weekendSchedule && (

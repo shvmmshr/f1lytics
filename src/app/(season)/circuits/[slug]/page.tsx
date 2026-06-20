@@ -165,7 +165,6 @@ export default async function CircuitPage({ params }: CircuitPageProps) {
                   height={400}
                   className="h-full max-h-72 w-auto object-contain"
                   style={{ filter: "brightness(0) invert(1)", opacity: 0.9 }}
-                  unoptimized
                 />
               </div>
 

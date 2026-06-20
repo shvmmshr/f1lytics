@@ -619,7 +619,6 @@ function VsHero({
             fill
             className="object-cover object-top"
             sizes="100px"
-            unoptimized
           />
         </div>
         <div className={`min-w-0 flex-1 ${isLeft ? "" : "flex flex-col items-end"}`}>
@@ -1030,7 +1029,6 @@ function TeamVsHero({
             width={48}
             height={48}
             className="object-contain"
-            unoptimized
           />
         </div>
         <div className={`min-w-0 flex-1 ${isLeft ? "" : "flex flex-col items-end"}`}>
@@ -1255,7 +1253,6 @@ function TeamComparison({ stats }: { stats: Record<string, ConstructorStat> }) {
                         alt={d.lastName}
                         fill
                         className="object-cover object-top"
-                        unoptimized
                       />
                     </div>
                     <div className="min-w-0">

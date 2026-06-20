@@ -261,7 +261,6 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
                 fill
                 className="object-cover object-top"
                 sizes="(max-width: 768px) 100vw, 320px"
-                unoptimized
                 priority
               />
               <div
@@ -620,7 +619,6 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
                               alt={`${d.firstName} ${d.lastName}`}
                               fill
                               className="object-cover object-top"
-                              unoptimized
                             />
                           </div>
                           <div className="flex-1 min-w-0">
@@ -705,7 +703,6 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
                       width={28}
                       height={28}
                       className="object-contain"
-                      unoptimized
                     />
                   </div>
                   <div className="flex-1 min-w-0">

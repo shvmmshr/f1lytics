@@ -230,6 +230,7 @@ export default async function CalendarPage() {
                 src={nextRace.trackImage}
                 alt={nextRace.name}
                 fill
+                sizes="(max-width: 768px) 100vw, 50vw"
                 className="object-contain"
                 style={{ filter: "invert(1) opacity(0.85)" }}
               />
