@@ -106,6 +106,9 @@ export function Hero({
 
   useGSAP(
     () => {
+      // Initial hidden state is set HERE (pre-paint via useGSAP's layout
+      // effect), never inline in JSX — if GSAP fails to run, the content
+      // renders visible instead of being stuck invisible-but-interactive.
       gsap.set([subRef.current, ctaRef.current, statsRef.current, tickerRef.current], { y: 24, opacity: 0 });
       const tl = gsap.timeline({ defaults: { ease: "power3.out" }, delay: 0.1 });
       tl.from(headlineRef.current, { y: 40, opacity: 0, duration: 0.8 }, 0)
@@ -128,8 +131,8 @@ export function Hero({
       className="relative flex flex-col overflow-hidden"
       style={{ background: F1.ink, color: F1.fg, minHeight: "100vh" }}
     >
-      {/* Background image + treatments */}
-      <div className="absolute inset-0" style={{ opacity: 0.45 }}>
+      {/* Background image + treatments (decorative — never intercepts clicks/drags) */}
+      <div className="absolute inset-0 pointer-events-none" style={{ opacity: 0.45 }}>
         <Image
           src="/hero-bg.avif"
           alt=""
@@ -196,13 +199,13 @@ export function Hero({
           <div
             ref={subRef}
             className="mt-8"
-            style={{ maxWidth: 520, fontSize: "clamp(15px, 4vw, 18px)", lineHeight: 1.5, color: F1.fg2, opacity: 0 }}
+            style={{ maxWidth: 520, fontSize: "clamp(15px, 4vw, 18px)", lineHeight: 1.5, color: F1.fg2 }}
           >
             Standings, race analysis, telemetry and the full 2026 season — in one place.
           </div>
 
           {/* CTAs */}
-          <div ref={ctaRef} className="mt-9 flex items-center flex-wrap" style={{ gap: 14, opacity: 0 }}>
+          <div ref={ctaRef} className="mt-9 flex items-center flex-wrap" style={{ gap: 14 }}>
             <Link
               href="/standings"
               className="font-display inline-flex items-center cursor-pointer transition-opacity hover:opacity-90"
@@ -236,7 +239,7 @@ export function Hero({
           {/* Stat row */}
           <div
             ref={statsRef}
-            style={{ marginTop: "clamp(32px, 6vw, 64px)", opacity: 0 }}
+            style={{ marginTop: "clamp(32px, 6vw, 64px)" }}
           >
             <div
               className="grid grid-cols-2 sm:grid-cols-4"
@@ -271,7 +274,7 @@ export function Hero({
 
         {/* RIGHT — Up next + championship ticker. Nudged up slightly at lg so
             the standings card clears the fold. */}
-        <div ref={tickerRef} className="flex flex-col gap-4 min-w-0 lg:-mt-6" style={{ opacity: 0 }}>
+        <div ref={tickerRef} className="flex flex-col gap-4 min-w-0 lg:-mt-6">
           {/* LAST RACE card — podium of the GP that finished within 3 days */}
           {recentRace && recentRace.podium.length > 0 && (
             <div
@@ -627,7 +630,8 @@ export function Hero({
                           fontWeight: 700,
                           fontSize: 10,
                           letterSpacing: "0.2em",
-                          padding: "5px 12px",
+                          // Tall enough to tap comfortably on mobile.
+                          padding: "9px 12px",
                           border: "none",
                         }}
                       >

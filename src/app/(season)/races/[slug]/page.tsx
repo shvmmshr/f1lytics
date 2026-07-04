@@ -305,7 +305,7 @@ export default async function RacePage({ params }: RacePageProps) {
               </Mono>
               <span style={{ width: 40, height: 1, background: F1.line }} />
               <Mono style={{ color: F1.fg3, fontSize: 11, letterSpacing: "0.18em" }}>
-                <Link href="/races" style={{ color: F1.fg3 }}>SEASON / RACES</Link> /{" "}
+                <Link href="/races" className="hover:text-white transition-colors" style={{ color: F1.fg3 }}>SEASON / RACES</Link> /{" "}
                 {circuit.country.toUpperCase()}
               </Mono>
             </div>
@@ -527,7 +527,7 @@ export default async function RacePage({ params }: RacePageProps) {
                 }
               />
               <div
-                className="overflow-x-auto"
+                className="overflow-x-auto scroll-fade-x"
                 style={{ background: F1.bg2, border: `1px solid ${F1.line}` }}
               >
                 <table
@@ -651,7 +651,7 @@ export default async function RacePage({ params }: RacePageProps) {
               }
             />
             {results.length > 0 ? (
-              <div className="overflow-x-auto"
+              <div className="overflow-x-auto scroll-fade-x"
                 style={{
                   background: F1.bg2,
                   border: `1px solid ${F1.line}`,

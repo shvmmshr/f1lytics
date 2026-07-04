@@ -211,7 +211,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
               </Mono>
               <span style={{ width: 40, height: 1, background: F1.line }} />
               <Mono style={{ color: F1.fg3, fontSize: 11, letterSpacing: "0.18em" }}>
-                <Link href="/teams" style={{ color: F1.fg3 }}>SEASON / TEAMS</Link> / {teamSlugUpper}
+                <Link href="/teams" className="hover:text-white transition-colors" style={{ color: F1.fg3 }}>SEASON / TEAMS</Link> / {teamSlugUpper}
               </Mono>
             </div>
 
@@ -367,7 +367,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
                   <Link
                     key={d.id}
                     href={`/drivers/${d.slug}`}
-                    className="group flex items-center gap-4"
+                    className="group flex items-center gap-4 transition-shadow hover:shadow-[inset_0_0_0_999px_rgba(255,255,255,0.04)]"
                     style={{
                       background: F1.bg,
                       borderTop: `2px solid ${team.color}`,
@@ -454,7 +454,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
           >
             <div className="mx-auto" style={{ maxWidth: 1400 }}>
               <SectionHeader label="CONSTRUCTOR TIMELINE" accent={team.color} />
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto scroll-fade-x">
               <div
                 className="grid"
                 style={{
@@ -570,7 +570,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
             <SectionHeader label="2026 RACE RESULTS" accent={team.color} />
             {raceData.length > 0 ? (
               <div
-                className="overflow-x-auto"
+                className="overflow-x-auto scroll-fade-x"
                 style={{
                   background: F1.bg2,
                   border: `1px solid ${F1.line}`,

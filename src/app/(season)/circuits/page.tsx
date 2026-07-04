@@ -83,7 +83,7 @@ export default function CircuitsPage() {
               key={circuit.id}
               href={`/circuits/${circuit.slug}`}
               data-circuit-card
-              className="group relative block"
+              className="group relative block transition-shadow hover:shadow-[inset_0_0_0_999px_rgba(255,255,255,0.03)]"
               style={{
                 background: F1.bg,
                 opacity: circuit.cancelled ? 0.5 : 1,

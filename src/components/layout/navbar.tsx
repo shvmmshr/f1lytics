@@ -114,6 +114,17 @@ export function Navbar() {
     else setMobileMenuOpen(true);
   }, [mobileMenuOpen, closeMobileMenu]);
 
+  // Escape closes the mobile menu — without this, keyboard users are stuck
+  // until they find the hamburger again.
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeMobileMenu();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [mobileMenuOpen, closeMobileMenu]);
+
   return (
     <>
       <header

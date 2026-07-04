@@ -139,8 +139,13 @@ function TimezoneSelect({
         border: `1px solid ${F1.line}`,
         fontSize: compact ? 10 : 11,
         // Extra right padding leaves room for the native dropdown arrow so it
-        // never overlaps the "(GMT+5:30)" text.
-        padding: compact ? "3px 24px 3px 8px" : "5px 28px 5px 10px",
+        // never overlaps the "(GMT+5:30)" text. Vertical padding sized for a
+        // finger-friendly tap target (~34-38px total).
+        padding: compact ? "9px 24px 9px 8px" : "10px 28px 10px 10px",
+        // min AND max width: before the timezone resolves the select shows a
+        // short "Detecting…" option; without a floor it grows on mount and
+        // nudges its flex siblings.
+        minWidth: compact ? 150 : 180,
         maxWidth: compact ? 190 : 240,
         cursor: "pointer",
       }}

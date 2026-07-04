@@ -123,7 +123,7 @@ export default async function CircuitPage({ params }: CircuitPageProps) {
               </Mono>
               <span style={{ width: 40, height: 1, background: F1.line }} />
               <Mono style={{ color: F1.fg3, fontSize: 11, letterSpacing: "0.18em" }}>
-                <Link href="/circuits" style={{ color: F1.fg3 }}>
+                <Link href="/circuits" className="hover:text-white transition-colors" style={{ color: F1.fg3 }}>
                   SEASON / CIRCUITS
                 </Link>{" "}
                 / {circuit.country.toUpperCase()}
@@ -294,7 +294,7 @@ export default async function CircuitPage({ params }: CircuitPageProps) {
                   border: `1px solid ${F1.line}`,
                 }}
               >
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto scroll-fade-x">
                 <table className="w-full" style={{ borderCollapse: "collapse", minWidth: 340 }}>
                   <thead>
                     <tr style={{ background: F1.bg, borderBottom: `1px solid ${F1.line}` }}>
@@ -404,7 +404,7 @@ export default async function CircuitPage({ params }: CircuitPageProps) {
             {prev ? (
               <Link
                 href={`/circuits/${prev.slug}`}
-                className="group flex items-center gap-3"
+                className="group flex items-center gap-3 transition-shadow hover:shadow-[inset_0_0_0_999px_rgba(255,255,255,0.04)]"
                 style={{ background: F1.bg, padding: "16px 22px" }}
               >
                 <span style={{ color: F1.fg3, fontSize: 18 }}>←</span>
@@ -435,7 +435,7 @@ export default async function CircuitPage({ params }: CircuitPageProps) {
             {next ? (
               <Link
                 href={`/circuits/${next.slug}`}
-                className="group flex items-center justify-end gap-3 text-right"
+                className="group flex items-center justify-end gap-3 text-right transition-shadow hover:shadow-[inset_0_0_0_999px_rgba(255,255,255,0.04)]"
                 style={{ background: F1.bg, padding: "16px 22px" }}
               >
                 <div className="min-w-0">

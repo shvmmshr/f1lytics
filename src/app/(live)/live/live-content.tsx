@@ -377,7 +377,9 @@ function TimingTower({
             key={pos.driver_number}
             type="button"
             onClick={() => onSelect(pos.driver_number)}
-            className={`grid items-center w-full text-left gap-1.5 sm:gap-2 px-2.5 sm:px-4 ${towerCols}`}
+            // Hover via inset shadow — the row background is inline (zebra /
+            // focus tint), which would override a background-based hover class.
+            className={`grid items-center w-full text-left gap-1.5 sm:gap-2 px-2.5 sm:px-4 transition-shadow hover:shadow-[inset_0_0_0_999px_rgba(255,255,255,0.04)] ${towerCols}`}
             style={{
               paddingTop: 10,
               paddingBottom: 10,
@@ -815,9 +817,10 @@ function RaceControlFeed({
                 href={r.recording_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-3 group"
+                className="flex items-center gap-3 transition-shadow hover:shadow-[inset_0_0_0_999px_rgba(255,255,255,0.05)]"
                 style={{
-                  padding: "8px 12px",
+                  // Tall enough to tap during a live session on a phone.
+                  padding: "12px",
                   background: F1.bg2,
                   borderLeft: `2px solid ${teamColor}`,
                   textDecoration: "none",
@@ -1328,6 +1331,12 @@ export function LiveContent({
               style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.24em" }}
             >
               CLICK A DRIVER ROW TO FOCUS TELEMETRY
+            </Mono>
+            <Mono
+              className="md:hidden shrink-0"
+              style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.2em" }}
+            >
+              TAP A DRIVER TO FOCUS
             </Mono>
           </div>
         </>

@@ -205,12 +205,34 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    /* Kill the macOS/iOS rubber-band bounce: pulling past the top dragged
+       the whole document (sticky navbar included). Root background matches
+       the theme so any residual overscroll area never flashes a mismatch. */
+    overscroll-behavior-y: none;
+    background: #08080A;
+  }
   body {
     @apply bg-bg-primary text-text-primary font-sans;
   }
   h1, h2, h3, h4, h5, h6 {
     @apply font-sans tracking-tight;
   }
+  /* Keyboard-only focus indicator. The default outline-ring/50 (#3F3F46 @50%)
+     is invisible on this near-black theme; give tab users the same red the
+     rest of the UI uses for signal. Mouse clicks (:focus) stay untouched. */
+  :focus-visible {
+    outline: 2px solid #ef4444;
+    outline-offset: 2px;
+  }
+}
+
+/* Right-edge fade on horizontally scrollable tables/timelines — mobile
+   browsers hide scrollbars, so without this there's no hint that more
+   columns exist off-screen. */
+.scroll-fade-x {
+  mask-image: linear-gradient(to right, black calc(100% - 28px), transparent);
+  -webkit-mask-image: linear-gradient(to right, black calc(100% - 28px), transparent);
 }
 
 /* ============================================================

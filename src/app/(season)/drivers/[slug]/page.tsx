@@ -413,7 +413,7 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
                 </Mono>
               </div>
             ) : (
-              <div className="mt-6 overflow-x-auto">
+              <div className="mt-6 overflow-x-auto scroll-fade-x">
                 <div style={{ minWidth: 480 }}>
                 {/* Header row */}
                 <div
@@ -538,7 +538,7 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
                     </Mono>
                   }
                 />
-                <div className="overflow-x-auto mt-6">
+                <div className="overflow-x-auto scroll-fade-x mt-6">
                 <div
                   className="grid"
                   style={{
@@ -604,7 +604,7 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
                       <Link
                         key={d.id}
                         href={`/drivers/${d.slug}`}
-                        className="block group"
+                        className="block group transition-shadow hover:shadow-[inset_0_0_0_999px_rgba(255,255,255,0.03)]"
                       >
                         <div className="flex items-center gap-3">
                           <div
@@ -679,7 +679,7 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
               <SectionHeader label="CONSTRUCTOR" />
               <Link
                 href={`/teams/${team.slug}`}
-                className="block mt-5 group"
+                className="block mt-5 group transition-shadow hover:shadow-[inset_0_0_0_999px_rgba(255,255,255,0.03)]"
                 style={{
                   background: F1.bg2,
                   border: `1px solid ${F1.line}`,
