@@ -152,30 +152,35 @@ export function LapTimeChart({
   const maxLapTime = Math.max(...allLapTimes);
   const safetyCarWindows = buildSafetyCarWindows(raceControl);
 
+  // m:ss for axis ticks (74 → "1:14"); tooltip keeps millisecond precision.
+  const formatTick = (s: number) =>
+    `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, "0")}`;
+  const formatTooltip = (s: number) => {
+    const mins = Math.floor(s / 60);
+    return `${mins}:${(s - mins * 60).toFixed(3).padStart(6, "0")}`;
+  };
+
   return (
     <div style={{ background: "#141418", border: "1px solid #27272A", padding: 16 }}>
       <div style={{ height }}>
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={chartData} margin={{ top: 20, right: 20, left: 8, bottom: 8 }}>
+          {/* No axis titles — they overlap tick values at phone widths, and
+              the section heading + m:ss ticks make the units self-evident. */}
+          <LineChart data={chartData} margin={{ top: 12, right: 12, left: 0, bottom: 4 }}>
             <CartesianGrid stroke="rgba(161,161,170,0.18)" strokeDasharray="3 3" />
             <XAxis
               dataKey="lap"
-              tick={{ fill: "#A1A1AA", fontSize: 12 }}
+              tick={{ fill: "#A1A1AA", fontSize: 11 }}
               tickLine={false}
               axisLine={{ stroke: "rgba(161,161,170,0.35)" }}
-              label={{ value: "Lap", position: "insideBottomRight", fill: "#A1A1AA" }}
             />
             <YAxis
-              domain={[minLap * 0.995, maxLapTime * 1.005]}
-              tick={{ fill: "#A1A1AA", fontSize: 12 }}
+              domain={[Math.floor(minLap - 1), Math.ceil(maxLapTime + 1)]}
+              tick={{ fill: "#A1A1AA", fontSize: 11 }}
+              tickFormatter={formatTick}
+              width={44}
               tickLine={false}
               axisLine={{ stroke: "rgba(161,161,170,0.35)" }}
-              label={{
-                value: "Lap Time (s)",
-                angle: -90,
-                position: "insideLeft",
-                fill: "#A1A1AA",
-              }}
             />
 
             {safetyCarWindows.map((window, index) => (
@@ -196,8 +201,12 @@ export function LapTimeChart({
                 borderRadius: 8,
                 color: "#F4F4F5",
               }}
+              formatter={(value) =>
+                typeof value === "number" ? formatTooltip(value) : (value ?? "—")
+              }
+              labelFormatter={(lap) => `Lap ${lap}`}
             />
-            <Legend wrapperStyle={{ color: "#A1A1AA", fontSize: 12 }} />
+            <Legend wrapperStyle={{ color: "#A1A1AA", fontSize: 11 }} />
 
             {series.map((item) => (
               <Line

@@ -119,26 +119,23 @@ export function TelemetryTrace({
     <div style={{ background: "#141418", border: "1px solid #27272A", padding: 16 }}>
       <div style={{ height }}>
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={rows} margin={{ top: 20, right: 20, left: 8, bottom: 8 }}>
+          {/* No axis titles — they overlap tick values at phone widths; the
+              tooltip carries the km/h unit. */}
+          <AreaChart data={rows} margin={{ top: 12, right: 12, left: 0, bottom: 4 }}>
             <CartesianGrid stroke="rgba(161,161,170,0.18)" strokeDasharray="3 3" />
             <XAxis
               dataKey="point"
-              tick={{ fill: "#A1A1AA", fontSize: 12 }}
+              tick={{ fill: "#A1A1AA", fontSize: 11 }}
               tickLine={false}
               axisLine={{ stroke: "rgba(161,161,170,0.35)" }}
-              label={{ value: "Distance / Time Samples", position: "insideBottomRight", fill: "#A1A1AA" }}
             />
             <YAxis
-              domain={[0, maxSpeed * 1.05]}
-              tick={{ fill: "#A1A1AA", fontSize: 12 }}
+              domain={[0, Math.ceil((maxSpeed * 1.05) / 10) * 10]}
+              tick={{ fill: "#A1A1AA", fontSize: 11 }}
+              tickFormatter={(v) => `${v}`}
+              width={40}
               tickLine={false}
               axisLine={{ stroke: "rgba(161,161,170,0.35)" }}
-              label={{
-                value: "Speed (km/h)",
-                angle: -90,
-                position: "insideLeft",
-                fill: "#A1A1AA",
-              }}
             />
 
             {segments.map((segment, index) => (
@@ -159,8 +156,11 @@ export function TelemetryTrace({
                 borderRadius: 8,
                 color: "#F4F4F5",
               }}
+              formatter={(value) =>
+                typeof value === "number" ? `${value} km/h` : (value ?? "—")
+              }
             />
-            <Legend wrapperStyle={{ color: "#A1A1AA", fontSize: 12 }} />
+            <Legend wrapperStyle={{ color: "#A1A1AA", fontSize: 11 }} />
 
             <Area
               type="monotone"

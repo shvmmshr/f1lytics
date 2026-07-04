@@ -132,23 +132,25 @@ export function PositionChart({ positions, drivers = [], height = "clamp(300px, 
     <div style={{ background: "#141418", border: "1px solid #27272A", padding: 16 }}>
       <div style={{ height }}>
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={chartData} margin={{ top: 20, right: 20, left: 8, bottom: 8 }}>
+          {/* No axis titles — they overlap tick values at phone widths; "P" on
+              the ticks and the section heading carry the meaning. */}
+          <LineChart data={chartData} margin={{ top: 12, right: 12, left: 0, bottom: 4 }}>
             <CartesianGrid stroke="rgba(161,161,170,0.18)" strokeDasharray="3 3" />
             <XAxis
               dataKey="lap"
-              tick={{ fill: "#A1A1AA", fontSize: 12 }}
+              tick={{ fill: "#A1A1AA", fontSize: 11 }}
               tickLine={false}
               axisLine={{ stroke: "rgba(161,161,170,0.35)" }}
-              label={{ value: "Lap", position: "insideBottomRight", fill: "#A1A1AA" }}
             />
             <YAxis
               type="number"
               domain={[maxPosition, 1]}
               allowDecimals={false}
-              tick={{ fill: "#A1A1AA", fontSize: 12 }}
+              tick={{ fill: "#A1A1AA", fontSize: 11 }}
+              tickFormatter={(p) => `P${p}`}
+              width={36}
               tickLine={false}
               axisLine={{ stroke: "rgba(161,161,170,0.35)" }}
-              label={{ value: "Position", angle: -90, position: "insideLeft", fill: "#A1A1AA" }}
             />
             <Tooltip
               contentStyle={{
@@ -157,8 +159,10 @@ export function PositionChart({ positions, drivers = [], height = "clamp(300px, 
                 borderRadius: 8,
                 color: "#F4F4F5",
               }}
+              formatter={(value) => (typeof value === "number" ? `P${value}` : (value ?? "—"))}
+              labelFormatter={(lap) => `Lap ${lap}`}
             />
-            <Legend wrapperStyle={{ color: "#A1A1AA", fontSize: 12 }} />
+            <Legend wrapperStyle={{ color: "#A1A1AA", fontSize: 11 }} />
 
             {series.map((item) => (
               <Line
