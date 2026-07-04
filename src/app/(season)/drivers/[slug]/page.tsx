@@ -380,7 +380,7 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
                 {s.label}
               </Mono>
               <StatValue
-                size={48}
+                size="clamp(32px, 7vw, 48px)"
                 color={s.accent ? team.color : s.highlight ? F1.amber : F1.fg}
                 style={{ marginTop: 12, display: "block" }}
               >

@@ -160,7 +160,7 @@ export function Hero({
             className="font-display uppercase m-0"
             style={{
               fontWeight: 700,
-              fontSize: "clamp(72px, 11.6vw, 168px)",
+              fontSize: "clamp(52px, 11.6vw, 168px)",
               lineHeight: 0.86,
               letterSpacing: "-0.045em",
               color: F1.fg,
@@ -246,7 +246,7 @@ export function Hero({
                 >
                   <DataLabel>{l}</DataLabel>
                   <div style={{ marginTop: 8 }}>
-                    <StatValue size={36}>{v}</StatValue>
+                    <StatValue size="clamp(26px, 5vw, 36px)">{v}</StatValue>
                   </div>
                 </div>
               ))}
@@ -319,7 +319,7 @@ export function Hero({
               <div
                 className="font-display"
                 style={{
-                  fontSize: 38,
+                  fontSize: "clamp(26px, 6vw, 38px)",
                   fontWeight: 600,
                   letterSpacing: "-0.02em",
                   lineHeight: 1,
@@ -363,7 +363,7 @@ export function Hero({
                       style={{
                         background: F1.bg,
                         padding: "6px 0",
-                        fontSize: 30,
+                        fontSize: "clamp(22px, 5.5vw, 30px)",
                         fontWeight: 700,
                         color: F1.fg,
                         letterSpacing: "-0.02em",

@@ -24,7 +24,7 @@ interface PositionChartDriver {
 interface PositionChartProps {
   positions: OpenF1Position[];
   drivers?: PositionChartDriver[];
-  height?: number;
+  height?: number | string;
 }
 
 interface ChartSeries {
@@ -99,7 +99,7 @@ function buildChartData(series: ChartSeries[]): ChartRow[] {
   });
 }
 
-export function PositionChart({ positions, drivers = [], height = 420 }: PositionChartProps) {
+export function PositionChart({ positions, drivers = [], height = "clamp(300px, 55vw, 420px)" }: PositionChartProps) {
   if (positions.length === 0) {
     return (
       <div

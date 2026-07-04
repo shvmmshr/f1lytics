@@ -26,7 +26,7 @@ interface LapTimeChartProps {
   laps: OpenF1Lap[];
   drivers?: LapTimeDriver[];
   raceControl?: OpenF1RaceControl[];
-  height?: number;
+  height?: number | string;
 }
 
 type LapChartRow = {
@@ -85,7 +85,7 @@ export function LapTimeChart({
   laps,
   drivers = [],
   raceControl = [],
-  height = 420,
+  height = "clamp(300px, 55vw, 420px)",
 }: LapTimeChartProps) {
   if (laps.length === 0) {
     return (

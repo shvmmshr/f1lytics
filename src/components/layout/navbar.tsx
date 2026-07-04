@@ -235,21 +235,28 @@ export function Navbar() {
           <div className="hidden md:flex items-center">
             {nextRace && (
               <span
-                className="font-mono hidden lg:inline-flex items-center gap-2"
+                className="hidden xl:flex flex-col justify-center whitespace-nowrap"
                 style={{
                   padding: "0 16px",
                   height: "100%",
                   borderLeft: `1px solid ${F1.line}`,
-                  fontSize: 10,
-                  letterSpacing: "0.14em",
-                  color: F1.fg3,
                 }}
               >
-                NEXT ·{" "}
-                <span style={{ color: F1.fg }}>
+                <Mono
+                  style={{ fontSize: 8, letterSpacing: "0.2em", color: F1.fg3 }}
+                >
+                  NEXT · RD {String(nextRace.round).padStart(2, "0")}/{TOTAL_ROUNDS}
+                </Mono>
+                <Mono
+                  style={{
+                    fontSize: 11,
+                    letterSpacing: "0.14em",
+                    color: F1.fg,
+                    marginTop: 3,
+                  }}
+                >
                   {nextRace.country.toUpperCase()}
-                </span>{" "}
-                · RD {String(nextRace.round).padStart(2, "0")}/{TOTAL_ROUNDS}
+                </Mono>
               </span>
             )}
             <a

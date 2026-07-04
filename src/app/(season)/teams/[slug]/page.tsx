@@ -288,7 +288,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
                 <div
                   className="font-display"
                   style={{
-                    fontSize: 64,
+                    fontSize: "clamp(40px, 9vw, 64px)",
                     fontWeight: 700,
                     color: team.color,
                     lineHeight: 1,
@@ -480,7 +480,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
                     <div
                       className="font-display"
                       style={{
-                        fontSize: 36,
+                        fontSize: "clamp(26px, 4.5vw, 36px)",
                         fontWeight: 700,
                         color: posColor(h.position),
                         lineHeight: 1,
@@ -529,7 +529,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
                   <div
                     className="font-display"
                     style={{
-                      fontSize: 36,
+                      fontSize: "clamp(26px, 4.5vw, 36px)",
                       fontWeight: 700,
                       color: team.color,
                       lineHeight: 1,

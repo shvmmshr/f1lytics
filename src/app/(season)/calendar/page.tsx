@@ -254,7 +254,7 @@ export default async function CalendarPage() {
                 </div>
               </div>
               <div
-                className="flex justify-between"
+                className="flex flex-wrap justify-between gap-x-4 gap-y-2"
                 style={{
                   position: "absolute",
                   bottom: 20,

@@ -361,8 +361,28 @@ function SceneContent({
         minDistance={1.8}
         maxDistance={4}
       />
+      <AllowPageScroll />
     </>
   );
+}
+
+/**
+ * OrbitControls sets `touch-action: none` on the canvas, which swallows
+ * single-finger vertical swipes — on a phone the page can't be scrolled past
+ * the 450px globe. Restore `pan-y` so vertical swipes scroll the page while
+ * horizontal drags still rotate the globe. Runs on a rAF because the controls
+ * apply their style in their own mount effect.
+ */
+function AllowPageScroll() {
+  const gl = useThree((state) => state.gl);
+  useEffect(() => {
+    const el = gl.domElement;
+    const id = requestAnimationFrame(() => {
+      el.style.touchAction = "pan-y";
+    });
+    return () => cancelAnimationFrame(id);
+  }, [gl]);
+  return null;
 }
 
 function LoadingFallback() {
@@ -385,7 +405,7 @@ export function CircuitGlobe({ circuits }: CircuitGlobeProps) {
         background: "#141418",
         borderTop: "1px solid #27272A",
         borderBottom: "1px solid #27272A",
-        padding: "32px",
+        padding: "clamp(16px, 4vw, 32px)",
       }}
     >
       <div className="mx-auto" style={{ maxWidth: 1400 }}>

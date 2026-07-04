@@ -107,9 +107,9 @@ export async function GET(req: NextRequest) {
     start(controller) {
       let closed = false;
       let subscribed = false;
-      let heartbeat: ReturnType<typeof setInterval> | undefined;
-      let wsPing: ReturnType<typeof setInterval> | undefined;
-      let maxTimer: ReturnType<typeof setTimeout> | undefined;
+      // The timers are declared const further down (assigned once, at setup);
+      // cleanup() closes over them and only ever runs from async callbacks,
+      // well after start() has finished initializing them.
 
       const ws = new WebSocket(wsUrl, {
         headers: {
@@ -214,13 +214,13 @@ export async function GET(req: NextRequest) {
       });
 
       // Keep the SignalR Core socket alive (ping type 6).
-      wsPing = setInterval(() => {
+      const wsPing = setInterval(() => {
         if (closed) return;
         wsSend({ type: 6 });
       }, WS_PING_MS);
 
       // SSE keep-alive comment so proxies don't drop the response.
-      heartbeat = setInterval(() => {
+      const heartbeat = setInterval(() => {
         if (closed) return;
         try {
           controller.enqueue(encoder.encode(`: ping\n\n`));
@@ -230,7 +230,7 @@ export async function GET(req: NextRequest) {
       }, HEARTBEAT_MS);
 
       // Close before the serverless cap; client reconnects and gets a fresh snapshot.
-      maxTimer = setTimeout(() => {
+      const maxTimer = setTimeout(() => {
         send("reconnect", {});
         cleanup();
       }, RECONNECT_MARGIN_MS);

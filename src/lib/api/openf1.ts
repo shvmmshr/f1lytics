@@ -121,30 +121,34 @@ export async function getLatestCompletedRaceKey(
 // Lap data
 // =============================================================================
 
-/** Fetch lap timing data for a session (optionally for a single driver). */
+/** Fetch lap timing data for a session (optionally for a single driver).
+ *  `revalidate` can be raised for settled sessions whose data is immutable. */
 export async function getLaps(
   params: {
     session_key: number;
     driver_number?: number;
   },
-  noStore = false
+  noStore = false,
+  revalidate = 3600
 ): Promise<OpenF1Lap[]> {
-  return fetchOpenF1<OpenF1Lap>("/laps", params, 3600, noStore);
+  return fetchOpenF1<OpenF1Lap>("/laps", params, revalidate, noStore);
 }
 
 // =============================================================================
 // Stint data (tire compounds, stint lengths)
 // =============================================================================
 
-/** Fetch tyre stint data for a session (optionally for a single driver). */
+/** Fetch tyre stint data for a session (optionally for a single driver).
+ *  `revalidate` can be raised for settled sessions whose data is immutable. */
 export async function getStints(
   params: {
     session_key: number;
     driver_number?: number;
   },
-  noStore = false
+  noStore = false,
+  revalidate = 3600
 ): Promise<OpenF1Stint[]> {
-  return fetchOpenF1<OpenF1Stint>("/stints", params, 3600, noStore);
+  return fetchOpenF1<OpenF1Stint>("/stints", params, revalidate, noStore);
 }
 
 // =============================================================================
@@ -176,14 +180,16 @@ export async function getLocations(params: {
 // Race control messages (flags, incidents)
 // =============================================================================
 
-/** Fetch race control messages (flags, safety car, penalties, etc.). */
+/** Fetch race control messages (flags, safety car, penalties, etc.).
+ *  `revalidate` can be raised for settled sessions whose data is immutable. */
 export async function getRaceControl(
   params: {
     session_key: number;
   },
-  noStore = false
+  noStore = false,
+  revalidate = 3600
 ): Promise<OpenF1RaceControl[]> {
-  return fetchOpenF1<OpenF1RaceControl>("/race_control", params, 3600, noStore);
+  return fetchOpenF1<OpenF1RaceControl>("/race_control", params, revalidate, noStore);
 }
 
 // =============================================================================
@@ -235,12 +241,13 @@ export async function getPositions(
     session_key: number;
     driver_number?: number;
   },
-  noStore = false
+  noStore = false,
+  revalidate = 3600
 ): Promise<OpenF1Position[]> {
   // Cached by default (historical positions never change); the live route
   // passes noStore. An uncached fetch here would also force `revalidate: 0`,
   // which breaks static prerendering of the race pages that call this.
-  return fetchOpenF1<OpenF1Position>("/position", params, 3600, noStore);
+  return fetchOpenF1<OpenF1Position>("/position", params, revalidate, noStore);
 }
 
 // =============================================================================

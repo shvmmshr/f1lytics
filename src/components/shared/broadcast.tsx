@@ -170,7 +170,8 @@ export function StatValue({
   style,
 }: {
   children: React.ReactNode;
-  size?: number;
+  /** px number or any CSS font-size (e.g. a clamp() expression). */
+  size?: number | string;
   color?: string;
   weight?: number;
   className?: string;

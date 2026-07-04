@@ -156,7 +156,7 @@ export default async function CircuitPage({ params }: CircuitPageProps) {
               {/* Track image */}
               <div
                 className="relative flex items-center justify-center"
-                style={{ background: F1.bg2, padding: 28, minHeight: 280 }}
+                style={{ background: F1.bg2, padding: "clamp(16px, 4vw, 28px)", minHeight: 280 }}
               >
                 <Image
                   src={circuit.trackImage}

@@ -23,7 +23,7 @@ interface TelemetryTraceProps {
   rightData: OpenF1CarData[];
   leftDriver: TraceDriver;
   rightDriver: TraceDriver;
-  height?: number;
+  height?: number | string;
 }
 
 interface TraceRow {
@@ -96,7 +96,7 @@ export function TelemetryTrace({
   rightData,
   leftDriver,
   rightDriver,
-  height = 420,
+  height = "clamp(300px, 55vw, 420px)",
 }: TelemetryTraceProps) {
   if (leftData.length === 0 || rightData.length === 0) {
     return (

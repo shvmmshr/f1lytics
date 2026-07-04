@@ -181,11 +181,17 @@ export default async function RacePage({ params }: RacePageProps) {
           console.error(`[f1lytics] race ${endpoint} fetch failed:`, err);
           return [];
         };
+        // Telemetry for a race that ended 2+ days ago is immutable — cache it
+        // for a day instead of an hour to keep OpenF1 rate-limit headroom for
+        // the live page and freshly-finished races.
+        const settled = Date.now() - raceDate.getTime() > 2 * 24 * 60 * 60 * 1000;
+        const telemetryRevalidate = settled ? 86400 : 3600;
+        const key = { session_key: matchedSession.session_key };
         [laps, stints, positions, raceControl] = await Promise.all([
-          getLaps({ session_key: matchedSession.session_key }).catch(logAndEmpty("laps")),
-          getStints({ session_key: matchedSession.session_key }).catch(logAndEmpty("stints")),
-          getPositions({ session_key: matchedSession.session_key }).catch(logAndEmpty("positions")),
-          getRaceControl({ session_key: matchedSession.session_key }).catch(logAndEmpty("race control")),
+          getLaps(key, false, telemetryRevalidate).catch(logAndEmpty("laps")),
+          getStints(key, false, telemetryRevalidate).catch(logAndEmpty("stints")),
+          getPositions(key, false, telemetryRevalidate).catch(logAndEmpty("positions")),
+          getRaceControl(key, false, telemetryRevalidate).catch(logAndEmpty("race control")),
         ]);
       }
     } catch (err) {

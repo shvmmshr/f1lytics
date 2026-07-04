@@ -929,7 +929,7 @@ function DriverComparison({ stats }: { stats: Record<string, DriverStat> }) {
               ].map((row, i, arr) => (
                 <div
                   key={row.label}
-                  className="flex items-center justify-between"
+                  className="flex items-center justify-between gap-3"
                   style={{
                     padding: "10px 18px",
                     borderBottom:
@@ -937,6 +937,7 @@ function DriverComparison({ stats }: { stats: Record<string, DriverStat> }) {
                   }}
                 >
                   <Mono
+                    className="shrink-0"
                     style={{
                       fontSize: 10,
                       color: F1.fg3,
@@ -946,9 +947,11 @@ function DriverComparison({ stats }: { stats: Record<string, DriverStat> }) {
                     {row.label}
                   </Mono>
                   <Mono
+                    className="truncate"
                     style={{
                       fontSize: 12,
                       color: F1.fg,
+                      textAlign: "right",
                       fontVariantNumeric: "tabular-nums",
                     }}
                   >
@@ -1183,7 +1186,7 @@ function TeamComparison({ stats }: { stats: Record<string, ConstructorStat> }) {
             ].map((row, i, arr) => (
               <div
                 key={row.label}
-                className="flex items-center justify-between"
+                className="flex items-center justify-between gap-3"
                 style={{
                   padding: "10px 18px",
                   borderBottom:
@@ -1191,6 +1194,7 @@ function TeamComparison({ stats }: { stats: Record<string, ConstructorStat> }) {
                 }}
               >
                 <Mono
+                  className="shrink-0"
                   style={{
                     fontSize: 10,
                     color: F1.fg3,
@@ -1200,6 +1204,7 @@ function TeamComparison({ stats }: { stats: Record<string, ConstructorStat> }) {
                   {row.label}
                 </Mono>
                 <Mono
+                  className="truncate"
                   style={{
                     fontSize: 12,
                     color: F1.fg,

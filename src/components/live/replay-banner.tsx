@@ -12,16 +12,17 @@ interface ReplayBannerProps {
 export function ReplayBanner({ sessionName, countryName }: ReplayBannerProps) {
   return (
     <div
-      className="flex items-center justify-between"
+      className="flex items-center justify-between gap-3"
       style={{
         background: F1.amber,
         color: F1.ink,
-        padding: "8px 24px",
+        padding: "8px clamp(12px, 2.5vw, 24px)",
         borderBottom: `1px solid ${F1.line}`,
       }}
     >
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 min-w-0">
         <svg
+          className="shrink-0"
           width="13"
           height="13"
           viewBox="0 0 24 24"
@@ -31,6 +32,7 @@ export function ReplayBanner({ sessionName, countryName }: ReplayBannerProps) {
           <polygon points="5 3 19 12 5 21 5 3" />
         </svg>
         <Mono
+          className="truncate"
           style={{
             fontSize: 10,
             letterSpacing: "0.22em",
@@ -44,6 +46,7 @@ export function ReplayBanner({ sessionName, countryName }: ReplayBannerProps) {
       </div>
       <Link
         href="/live"
+        className="shrink-0 whitespace-nowrap"
         style={{
           fontFamily: "var(--font-mono)",
           fontSize: 10,
