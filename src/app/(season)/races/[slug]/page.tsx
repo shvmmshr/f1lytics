@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { getRaceResults, getSprintResults } from "@/lib/api/jolpica";
 import { getStartingGrid, type GridRow } from "@/lib/api/weekend";
 import type { ResultItem, SprintRace } from "@/lib/api/types";
-import { getLaps, getPositions, getRaceControl, getSessions, getStints } from "@/lib/api/openf1";
+import { getLaps, getRaceControl, getSessions, getStints } from "@/lib/api/openf1";
 import { CIRCUIT_LIST, TEAMS, getApiRound, getCircuitBySlug } from "@/lib/constants";
 import { getWeekendSchedule } from "@/lib/constants/sessions";
 import { SessionSchedule } from "@/components/shared/session-schedule";
@@ -19,7 +19,6 @@ import {
 } from "@/components/shared/broadcast";
 import Link from "next/link";
 import { formatLapTime, positionChange } from "@/lib/utils";
-import { PositionChart } from "@/components/charts/position-chart";
 import { TireStrategyViz } from "@/components/charts/tire-strategy-viz";
 import { LapTimeChart } from "@/components/charts/lap-time-chart";
 
@@ -129,7 +128,6 @@ export default async function RacePage({ params }: RacePageProps) {
   let race = null as Awaited<ReturnType<typeof getRaceResults>>[number] | null;
   let laps: Awaited<ReturnType<typeof getLaps>> = [];
   let stints: Awaited<ReturnType<typeof getStints>> = [];
-  let positions: Awaited<ReturnType<typeof getPositions>> = [];
   let raceControl: Awaited<ReturnType<typeof getRaceControl>> = [];
   let matchedSession: OpenF1SessionCandidate | null = null;
 
@@ -223,10 +221,9 @@ export default async function RacePage({ params }: RacePageProps) {
         const settled = Date.now() - raceDate.getTime() > 2 * 24 * 60 * 60 * 1000;
         const telemetryRevalidate = settled ? 86400 : 3600;
         const key = { session_key: matchedSession.session_key };
-        [laps, stints, positions, raceControl] = await Promise.all([
+        [laps, stints, raceControl] = await Promise.all([
           getLaps(key, false, telemetryRevalidate).catch(logAndEmpty("laps")),
           getStints(key, false, telemetryRevalidate).catch(logAndEmpty("stints")),
-          getPositions(key, false, telemetryRevalidate).catch(logAndEmpty("positions")),
           getRaceControl(key, false, telemetryRevalidate).catch(logAndEmpty("race control")),
         ]);
       }
@@ -883,14 +880,6 @@ export default async function RacePage({ params }: RacePageProps) {
         <section className="relative" style={{ padding: "40px clamp(16px, 4vw, 32px) 60px" }}>
           <div className="mx-auto" style={{ maxWidth: 1400 }}>
             <div className="space-y-10">
-              <div>
-                <SectionHeader label="POSITION CHANGES" />
-                {positions.length === 0 ? (
-                  <ChartEmptyState label="RACE POSITIONS" />
-                ) : (
-                  <PositionChart positions={positions} drivers={chartDrivers} />
-                )}
-              </div>
               <div>
                 <SectionHeader label="TIRE STRATEGY" />
                 {stints.length === 0 ? (
