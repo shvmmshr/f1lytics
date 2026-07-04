@@ -23,6 +23,7 @@ import {
   StatValue,
 } from "@/components/shared/broadcast";
 import { SessionSchedule } from "@/components/shared/session-schedule";
+import type { GridRow, RecentRace } from "@/lib/api/weekend";
 
 type Standing = {
   position: number;
@@ -31,6 +32,16 @@ type Standing = {
   points: number;
 };
 
+/** Server-computed race-weekend context for the UP NEXT card. */
+export interface WeekendInfo {
+  raceSlug: string;
+  isSprint: boolean;
+  /** Top of the starting grid (OpenF1, minutes after qualifying). P1 = pole. */
+  grid?: GridRow[];
+  /** Sprint winner, once the sprint has run (sprint weekends only). */
+  sprintWinner?: { name: string };
+}
+
 function pad(n: number) {
   return String(n).padStart(2, "0");
 }
@@ -38,9 +49,13 @@ function pad(n: number) {
 export function Hero({
   driverStandings = [] as Standing[],
   constructorStandings = [] as Standing[],
+  weekend = null,
+  recentRace = null,
 }: {
   driverStandings?: Standing[];
   constructorStandings?: Standing[];
+  weekend?: WeekendInfo | null;
+  recentRace?: RecentRace | null;
 }) {
   const [view, setView] = useState<"drivers" | "constructors">("drivers");
   const heroRef = useRef<HTMLElement>(null);
@@ -254,8 +269,93 @@ export function Hero({
           </div>
         </div>
 
-        {/* RIGHT — Up next + championship ticker */}
-        <div ref={tickerRef} className="flex flex-col gap-4 min-w-0" style={{ opacity: 0 }}>
+        {/* RIGHT — Up next + championship ticker. Nudged up slightly at lg so
+            the standings card clears the fold. */}
+        <div ref={tickerRef} className="flex flex-col gap-4 min-w-0 lg:-mt-6" style={{ opacity: 0 }}>
+          {/* LAST RACE card — podium of the GP that finished within 3 days */}
+          {recentRace && recentRace.podium.length > 0 && (
+            <div
+              className="relative"
+              style={{
+                background: F1.bg2,
+                border: `1px solid ${F1.line}`,
+                borderTop: `2px solid ${F1.amber}`,
+                padding: 20,
+              }}
+            >
+              <div className="flex items-center justify-between gap-3 mb-3">
+                <Mono style={{ color: F1.amber, fontSize: 11, letterSpacing: "0.2em", fontWeight: 700 }}>
+                  LAST RACE · ROUND {String(recentRace.round).padStart(2, "0")}
+                </Mono>
+                <Link
+                  href={`/races/${recentRace.slug}`}
+                  className="font-mono shrink-0 transition-colors hover:text-white"
+                  style={{
+                    fontSize: 10,
+                    color: F1.fg3,
+                    letterSpacing: "0.16em",
+                    fontWeight: 700,
+                    textDecoration: "none",
+                  }}
+                >
+                  FULL RESULTS →
+                </Link>
+              </div>
+              <div
+                className="font-display"
+                style={{
+                  fontSize: "clamp(20px, 4.5vw, 26px)",
+                  fontWeight: 600,
+                  letterSpacing: "-0.02em",
+                  lineHeight: 1,
+                  color: F1.fg,
+                  marginBottom: 14,
+                }}
+              >
+                {recentRace.name.toUpperCase()}
+              </div>
+              <div className="flex flex-col gap-1.5">
+                {recentRace.podium.map((p) => (
+                  <div
+                    key={p.position}
+                    className="grid items-center"
+                    style={{
+                      gridTemplateColumns: "28px 4px 1fr auto",
+                      gap: 10,
+                      background: F1.bg,
+                      padding: "8px 10px",
+                    }}
+                  >
+                    <Mono
+                      style={{
+                        fontSize: 12,
+                        fontWeight: 700,
+                        color: p.position === 1 ? F1.amber : p.position === 2 ? "#C0C0C0" : "#CD7F32",
+                      }}
+                    >
+                      P{p.position}
+                    </Mono>
+                    <span style={{ width: 3, height: 22, background: p.teamColor }} />
+                    <span
+                      className="font-display truncate"
+                      style={{ fontSize: 14, fontWeight: 600, color: F1.fg }}
+                    >
+                      {p.driverName}
+                    </span>
+                    {p.time && (
+                      <Mono
+                        className="shrink-0"
+                        style={{ fontSize: 10, color: F1.fg3, letterSpacing: "0.08em" }}
+                      >
+                        {p.time}
+                      </Mono>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* UP NEXT card */}
           {nextRace && (
             <div
@@ -309,7 +409,8 @@ export function Hero({
                     />
                   )}
                   <Mono style={{ color: F1.red, fontSize: 11, letterSpacing: "0.2em" }}>
-                    UP NEXT · ROUND {String(nextRace.round).padStart(2, "0")}
+                    {weekend ? "RACE WEEKEND" : "UP NEXT"} · ROUND{" "}
+                    {String(nextRace.round).padStart(2, "0")}
                   </Mono>
                 </span>
                 <Mono style={{ color: F1.fg3, fontSize: 10, letterSpacing: "0.16em" }}>
@@ -340,14 +441,99 @@ export function Hero({
                 {nextRace.fullName.toUpperCase()}
               </div>
 
+              {/* Weekend context — sprint winner + starting grid preview as
+                  they get decided (grid is OpenF1-live, minutes after quali) */}
+              {weekend && (weekend.grid || weekend.sprintWinner) && (
+                <div
+                  className="flex flex-col gap-2"
+                  style={{
+                    marginTop: 14,
+                    paddingTop: 14,
+                    borderTop: `1px solid ${F1.line}`,
+                  }}
+                >
+                  {weekend.sprintWinner && (
+                    <div className="flex items-center justify-between gap-3">
+                      <Mono style={{ fontSize: 10, color: F1.fg3, letterSpacing: "0.2em" }}>
+                        SPRINT WINNER
+                      </Mono>
+                      <Mono
+                        className="truncate"
+                        style={{ fontSize: 11, color: F1.amber, fontWeight: 700, letterSpacing: "0.1em" }}
+                      >
+                        {weekend.sprintWinner.name.toUpperCase()}
+                      </Mono>
+                    </div>
+                  )}
+                  {weekend.grid && weekend.grid.length > 0 && (
+                    <>
+                      <div className="flex items-center justify-between gap-3">
+                        <Mono
+                          style={{ fontSize: 10, color: F1.fg3, letterSpacing: "0.2em" }}
+                        >
+                          STARTING GRID
+                        </Mono>
+                        <Link
+                          href={`/races/${weekend.raceSlug}#starting-grid`}
+                          className="font-mono shrink-0 transition-colors hover:text-white"
+                          style={{
+                            fontSize: 10,
+                            color: F1.fg3,
+                            letterSpacing: "0.16em",
+                            fontWeight: 700,
+                            textDecoration: "none",
+                          }}
+                        >
+                          FULL GRID →
+                        </Link>
+                      </div>
+                      <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+                        {weekend.grid.map((row) => (
+                          <div
+                            key={row.position}
+                            className="flex items-center gap-2 min-w-0"
+                            style={{
+                              background: F1.bg,
+                              borderLeft: `2px solid ${row.teamColor}`,
+                              padding: "5px 8px",
+                            }}
+                          >
+                            <Mono
+                              className="shrink-0"
+                              style={{
+                                fontSize: 10,
+                                color: row.position === 1 ? F1.amber : F1.fg3,
+                                fontWeight: 700,
+                                width: 20,
+                              }}
+                            >
+                              P{row.position}
+                            </Mono>
+                            <span
+                              className="font-display truncate"
+                              style={{ fontSize: 12, fontWeight: 600, color: F1.fg }}
+                            >
+                              {row.familyName.toUpperCase()}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+
               {/* Countdown digits — rendered with "--" placeholders (matching SSR)
-                  and filled by the shared ticker via refs, no re-render. */}
+                  and filled by the shared ticker via refs, no re-render. Hidden
+                  once the grid preview is in (card must fit one viewport; the
+                  header's "IN xD xH" still shows the countdown). */}
               <div
                 className="flex"
                 style={{
                   marginTop: 18,
                   gap: 10,
                   fontFamily: "var(--font-display)",
+                  display: weekend?.grid?.length ? "none" : undefined,
                 }}
               >
                 {(

@@ -11,6 +11,7 @@ import type {
   OpenF1Driver,
   OpenF1TeamRadio,
   OpenF1Weather,
+  OpenF1SessionResult,
 } from "./types";
 import { fetchWithRetry } from "./fetch-retry";
 
@@ -190,6 +191,26 @@ export async function getRaceControl(
   revalidate = 3600
 ): Promise<OpenF1RaceControl[]> {
   return fetchOpenF1<OpenF1RaceControl>("/race_control", params, revalidate, noStore);
+}
+
+// =============================================================================
+// Session results (final classification — available minutes after a session)
+// =============================================================================
+
+/** Fetch the final classification of a session. Published by OpenF1 within
+ *  minutes of the chequered flag — hours before Jolpica/Ergast mirrors it.
+ *  Returns [] when the session hasn't produced results yet (OpenF1 responds
+ *  with a non-array "no results" object in that case). */
+export async function getSessionResult(
+  params: { session_key: number },
+  revalidate = 300
+): Promise<OpenF1SessionResult[]> {
+  const rows = await fetchOpenF1<OpenF1SessionResult>(
+    "/session_result",
+    params,
+    revalidate
+  );
+  return Array.isArray(rows) ? rows : [];
 }
 
 // =============================================================================

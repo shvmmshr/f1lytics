@@ -166,6 +166,28 @@ export interface QualifyingTable {
   };
 }
 
+/** A sprint race event with SprintResults (from the /sprint endpoint).
+ *  Rows share the race ResultItem shape (position, points, grid, Time…). */
+export interface SprintRace {
+  season: string;
+  round: string;
+  url: string;
+  raceName: string;
+  Circuit: Circuit;
+  date: string;
+  time?: string;
+  SprintResults?: ResultItem[];
+}
+
+/** Sprint results table from Jolpica response */
+export interface SprintTable {
+  RaceTable: {
+    season: string;
+    round?: string;
+    Races: SprintRace[];
+  };
+}
+
 /** Sprint event info (optional on schedule) */
 export interface SprintInfo {
   date: string;
@@ -320,6 +342,22 @@ export interface OpenF1Driver {
   team_colour: string;
   headshot_url: string | null;
   country_code: string;
+}
+
+/** Final classification row from OpenF1's session_result endpoint.
+ *  `duration` is a single lap time for races, or [Q1, Q2, Q3] for qualifying
+ *  (entries null/absent when the driver was eliminated earlier). */
+export interface OpenF1SessionResult {
+  session_key: number;
+  meeting_key: number;
+  position: number | null;
+  driver_number: number;
+  number_of_laps: number | null;
+  dnf: boolean;
+  dns: boolean;
+  dsq: boolean;
+  duration: number | (number | null)[] | null;
+  gap_to_leader: number | string | (number | null)[] | null;
 }
 
 /** Weather reading from OpenF1 (one row per ~minute during a session) */

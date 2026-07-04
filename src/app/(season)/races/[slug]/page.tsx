@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getRaceResults } from "@/lib/api/jolpica";
+import { getRaceResults, getSprintResults } from "@/lib/api/jolpica";
+import { getStartingGrid, type GridRow } from "@/lib/api/weekend";
+import type { ResultItem, SprintRace } from "@/lib/api/types";
 import { getLaps, getPositions, getRaceControl, getSessions, getStints } from "@/lib/api/openf1";
 import { CIRCUIT_LIST, TEAMS, getApiRound, getCircuitBySlug } from "@/lib/constants";
 import { getWeekendSchedule } from "@/lib/constants/sessions";
@@ -136,6 +138,36 @@ export default async function RacePage({ params }: RacePageProps) {
   // rate limits (16 of 24 races are in the future at season midpoint).
   const raceHasHappened = circuit.raceDate <= new Date().toISOString().split("T")[0];
 
+  // Qualifying (→ starting grid) and sprint results exist BEFORE the race —
+  // fetch them as soon as the weekend is underway (race day minus 3 days).
+  const weekendHasStarted =
+    Date.now() >= raceDate.getTime() - 3 * 24 * 60 * 60 * 1000;
+
+  let gridRows: GridRow[] = [];
+  let sprintRows: ResultItem[] = [];
+  if (!circuit.cancelled && weekendHasStarted) {
+    const [grid, sprint] = await Promise.all([
+      // OpenF1-first (grid appears minutes after quali), Jolpica fallback.
+      getStartingGrid(circuit),
+      circuit.isSprint
+        ? getSprintResults("2026", String(getApiRound(circuit))).catch(
+            (err): SprintRace | null => {
+              // warn, not error: transient 429s are expected, self-heal via ISR.
+              console.warn("[f1lytics] sprint results fetch failed:", err);
+              return null;
+            }
+          )
+        : Promise.resolve(null),
+    ]);
+    gridRows = grid;
+    // Same round-renumbering guard as the race results below.
+    if (sprint && sprint.date === circuit.raceDate) {
+      sprintRows = [...(sprint.SprintResults ?? [])].sort(
+        (a, b) => Number.parseInt(a.position, 10) - Number.parseInt(b.position, 10)
+      );
+    }
+  }
+
   if (!circuit.cancelled && raceHasHappened) {
     try {
       // Jolpica drops cancelled races from its calendar, so its round numbers
@@ -150,7 +182,8 @@ export default async function RacePage({ params }: RacePageProps) {
         );
       }
     } catch (err) {
-      console.error("[f1lytics] race result fetch failed:", err);
+      // warn, not error: transient 429s are expected and self-heal via ISR.
+      console.warn("[f1lytics] race result fetch failed:", err);
       // Keep rendering static race shell if Jolpica is unavailable.
     }
 
@@ -177,8 +210,11 @@ export default async function RacePage({ params }: RacePageProps) {
       if (matchedSession) {
         // Each call tolerates failure (e.g. an OpenF1 429 during the build
         // burst) so one throttled endpoint costs one chart, not all four.
+        // warn, not error: transient 429s are expected (tight free-tier burst
+        // limits) and self-heal on the next ISR pass. Next's dev overlay and
+        // log alerting should stay reserved for unexpected failures.
         const logAndEmpty = (endpoint: string) => (err: unknown) => {
-          console.error(`[f1lytics] race ${endpoint} fetch failed:`, err);
+          console.warn(`[f1lytics] race ${endpoint} fetch failed:`, err);
           return [];
         };
         // Telemetry for a race that ended 2+ days ago is immutable — cache it
@@ -195,7 +231,7 @@ export default async function RacePage({ params }: RacePageProps) {
         ]);
       }
     } catch (err) {
-      console.error("[f1lytics] race OpenF1 data fetch failed:", err);
+      console.warn("[f1lytics] race OpenF1 data fetch failed:", err);
       // OpenF1 data is optional for the initial race page implementation.
     }
   }
@@ -314,6 +350,83 @@ export default async function RacePage({ params }: RacePageProps) {
           </section>
         )}
 
+        {/* STARTING GRID — from qualifying, shown until race results arrive */}
+        {results.length === 0 && gridRows.length > 0 && (
+          <section
+            id="starting-grid"
+            // scroll-mt clears the 56px sticky navbar on #starting-grid jumps.
+            className="relative scroll-mt-16"
+            style={{ padding: "40px clamp(16px, 4vw, 32px)", borderBottom: `1px solid ${F1.line}` }}
+          >
+            <div className="mx-auto" style={{ maxWidth: 1400 }}>
+              <SectionHeader
+                label="STARTING GRID"
+                right={
+                  <Mono style={{ fontSize: 10, color: F1.fg3, letterSpacing: "0.18em" }}>
+                    BASED ON QUALIFYING · PENALTIES MAY APPLY
+                  </Mono>
+                }
+              />
+              <div
+                className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1"
+                style={{ maxWidth: 980 }}
+              >
+                {gridRows.map((row, i) => {
+                  const teamColor = row.teamColor;
+                  const bestLap = row.time ?? "—";
+                  return (
+                    <div
+                      key={`${row.position}-${row.driverName}`}
+                      // Even grid slots sit half a row lower on sm+, echoing a
+                      // real staggered F1 grid. Single column on phones.
+                      className={`flex items-center gap-3 ${i % 2 === 1 ? "sm:translate-y-3" : ""}`}
+                      style={{
+                        background: F1.bg2,
+                        border: `1px solid ${F1.line}`,
+                        borderLeft: `3px solid ${teamColor}`,
+                        padding: "10px 14px",
+                      }}
+                    >
+                      <PositionBadge position={row.position} />
+                      <div className="flex flex-col min-w-0 flex-1">
+                        <span
+                          className="font-display truncate"
+                          style={{
+                            fontSize: "clamp(14px, 3.4vw, 16px)",
+                            fontWeight: 600,
+                            letterSpacing: "-0.01em",
+                            color: F1.fg,
+                            lineHeight: 1.1,
+                          }}
+                        >
+                          {row.driverName.toUpperCase()}
+                        </span>
+                        <Mono
+                          className="truncate"
+                          style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.14em", marginTop: 2 }}
+                        >
+                          {row.teamName.toUpperCase()}
+                        </Mono>
+                      </div>
+                      <Mono
+                        className="shrink-0"
+                        style={{
+                          fontSize: 12,
+                          color: i === 0 ? F1.amber : F1.fg2,
+                          fontWeight: i === 0 ? 700 : 400,
+                          fontVariantNumeric: "tabular-nums",
+                        }}
+                      >
+                        {bestLap}
+                      </Mono>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* PODIUM */}
         <section
           className="relative"
@@ -400,6 +513,129 @@ export default async function RacePage({ params }: RacePageProps) {
             )}
           </div>
         </section>
+
+        {/* SPRINT RESULTS — sprint weekends only, once the sprint has run */}
+        {sprintRows.length > 0 && (
+          <section
+            className="relative"
+            style={{ padding: "40px clamp(16px, 4vw, 32px)", borderBottom: `1px solid ${F1.line}` }}
+          >
+            <div className="mx-auto" style={{ maxWidth: 1400 }}>
+              <SectionHeader
+                label="SPRINT RESULTS"
+                right={
+                  <Mono style={{ fontSize: 10, color: F1.fg3, letterSpacing: "0.18em" }}>
+                    {sprintRows.length} CLASSIFIED
+                  </Mono>
+                }
+              />
+              <div
+                className="overflow-x-auto"
+                style={{ background: F1.bg2, border: `1px solid ${F1.line}` }}
+              >
+                <table
+                  className="w-full"
+                  style={{ borderCollapse: "collapse", minWidth: 720 }}
+                >
+                  <thead>
+                    <tr style={{ background: F1.bg, borderBottom: `1px solid ${F1.line}` }}>
+                      {["POS", "DRIVER", "TEAM", "GRID", "GAP / TIME", "PTS"].map((h) => (
+                        <th
+                          key={h}
+                          className="font-mono text-left"
+                          style={{
+                            padding: "12px 16px",
+                            fontSize: 10,
+                            color: F1.fg3,
+                            letterSpacing: "0.2em",
+                            fontWeight: 600,
+                          }}
+                        >
+                          {h}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sprintRows.map((result) => {
+                      const position = Number.parseInt(result.position, 10);
+                      const grid = Number.parseInt(result.grid, 10);
+                      const isLeader = position === 1;
+                      const teamColor = mapConstructorToTeamColor(result.Constructor.name);
+                      return (
+                        <tr
+                          key={`${result.Driver.driverId}-${result.position}`}
+                          style={{ borderBottom: `1px solid ${F1.line}` }}
+                        >
+                          <td style={{ padding: "12px 16px" }}>
+                            <PositionBadge position={position} />
+                          </td>
+                          <td
+                            className="font-display"
+                            style={{
+                              padding: "12px 16px",
+                              color: F1.fg,
+                              fontSize: 14,
+                              fontWeight: 500,
+                              letterSpacing: "-0.01em",
+                            }}
+                          >
+                            <span
+                              aria-hidden
+                              style={{
+                                display: "inline-block",
+                                width: 3,
+                                height: 16,
+                                background: teamColor,
+                                marginRight: 10,
+                                verticalAlign: "middle",
+                              }}
+                            />
+                            {result.Driver.givenName} {result.Driver.familyName}
+                          </td>
+                          <td
+                            className="font-mono"
+                            style={{ padding: "12px 16px", color: F1.fg2, fontSize: 12 }}
+                          >
+                            {result.Constructor.name}
+                          </td>
+                          <td
+                            className="font-mono tabular-nums"
+                            style={{ padding: "12px 16px", color: F1.fg3, fontSize: 13 }}
+                          >
+                            {Number.isNaN(grid) ? "—" : grid === 0 ? "PL" : grid}
+                          </td>
+                          <td
+                            className="font-mono tabular-nums"
+                            style={{
+                              padding: "12px 16px",
+                              color: isLeader ? F1.amber : F1.fg2,
+                              fontSize: 12,
+                              fontWeight: isLeader ? 700 : 400,
+                            }}
+                          >
+                            {isLeader ? "WINNER" : result.Time?.time ?? result.status}
+                          </td>
+                          <td
+                            className="font-mono tabular-nums"
+                            style={{
+                              padding: "12px 16px",
+                              color: F1.fg,
+                              fontSize: 13,
+                              fontWeight: 700,
+                            }}
+                          >
+                            {Number.parseFloat(result.points).toFixed(0)}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* FULL RESULTS */}
         <section
@@ -527,7 +763,7 @@ export default async function RacePage({ params }: RacePageProps) {
                                     fontVariantNumeric: "tabular-nums",
                                   }}
                                 >
-                                  {change > 0 ? `+${change}` : change}
+                                  {change > 0 ? `+${change}` : `−${Math.abs(change)}`}
                                 </Mono>
                               )}
                             </td>
@@ -551,7 +787,13 @@ export default async function RacePage({ params }: RacePageProps) {
                                 fontWeight: 700,
                               }}
                             >
-                              {Number.parseFloat(result.points).toFixed(1)}
+                              {(() => {
+                                // Points are integers except rare half-point
+                                // races — no phantom ".0" (podium tiles above
+                                // show "25", this table must agree).
+                                const pts = Number.parseFloat(result.points);
+                                return pts % 1 === 0 ? pts.toFixed(0) : pts.toFixed(1);
+                              })()}
                             </td>
                           </tr>
                         );

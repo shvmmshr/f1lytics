@@ -9,6 +9,8 @@ import type {
   QualifyingResult,
   ScheduleTable,
   RaceSchedule,
+  SprintTable,
+  SprintRace,
 } from "./types";
 
 import { fetchWithRetry } from "./fetch-retry";
@@ -194,6 +196,24 @@ export async function getAllQualifyingResults(
   return Array.from(byRound.values()).sort(
     (a, b) => Number.parseInt(a.round, 10) - Number.parseInt(b.round, 10)
   );
+}
+
+/**
+ * Fetch sprint race results for a specific season and round.
+ * Returns the SprintRace entry (with SprintResults rows) or null when the
+ * sprint hasn't run yet / the round has no sprint.
+ * 5-min cache so a just-finished sprint's results appear promptly.
+ */
+export async function getSprintResults(
+  season: string,
+  round: string
+): Promise<SprintRace | null> {
+  const data = await fetchJolpica<SprintTable>(
+    `/${season}/${round}/sprint.json`,
+    300
+  );
+  const races = data.MRData.RaceTable.Races;
+  return races.length > 0 ? races[0] : null;
 }
 
 /**
