@@ -34,7 +34,7 @@ export function PositionBadge({ position, change }: PositionBadgeProps) {
             change < 0 && "text-status-red"
           )}
         >
-          {change > 0 ? `+${change}` : change}
+          {change > 0 ? `+${change}` : `−${Math.abs(change)}`}
         </span>
       )}
     </div>

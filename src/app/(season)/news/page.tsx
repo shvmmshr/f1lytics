@@ -1,7 +1,63 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { fetchAllNews, scoreImportance, type NewsItem } from "@/lib/api/news";
 import { PageTransition } from "@/components/layout/page-transition";
 import { F1, Mono, Grid as BroadcastGrid } from "@/components/shared/broadcast";
+
+// CDN hosts allowed through the Next image optimizer (must stay in sync with
+// images.remotePatterns in next.config.ts). Anything else — e.g. a feed
+// switching CDNs — renders as a plain <img> instead of crashing the page.
+const OPTIMIZED_IMAGE_HOSTS = [
+  /(^|\.)motorsport\.com$/,
+  /^ichef\.bbci\.co\.uk$/,
+  /\.cloudfront\.net$/,
+  /(^|\.)ghost\.io$/,
+];
+
+function canOptimizeImage(url: string): boolean {
+  try {
+    return OPTIMIZED_IMAGE_HOSTS.some((re) => re.test(new URL(url).hostname));
+  } catch {
+    return false;
+  }
+}
+
+/** Feed thumbnail: next/image (resized, AVIF/WebP srcset) for known CDNs,
+ *  plain <img> fallback for unknown hosts. Fills its aspect-ratio container. */
+function NewsImage({
+  src,
+  sizes,
+  eager,
+  className,
+}: {
+  src: string;
+  sizes: string;
+  eager?: boolean;
+  className: string;
+}) {
+  if (canOptimizeImage(src)) {
+    return (
+      <Image
+        src={src}
+        alt=""
+        fill
+        sizes={sizes}
+        priority={eager}
+        className={className}
+        style={{ objectFit: "cover" }}
+      />
+    );
+  }
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={src}
+      alt=""
+      loading={eager ? "eager" : "lazy"}
+      className={`h-full w-full object-cover ${className}`}
+    />
+  );
+}
 
 export const metadata: Metadata = {
   title: "F1 News",
@@ -137,18 +193,18 @@ export default async function NewsPage() {
                   >
                     {featured.imageUrl && (
                       <div
+                        className="relative"
                         style={{
                           aspectRatio: "16 / 8",
                           overflow: "hidden",
                           borderBottom: `1px solid ${F1.line}`,
                         }}
                       >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
+                        <NewsImage
                           src={featured.imageUrl}
-                          alt=""
-                          loading="eager"
-                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+                          eager
+                          sizes="(max-width: 1024px) 100vw, 60vw"
+                          className="transition-transform duration-500 group-hover:scale-[1.02]"
                         />
                       </div>
                     )}
@@ -274,6 +330,7 @@ export default async function NewsPage() {
                   >
                     {item.imageUrl && (
                       <div
+                        className="relative"
                         style={{
                           aspectRatio: "16 / 9",
                           overflow: "hidden",
@@ -281,12 +338,10 @@ export default async function NewsPage() {
                           borderBottom: `1px solid ${F1.line}`,
                         }}
                       >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
+                        <NewsImage
                           src={item.imageUrl}
-                          alt=""
-                          loading="lazy"
-                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                          sizes="(max-width: 768px) 100vw, 340px"
+                          className="transition-transform duration-300 group-hover:scale-[1.03]"
                         />
                       </div>
                     )}

@@ -117,20 +117,28 @@ export function Grid({
   );
 }
 
-/* Pulsing live indicator dot */
+/* Live indicator dot. Pulses by default — pass pulse={false} for states that
+   are NOT actively updating (finished, standby, connecting), where a pulsing
+   dot would falsely signal live data. */
 export function LiveDot({
   color = F1.red,
   size = 8,
   className,
+  pulse = true,
 }: {
   color?: string;
   size?: number;
   className?: string;
+  pulse?: boolean;
 }) {
   return (
     <span
       aria-hidden
-      className={cn("inline-block rounded-full animate-f1pulse align-middle", className)}
+      className={cn(
+        "inline-block rounded-full align-middle",
+        pulse && "animate-f1pulse",
+        className
+      )}
       style={{ width: size, height: size, background: color }}
     />
   );

@@ -87,26 +87,37 @@ function CompareBar({
   format?: "number" | "position";
   lowerIsBetter?: boolean;
 }) {
+  // For lower-is-better metrics (positions), 0 is the "no data" sentinel —
+  // e.g. a rookie with no qualifying history. Never award a win against
+  // missing data, and don't draw a full "winning" bar for the side that
+  // merely has a value.
+  const missingA = lowerIsBetter && valueA <= 0;
+  const missingB = lowerIsBetter && valueB <= 0;
+  const comparable = !missingA && !missingB;
+
   let pctA: number;
   let pctB: number;
-  if (lowerIsBetter && valueA > 0 && valueB > 0) {
-    const invA = 1 / valueA;
-    const invB = 1 / valueB;
-    const maxInv = Math.max(invA, invB);
-    pctA = (invA / maxInv) * 100;
-    pctB = (invB / maxInv) * 100;
+  if (lowerIsBetter) {
+    if (comparable) {
+      const invA = 1 / valueA;
+      const invB = 1 / valueB;
+      const maxInv = Math.max(invA, invB);
+      pctA = (invA / maxInv) * 100;
+      pctB = (invB / maxInv) * 100;
+    } else {
+      // One side has no data: show a dim half-bar for the side that does,
+      // signalling "value exists" without claiming superiority.
+      pctA = missingA ? 0 : 50;
+      pctB = missingB ? 0 : 50;
+    }
   } else {
     const max = Math.max(valueA, valueB, 1);
     pctA = (valueA / max) * 100;
     pctB = (valueB / max) * 100;
   }
 
-  const aWins = lowerIsBetter
-    ? valueA > 0 && (valueB === 0 || valueA < valueB)
-    : valueA > valueB;
-  const bWins = lowerIsBetter
-    ? valueB > 0 && (valueA === 0 || valueB < valueA)
-    : valueB > valueA;
+  const aWins = comparable && (lowerIsBetter ? valueA < valueB : valueA > valueB);
+  const bWins = comparable && (lowerIsBetter ? valueB < valueA : valueB > valueA);
 
   const displayA = format === "position" && valueA > 0 ? `P${valueA}` : valueA || "—";
   const displayB = format === "position" && valueB > 0 ? `P${valueB}` : valueB || "—";

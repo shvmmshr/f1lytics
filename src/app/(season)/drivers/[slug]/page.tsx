@@ -138,10 +138,13 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
   const podiums = driverRaceResults.filter((r) => r.position !== null && r.position <= 3).length;
   const totalPoints = driverStanding ? Number.parseFloat(driverStanding.points) || 0 : 0;
   const champPos = driverStanding ? Number.parseInt(driverStanding.position, 10) : null;
-  const bestFinish = driverRaceResults.length
-    ? Math.min(...driverRaceResults.filter((r) => r.position !== null).map((r) => r.position!))
-    : null;
   const finishedRaces = driverRaceResults.filter((r) => r.position !== null);
+  // Guard on finished races, not raced entries — a driver who DNF'd every
+  // round has results but no classified position, and Math.min of an empty
+  // list is Infinity ("PInfinity" in the UI).
+  const bestFinish = finishedRaces.length
+    ? Math.min(...finishedRaces.map((r) => r.position!))
+    : null;
   const avgFinish =
     finishedRaces.length > 0
       ? (finishedRaces.reduce((sum, r) => sum + r.position!, 0) / finishedRaces.length).toFixed(1)
@@ -504,7 +507,7 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
                           fontVariantNumeric: "tabular-nums",
                         }}
                       >
-                        {isPitLane ? "PL" : gained === null ? "—" : gained > 0 ? `+${gained}` : gained === 0 ? "=" : gained}
+                        {isPitLane ? "PL" : gained === null ? "—" : gained > 0 ? `+${gained}` : gained === 0 ? "=" : `−${Math.abs(gained)}`}
                       </Mono>
                       <Mono
                         style={{

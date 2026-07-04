@@ -9,7 +9,6 @@ import {
   StatValue,
   PosPill,
   SectionHeader,
-  Trend,
   Grid as BroadcastGrid,
 } from "@/components/shared/broadcast";
 import { AnimatedBar } from "@/components/shared/animated-bar";
@@ -274,7 +273,9 @@ export default async function StandingsPage() {
 
             {constructors.map((c, i) => {
               const ptsPct = (c.points / maxConstructorPts) * 100;
-              const gap = i === 0 ? "—" : `−${(maxConstructorPts - c.points).toFixed(0)}`;
+              // Gap to leader. No trend arrow — we have no previous-round data,
+              // so an up/flat glyph would be decoration pretending to be data.
+              const gap = i === 0 ? "LEADER" : `−${(maxConstructorPts - c.points).toFixed(0)}`;
               return (
                 <div
                   key={c.id}
@@ -316,10 +317,12 @@ export default async function StandingsPage() {
                       <Mono
                         style={{
                           fontSize: 10,
-                          color: i === 0 ? F1.green : F1.fg3,
+                          color: i === 0 ? F1.amber : F1.fg3,
+                          letterSpacing: i === 0 ? "0.08em" : undefined,
+                          fontWeight: i === 0 ? 700 : 400,
                         }}
                       >
-                        <Trend dir={i === 0 ? "up" : "flat"} /> {gap}
+                        {gap}
                       </Mono>
                     </div>
                   </div>

@@ -81,7 +81,9 @@ function compoundShort(c: string | null): "S" | "M" | "H" | "I" | "W" | "?" {
   if (u.startsWith("M")) return "M";
   if (u.startsWith("H")) return "H";
   if (u.startsWith("I")) return "I";
-  return "W";
+  if (u.startsWith("W")) return "W";
+  // OpenF1 emits e.g. "UNKNOWN" — show the unknown glyph, not a wet tyre.
+  return "?";
 }
 
 // ─── Top Broadcast Bar ─────────────────────────────────────────────────
@@ -130,7 +132,7 @@ function TopBroadcastBar({
             minHeight: 56,
           }}
         >
-          <LiveDot color={isLive ? F1.ink : F1.fg3} size={8} />
+          <LiveDot color={isLive ? F1.ink : F1.fg3} size={8} pulse={isLive} />
           <Mono
             style={{
               fontSize: 12,
@@ -186,12 +188,12 @@ function TopBroadcastBar({
         {/* Air */}
         <TopTile
           label="AIR"
-          value={airTemp !== null ? `${airTemp.toFixed(0)}°C` : "—°C"}
+          value={airTemp !== null ? `${airTemp.toFixed(0)}°C` : "—"}
         />
         {/* Track */}
         <TopTile
           label="TRACK"
-          value={trackTemp !== null ? `${trackTemp.toFixed(0)}°C` : "—°C"}
+          value={trackTemp !== null ? `${trackTemp.toFixed(0)}°C` : "—"}
         />
       </div>
     </div>
@@ -531,13 +533,16 @@ function TelemetryBlock({
     );
   }
 
+  // No sample yet ≠ zero: "SPEED 0 · RPM 0" reads as a car stopped on track.
+  // Render em-dashes until real telemetry arrives.
+  const hasData = carData !== null;
   const speed = carData?.speed ?? 0;
   const gear = carData?.gear ?? 0;
   const rpm = carData?.rpm ?? 0;
   const throttle = carData?.throttle ?? 0;
   const brake = carData?.brake ?? 0;
   const drs = carData?.drs ?? 0;
-  const drsActive = drs >= 10 && drs !== 0 && drs !== 8;
+  const drsActive = hasData && drs >= 10 && drs !== 0 && drs !== 8;
 
   return (
     <div style={{ padding: 24 }}>
@@ -578,7 +583,7 @@ function TelemetryBlock({
             SPEED
           </Mono>
           <StatValue size={36} color={teamColor} style={{ display: "block", marginTop: 4 }}>
-            {speed}
+            {hasData ? speed : "—"}
           </StatValue>
           <Mono style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.18em" }}>
             KM/H
@@ -589,7 +594,7 @@ function TelemetryBlock({
             GEAR
           </Mono>
           <StatValue size={36} style={{ display: "block", marginTop: 4 }}>
-            {gear || "N"}
+            {hasData ? gear || "N" : "—"}
           </StatValue>
         </div>
         <div style={{ background: F1.bg, padding: 14, textAlign: "right" }}>
@@ -597,7 +602,7 @@ function TelemetryBlock({
             RPM
           </Mono>
           <StatValue size={36} style={{ display: "block", marginTop: 4 }}>
-            {rpm.toLocaleString("en-US")}
+            {hasData ? rpm.toLocaleString("en-US") : "—"}
           </StatValue>
           <Mono style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.18em" }}>
             REV/MIN
@@ -619,7 +624,7 @@ function TelemetryBlock({
               fontVariantNumeric: "tabular-nums",
             }}
           >
-            {throttle}%
+            {hasData ? `${throttle}%` : "—"}
           </Mono>
         </div>
         <div style={{ height: 8, background: F1.bg3 }}>
@@ -646,7 +651,7 @@ function TelemetryBlock({
               fontVariantNumeric: "tabular-nums",
             }}
           >
-            {brake}%
+            {hasData ? `${brake}%` : "—"}
           </Mono>
         </div>
         <div style={{ height: 8, background: F1.bg3 }}>
@@ -682,7 +687,7 @@ function TelemetryBlock({
             fontWeight: 700,
           }}
         >
-          {drsActive ? "ACTIVE" : "OFF"}
+          {hasData ? (drsActive ? "ACTIVE" : "OFF") : "—"}
         </Mono>
       </div>
     </div>
@@ -764,7 +769,7 @@ function RaceControlFeed({
             >
               <div className="flex items-center gap-2" style={{ marginBottom: 4 }}>
                 <Mono style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.14em" }}>
-                  {time}
+                  {time} UTC
                 </Mono>
                 {m.flag && <FlagPill flag={m.flag} />}
                 <Mono style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.14em" }}>
@@ -819,7 +824,7 @@ function RaceControlFeed({
                 }}
               >
                 <Mono style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.14em" }}>
-                  {time}
+                  {time} UTC
                 </Mono>
                 <Mono
                   style={{
@@ -861,7 +866,7 @@ function IdleView({ lastRaceSessionKey }: { lastRaceSessionKey: number | null })
       >
         <Brackets color={F1.red} size={14} weight={2} />
         <div className="flex items-center justify-center gap-3" style={{ marginBottom: 18 }}>
-          <LiveDot size={10} />
+          <LiveDot size={10} pulse={false} />
           <Mono
             style={{
               fontSize: 11,
@@ -957,7 +962,7 @@ function LoadingView({ replay }: { replay: boolean }) {
       >
         <Brackets color={F1.fg3} size={14} weight={2} />
         <div className="flex items-center justify-center gap-3" style={{ marginBottom: 18 }}>
-          <LiveDot color={F1.fg3} size={10} />
+          <LiveDot color={F1.fg3} size={10} pulse={false} />
           <Mono
             style={{
               fontSize: 11,

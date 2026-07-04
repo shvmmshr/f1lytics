@@ -448,7 +448,10 @@ export default async function CalendarPage() {
                           letterSpacing: "0.16em",
                         }}
                       >
-                        {isCancelled ? "—" : "TBD"}
+                        {/* Same vocabulary as the races index: a run race
+                            awaiting classification is "pending", a future
+                            one is genuinely undecided. */}
+                        {isCancelled ? "—" : isPast ? "RESULT PENDING" : "TBD"}
                       </Mono>
                       <Mono
                         style={{

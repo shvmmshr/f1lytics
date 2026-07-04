@@ -15,7 +15,13 @@ export function ScrollProgress() {
   const barRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (SUPPORTS_SCROLL_TIMELINE) return; // CSS handles it — no listener needed.
+    if (SUPPORTS_SCROLL_TIMELINE) {
+      // Clear the SSR-shipped scaleX(0) so the CSS scroll-timeline animation
+      // takes over. Done here (not in JSX) because the server can't know the
+      // browser's support — branching in render caused a hydration mismatch.
+      if (barRef.current) barRef.current.style.transform = "";
+      return; // CSS handles it — no listener needed.
+    }
 
     let rafId = 0;
     function onScroll() {
@@ -39,11 +45,16 @@ export function ScrollProgress() {
   return (
     <div
       ref={barRef}
-      className="scroll-progress-bar fixed top-0 left-0 right-0 h-0.5 bg-status-red z-[100]"
+      // top-14 = just under the 56px sticky navbar. At top-0 the growing red
+      // line overlays the nav's own red accents (active-tab bar, logo stripe)
+      // and reads as the header itself shifting while you scroll.
+      className="scroll-progress-bar fixed top-14 left-0 right-0 h-0.5 bg-status-red z-[49]"
+      // Deterministic on server AND first client render (no support-dependent
+      // branch — that differs between server and browser and breaks hydration).
+      // The mount effect clears the transform when CSS scroll-timeline drives it.
       style={{
         transformOrigin: "left",
-        // CSS keyframes drive the transform when supported; otherwise start at 0.
-        transform: SUPPORTS_SCROLL_TIMELINE ? undefined : "scaleX(0)",
+        transform: "scaleX(0)",
       }}
     />
   );

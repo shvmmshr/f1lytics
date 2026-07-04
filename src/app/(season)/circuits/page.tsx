@@ -193,7 +193,7 @@ export default function CircuitsPage() {
                       fontVariantNumeric: "tabular-nums",
                     }}
                   >
-                    {circuit.length.toFixed(1)} KM
+                    {circuit.length.toFixed(3)} KM
                   </Mono>
                   <span style={{ width: 1, height: 12, background: F1.line }} />
                   <Mono style={{ fontSize: 11, color: F1.fg2 }}>
