@@ -139,10 +139,6 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
     <img src="https://img.shields.io/badge/Sponsor-GitHub-%23ea4aaa?logo=github-sponsors" alt="GitHub Sponsors" />
   </a>
   &nbsp;
-  <a href="https://buymeacoffee.com/shvmmshra">
-    <img src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?logo=buy-me-a-coffee&logoColor=black" alt="Buy Me a Coffee" />
-  </a>
-  &nbsp;
   <a href="https://github.com/shvmmshr/f1lytics">
     <img src="https://img.shields.io/github/stars/shvmmshr/f1lytics?style=social" alt="GitHub stars" />
   </a>

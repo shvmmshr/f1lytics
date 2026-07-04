@@ -1,13 +1,18 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useGSAP } from "@gsap/react";
 import { gsap, ScrollTrigger } from "@/lib/gsap";
 import { useCountdownTick } from "@/hooks/use-countdown-tick";
 import Image from "next/image";
 import Link from "next/link";
 import { getNextEvent, TEAMS, CIRCUIT_LIST, DRIVER_LIST, TEAM_LIST } from "@/lib/constants";
-import { getWeekendSchedule } from "@/lib/constants/sessions";
+import {
+  getWeekendSchedule,
+  getActiveHeadlineSession,
+  SESSION_LABELS,
+  type ActiveSession,
+} from "@/lib/constants/sessions";
 import {
   F1,
   LiveDot,
@@ -48,6 +53,17 @@ export function Hero({
   const event = getNextEvent();
   const nextRace = event?.circuit;
   const weekendSchedule = nextRace ? getWeekendSchedule(nextRace.raceDate) : undefined;
+
+  // Live-session awareness (quali / sprint quali / sprint / race only) — same
+  // client-side schedule check the navbar dot uses; null until mounted so the
+  // SSR and first client render agree.
+  const [liveSession, setLiveSession] = useState<ActiveSession | null>(null);
+  useEffect(() => {
+    const check = () => setLiveSession(getActiveHeadlineSession(Date.now()));
+    check();
+    const id = setInterval(check, 30_000);
+    return () => clearInterval(id);
+  }, []);
   // Count down to the actual next event — on sprint weekends that's the
   // sprint, not the Sunday race.
   const targetTime = event
@@ -251,9 +267,47 @@ export function Hero({
               }}
             >
               <Brackets color={F1.red} size={12} />
+
+              {/* LIVE banner — only rendered while quali/sprint/race is on-track */}
+              {liveSession && (
+                <Link
+                  href="/live"
+                  className="flex items-center justify-between gap-3 mb-4 transition-opacity hover:opacity-90"
+                  style={{
+                    background: F1.red,
+                    color: F1.ink,
+                    padding: "10px 14px",
+                    textDecoration: "none",
+                  }}
+                >
+                  <span className="inline-flex items-center gap-2.5 min-w-0">
+                    <LiveDot color={F1.ink} size={8} />
+                    <Mono
+                      className="truncate"
+                      style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.2em" }}
+                    >
+                      LIVE NOW · {SESSION_LABELS[liveSession.session]}
+                    </Mono>
+                  </span>
+                  <Mono
+                    className="shrink-0"
+                    style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.14em" }}
+                  >
+                    WATCH →
+                  </Mono>
+                </Link>
+              )}
+
               <div className="flex items-center justify-between mb-4">
                 <span className="inline-flex items-center gap-2.5">
-                  <LiveDot />
+                  {liveSession ? (
+                    <LiveDot />
+                  ) : (
+                    <span
+                      aria-hidden
+                      style={{ width: 6, height: 6, background: F1.red, borderRadius: "50%" }}
+                    />
+                  )}
                   <Mono style={{ color: F1.red, fontSize: 11, letterSpacing: "0.2em" }}>
                     UP NEXT · ROUND {String(nextRace.round).padStart(2, "0")}
                   </Mono>

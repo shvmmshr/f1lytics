@@ -15,6 +15,11 @@ export async function POST(request: NextRequest) {
   for (const path of paths) {
     revalidatePath(path);
   }
+  // Dynamic-slug pages (each /races/<slug>, /drivers/<slug>, ...) are separate
+  // static pages — revalidating the index above does NOT touch them.
+  for (const dynamicPath of ["/races/[slug]", "/drivers/[slug]", "/teams/[slug]", "/circuits/[slug]"]) {
+    revalidatePath(dynamicPath, "page");
+  }
 
   return NextResponse.json({ revalidated: true, paths, now: Date.now() });
 }

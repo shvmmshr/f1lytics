@@ -69,7 +69,8 @@ export async function getRaceResults(
   round?: string
 ): Promise<RaceResult[]> {
   if (round) {
-    const data = await fetchJolpica<RaceTable>(`/${season}/${round}/results.json`);
+    // 5-min cache so a just-finished race's results appear promptly.
+    const data = await fetchJolpica<RaceTable>(`/${season}/${round}/results.json`, 300);
     return data.MRData.RaceTable.Races;
   }
 
@@ -108,7 +109,7 @@ export async function getRaceResults(
 /**
  * Fetch driver standings for a given season.
  * Returns an array of DriverStanding entries.
- * Revalidates every hour (3600s) since standings change frequently during a season.
+ * Revalidates every 5 minutes (300s) so points update promptly after a session.
  */
 export async function getDriverStandings(
   season: string = "current"
@@ -124,7 +125,7 @@ export async function getDriverStandings(
 /**
  * Fetch constructor standings for a given season.
  * Returns an array of ConstructorStanding entries.
- * Revalidates every hour (3600s) since standings change frequently during a season.
+ * Revalidates every 5 minutes (300s) so points update promptly after a session.
  */
 export async function getConstructorStandings(
   season: string = "current"
@@ -146,7 +147,8 @@ export async function getQualifyingResults(
   round: string
 ): Promise<QualifyingResult[]> {
   const data = await fetchJolpica<QualifyingTable>(
-    `/${season}/${round}/qualifying.json`
+    `/${season}/${round}/qualifying.json`,
+    300
   );
   return data.MRData.RaceTable.Races;
 }
@@ -196,7 +198,7 @@ export async function getAllQualifyingResults(
 
 /**
  * Fetch the most recent race result.
- * Revalidates every hour (3600s) to pick up new results promptly.
+ * Revalidates every 5 minutes (300s) to pick up new results promptly.
  * Returns the latest RaceResult or null if no results are available.
  */
 export async function getLastRaceResult(): Promise<RaceResult | null> {

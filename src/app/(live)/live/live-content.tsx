@@ -121,13 +121,13 @@ function TopBroadcastBar({
       <div className="flex items-stretch lg:contents">
         {/* LIVE pill */}
         <div
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 shrink-0"
           style={{
-            padding: "0 18px",
+            padding: "0 clamp(12px, 2vw, 18px)",
             background: isLive ? F1.red : F1.bg2,
             color: isLive ? F1.ink : F1.fg2,
             clipPath: "polygon(0 0, 100% 0, 92% 100%, 0 100%)",
-            minHeight: 64,
+            minHeight: 56,
           }}
         >
           <LiveDot color={isLive ? F1.ink : F1.fg3} size={8} />
@@ -142,21 +142,27 @@ function TopBroadcastBar({
           </Mono>
         </div>
 
-        {/* Session title */}
+        {/* Session title. The eyebrow skips the session type when it just
+            repeats the big title (e.g. "QUALIFYING · QUALIFYING"). */}
         <div
           className="flex flex-1 flex-col justify-center min-w-0"
           style={{
-            padding: "8px 24px",
+            padding: "8px clamp(14px, 2.5vw, 24px)",
             borderRight: `1px solid ${F1.line}`,
           }}
         >
-          <Mono style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.24em" }}>
-            {sessionType.toUpperCase()} · {countryName.toUpperCase()}
+          <Mono
+            className="truncate"
+            style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.24em" }}
+          >
+            {sessionType && sessionType.toUpperCase() !== sessionName.toUpperCase()
+              ? `${sessionType.toUpperCase()} · ${countryName.toUpperCase()}`
+              : countryName.toUpperCase()}
           </Mono>
           <span
             className="font-display truncate"
             style={{
-              fontSize: 24,
+              fontSize: "clamp(17px, 3vw, 24px)",
               fontWeight: 700,
               letterSpacing: "-0.02em",
               lineHeight: 1.05,
@@ -168,8 +174,9 @@ function TopBroadcastBar({
         </div>
       </div>
 
+      {/* One slim row of 4 tiles on mobile, promoted into the desktop grid at lg */}
       <div
-        className="grid grid-cols-2 sm:grid-cols-4 lg:contents"
+        className="grid grid-cols-4 lg:contents"
         style={{ borderTop: `1px solid ${F1.line}` }}
       >
         {/* Lap */}
@@ -202,22 +209,26 @@ function TopTile({
 }) {
   return (
     <div
+      className="flex flex-col justify-center min-w-0"
       style={{
-        padding: "10px 16px",
+        padding: "8px clamp(8px, 1.5vw, 16px)",
         borderRight: `1px solid ${F1.line}`,
       }}
     >
-      <Mono style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.24em" }}>
+      <Mono
+        className="truncate"
+        style={{ fontSize: 8.5, color: F1.fg3, letterSpacing: "0.2em" }}
+      >
         {label}
       </Mono>
       <div
-        className="font-display"
+        className="font-display truncate"
         style={{
-          fontSize: small ? 16 : 24,
+          fontSize: small ? "clamp(11px, 2.6vw, 15px)" : "clamp(15px, 4vw, 22px)",
           fontWeight: 700,
           letterSpacing: "-0.02em",
           marginTop: 2,
-          lineHeight: 1,
+          lineHeight: 1.1,
           fontVariantNumeric: "tabular-nums",
           color: F1.fg,
         }}
@@ -300,37 +311,53 @@ function TimingTower({
     );
   }
 
+  // Responsive column sets — no horizontal scroll. Phones get the essential 7
+  // columns (pos/colour/code/driver/last/best/gap), tyre joins at md, interval
+  // and sectors at xl (where the tower shares the row with the side panel).
+  const towerCols =
+    "grid-cols-[30px_4px_42px_minmax(0,1fr)_64px_64px_52px] " +
+    "md:grid-cols-[40px_5px_50px_minmax(0,1fr)_80px_80px_68px_58px] " +
+    "xl:grid-cols-[44px_6px_56px_minmax(0,1fr)_90px_90px_76px_76px_56px_96px]";
+
+  const headerCells: { label: string; className?: string; right?: boolean }[] = [
+    { label: "POS" },
+    { label: "" },
+    { label: "CODE" },
+    { label: "DRIVER · TEAM" },
+    { label: "LAST", right: true },
+    { label: "BEST", right: true },
+    { label: "GAP", right: true },
+    { label: "INT", right: true, className: "hidden xl:block" },
+    { label: "TYRE", className: "hidden md:block" },
+    { label: "SECTORS", className: "hidden xl:block" },
+  ];
+
   return (
-    // Horizontal scroll on narrow screens — the column set needs ~700px.
-    <div className="overflow-x-auto">
-    <div style={{ minWidth: 700 }}>
+    <div>
       {/* Header row */}
       <div
-        className="grid items-center"
+        className={`grid items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 ${towerCols}`}
         style={{
-          gridTemplateColumns:
-            "44px 6px 56px minmax(0, 1fr) 90px 90px 76px 76px 56px 96px",
-          gap: 8,
-          padding: "10px 16px",
+          paddingTop: 10,
+          paddingBottom: 10,
           background: F1.bg2,
           borderBottom: `1px solid ${F1.line}`,
         }}
       >
-        {["POS", "", "CODE", "DRIVER · TEAM", "LAST", "BEST", "GAP", "INT", "TYRE", "SECTORS"].map(
-          (h, i) => (
-            <Mono
-              key={i}
-              style={{
-                fontSize: 9,
-                color: F1.fg3,
-                letterSpacing: "0.18em",
-                textAlign: i >= 4 && i <= 7 ? "right" : "left",
-              }}
-            >
-              {h}
-            </Mono>
-          )
-        )}
+        {headerCells.map((h, i) => (
+          <Mono
+            key={i}
+            className={h.className}
+            style={{
+              fontSize: 9,
+              color: F1.fg3,
+              letterSpacing: "0.18em",
+              textAlign: h.right ? "right" : "left",
+            }}
+          >
+            {h.label}
+          </Mono>
+        ))}
       </div>
 
       {sortedPositions.map((pos, i) => {
@@ -348,12 +375,10 @@ function TimingTower({
             key={pos.driver_number}
             type="button"
             onClick={() => onSelect(pos.driver_number)}
-            className="grid items-center w-full text-left"
+            className={`grid items-center w-full text-left gap-1.5 sm:gap-2 px-2.5 sm:px-4 ${towerCols}`}
             style={{
-              gridTemplateColumns:
-                "44px 6px 56px minmax(0, 1fr) 90px 90px 76px 76px 56px 96px",
-              gap: 8,
-              padding: "10px 16px",
+              paddingTop: 10,
+              paddingBottom: 10,
               background: focused
                 ? `${teamColor}14`
                 : i % 2 === 0
@@ -375,7 +400,7 @@ function TimingTower({
             />
             <Mono
               style={{
-                fontSize: 13,
+                fontSize: "clamp(11px, 2.8vw, 13px)",
                 fontWeight: 700,
                 letterSpacing: "0.06em",
                 color: F1.fg,
@@ -387,7 +412,7 @@ function TimingTower({
               <span
                 className="font-display truncate"
                 style={{
-                  fontSize: 16,
+                  fontSize: "clamp(13px, 3.4vw, 16px)",
                   fontWeight: 600,
                   letterSpacing: "-0.01em",
                   lineHeight: 1.05,
@@ -397,6 +422,7 @@ function TimingTower({
                 {last.toUpperCase()}
               </span>
               <Mono
+                className="truncate"
                 style={{
                   fontSize: 9,
                   color: F1.fg3,
@@ -438,6 +464,7 @@ function TimingTower({
               {pos.position === 1 ? "LEADER" : formatGap(interval?.gap_to_leader)}
             </Mono>
             <Mono
+              className="hidden xl:block"
               style={{
                 fontSize: 12,
                 color: F1.fg2,
@@ -448,7 +475,7 @@ function TimingTower({
               {pos.position === 1 ? "—" : formatGap(interval?.interval)}
             </Mono>
             {stint ? (
-              <div className="flex items-center gap-1.5">
+              <div className="hidden md:flex items-center gap-1.5">
                 <Tire compound={compoundShort(stint.compound)} />
                 <Mono style={{ fontSize: 10, color: F1.fg3 }}>
                   {(() => {
@@ -461,9 +488,9 @@ function TimingTower({
                 </Mono>
               </div>
             ) : (
-              <Mono style={{ fontSize: 11, color: F1.fg3 }}>—</Mono>
+              <Mono className="hidden md:block" style={{ fontSize: 11, color: F1.fg3 }}>—</Mono>
             )}
-            <div className="flex items-center gap-[3px]">
+            <div className="hidden xl:flex items-center gap-[3px]">
               {[0, 1, 2].map((idx) => {
                 const sec = lap?.sectors[idx] ?? null;
                 const best = bestSectors[idx];
@@ -479,7 +506,6 @@ function TimingTower({
           </button>
         );
       })}
-    </div>
     </div>
   );
 }
@@ -1281,9 +1307,9 @@ export function LiveContent({
 
           {/* Footer ticker */}
           <div
-            className="flex items-center justify-between"
+            className="flex items-center justify-between gap-3"
             style={{
-              padding: "10px 24px",
+              padding: "10px clamp(12px, 2.5vw, 24px)",
               background: F1.bg2,
               borderTop: `1px solid ${F1.line}`,
             }}
@@ -1292,7 +1318,10 @@ export function LiveContent({
               FEED · {view.feedLabel}
               {view.lastUpdated && ` · UPDATED ${formatTimeSince(view.lastUpdated)}`}
             </Mono>
-            <Mono style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.24em" }}>
+            <Mono
+              className="hidden md:inline"
+              style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.24em" }}
+            >
               CLICK A DRIVER ROW TO FOCUS TELEMETRY
             </Mono>
           </div>

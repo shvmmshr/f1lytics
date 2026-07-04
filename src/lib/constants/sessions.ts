@@ -98,6 +98,37 @@ export interface ActiveSession {
  * `nowMs`, or null if nothing is live. Schedule-based (no network), so it can
  * gate UI like the navbar LIVE dot purely from the baked calendar.
  */
+/** Display names for each session key, for LIVE banners and labels. */
+export const SESSION_LABELS: Record<keyof WeekendSchedule, string> = {
+  fp1: "PRACTICE 1",
+  fp2: "PRACTICE 2",
+  fp3: "PRACTICE 3",
+  sprintQualifying: "SPRINT QUALIFYING",
+  sprint: "SPRINT",
+  qualifying: "QUALIFYING",
+  race: "RACE",
+};
+
+/**
+ * Competitive sessions that warrant the site-wide LIVE treatment (navbar red
+ * dot, homepage banner). Practice sessions deliberately excluded.
+ */
+const HEADLINE_SESSIONS = new Set<keyof WeekendSchedule>([
+  "sprintQualifying",
+  "sprint",
+  "qualifying",
+  "race",
+]);
+
+/**
+ * Like getActiveSession, but only for quali / sprint quali / sprint / race —
+ * returns null while a practice session is running.
+ */
+export function getActiveHeadlineSession(nowMs: number): ActiveSession | null {
+  const active = getActiveSession(nowMs);
+  return active && HEADLINE_SESSIONS.has(active.session) ? active : null;
+}
+
 export function getActiveSession(nowMs: number): ActiveSession | null {
   for (const raceDate of Object.keys(WEEKEND_SCHEDULES)) {
     const sched = WEEKEND_SCHEDULES[raceDate];

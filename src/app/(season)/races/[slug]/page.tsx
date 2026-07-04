@@ -59,6 +59,12 @@ interface OpenF1SessionCandidate {
   circuit_short_name: string;
 }
 
+// Regenerate every 5 minutes. Without this, a page built BEFORE its race
+// happened skips every data fetch (raceHasHappened is false at build time),
+// so Next.js marks it fully static and it never picks up results/points
+// until the next deploy — this is why a just-finished GP showed no data.
+export const revalidate = 300;
+
 export function generateStaticParams() {
   return CIRCUIT_LIST.map((circuit) => ({
     slug: circuit.slug,
