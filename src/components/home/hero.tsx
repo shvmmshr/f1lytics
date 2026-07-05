@@ -276,7 +276,10 @@ export function Hero({
             {headlineState === "live"
               ? "Positions, gaps and race control — streaming now on the live timing screen."
               : headlineState === "countdown" && nextRace
-                ? `${nextRace.name} from ${nextRace.city}. Grid, schedule and live timing in one place.`
+                ? // fullName is the GP name ("British Grand Prix") — the circuit
+                  // name can contain the city ("Silverstone Circuit from
+                  // Silverstone") and read like a stutter.
+                  `The ${nextRace.fullName} from ${nextRace.city}. Starting grid, schedule and live timing in one place.`
                 : "Standings, race analysis, telemetry and the full 2026 season — in one place."}
           </div>
 
