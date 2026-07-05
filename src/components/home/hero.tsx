@@ -193,9 +193,14 @@ export function Hero({
         {/* LEFT — headline */}
         <div className="min-w-0">
           {/* Start lights: illuminate in sequence, extinguish together, once. */}
-          <div className="flex items-center gap-5 mb-7">
-            <StartLights size={12} />
-            <Mono style={{ fontSize: 11, color: F1.fg3, letterSpacing: "0.24em" }}>
+          <div className="flex items-center gap-3 sm:gap-5 mb-7 min-w-0">
+            <div className="shrink-0">
+              <StartLights size={12} />
+            </div>
+            <Mono
+              className="truncate text-[10px] tracking-[0.16em] sm:text-[11px] sm:tracking-[0.24em]"
+              style={{ color: F1.fg3 }}
+            >
               {headlineState === "live" && liveSession
                 ? `ON AIR · ${SESSION_LABELS[liveSession.session]}`
                 : headlineState === "countdown" && nextRace
@@ -259,6 +264,9 @@ export function Hero({
                   fontSize: "clamp(48px, 10.5vw, 148px)",
                   lineHeight: 0.88,
                   letterSpacing: "-0.04em",
+                  // lineHeight 0.88 leaves the two blocks tangent — a hair of
+                  // font-relative space keeps the stroked line from colliding.
+                  marginTop: "0.08em",
                   WebkitTextStroke: `2px ${F1.red}`,
                   color: "transparent",
                 }}
@@ -284,7 +292,9 @@ export function Hero({
           </div>
 
           {/* CTAs — the primary action follows the headline's state */}
-          <div ref={ctaRef} className="mt-9 flex items-center flex-wrap" style={{ gap: 14 }}>
+          {/* Stacked full-width on phones (side-by-side wraps ragged below
+              ~440px); intrinsic-width row from sm up. */}
+          <div ref={ctaRef} className="mt-9 flex flex-col sm:flex-row sm:items-center sm:flex-wrap" style={{ gap: 14 }}>
             <Link
               href={
                 headlineState === "live"
@@ -293,7 +303,7 @@ export function Hero({
                     ? `/races/${weekend.raceSlug}#starting-grid`
                     : "/standings"
               }
-              className="font-display inline-flex items-center cursor-pointer transition-opacity hover:opacity-90"
+              className="font-display inline-flex items-center justify-center cursor-pointer transition-opacity hover:opacity-90"
               style={{
                 background: F1.red,
                 color: F1.ink,
@@ -317,9 +327,11 @@ export function Hero({
                     ? "/standings"
                     : "/races"
               }
-              className="font-mono inline-flex items-center cursor-pointer hover:bg-white/5 transition-colors"
+              className="font-mono inline-flex items-center justify-center whitespace-nowrap cursor-pointer hover:bg-white/5 transition-colors"
               style={{
-                padding: "17px 26px",
+                // 18px mono line + 18px×2 + 2px border = 56px — matches the
+                // primary button (24px display line + 16px×2, borderless).
+                padding: "18px 26px",
                 background: "transparent",
                 color: F1.fg,
                 border: `1px solid ${F1.lineHi}`,
