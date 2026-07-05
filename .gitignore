@@ -43,3 +43,6 @@ next-env.d.ts
 # claude code / tools
 docs/superpowers
 excalidraw.log
+CLAUDE.md
+.claude/
+.claude.local.md
