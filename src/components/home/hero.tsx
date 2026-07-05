@@ -22,6 +22,7 @@ import {
   DataLabel,
   StatValue,
 } from "@/components/shared/broadcast";
+import { StartLights } from "@/components/home/start-lights";
 import { SessionSchedule } from "@/components/shared/session-schedule";
 import type { GridRow, RecentRace } from "@/lib/api/weekend";
 
@@ -46,6 +47,7 @@ function pad(n: number) {
   return String(n).padStart(2, "0");
 }
 
+
 export function Hero({
   driverStandings = [] as Standing[],
   constructorStandings = [] as Standing[],
@@ -59,7 +61,7 @@ export function Hero({
 }) {
   const [view, setView] = useState<"drivers" | "constructors">("drivers");
   const heroRef = useRef<HTMLElement>(null);
-  const headlineRef = useRef<HTMLHeadingElement>(null);
+  const headlineRef = useRef<HTMLDivElement>(null);
   const subRef = useRef<HTMLDivElement>(null);
   const ctaRef = useRef<HTMLDivElement>(null);
   const tickerRef = useRef<HTMLDivElement>(null);
@@ -94,6 +96,8 @@ export function Hero({
   const cdHours = useRef<HTMLSpanElement>(null);
   const cdMins = useRef<HTMLSpanElement>(null);
   const cdSecs = useRef<HTMLSpanElement>(null);
+  // The headline's own ticking clock (LIGHTS OUT state).
+  const hlTime = useRef<HTMLSpanElement>(null);
 
   useCountdownTick(targetTime, ({ d, h, m, s }) => {
     if (cdHeaderD.current) cdHeaderD.current.textContent = String(d);
@@ -102,7 +106,26 @@ export function Hero({
     if (cdHours.current) cdHours.current.textContent = pad(h);
     if (cdMins.current) cdMins.current.textContent = pad(m);
     if (cdSecs.current) cdSecs.current.textContent = pad(s);
+    if (hlTime.current)
+      hlTime.current.textContent =
+        d > 0 ? `${d}D ${pad(h)}:${pad(m)}` : `${pad(h)}:${pad(m)}:${pad(s)}`;
   });
+
+  // ── The headline is generated from season state, not a slogan ──
+  // live session → "IT'S LIVE."; race weekend → "LIGHTS OUT" + ticking clock;
+  // otherwise → the championship story from the standings we already fetched.
+  const leader = driverStandings[0];
+  const runnerUp = driverStandings[1];
+  const leaderGap =
+    leader && runnerUp && leader.points > runnerUp.points
+      ? Math.round(leader.points - runnerUp.points)
+      : null;
+  const leaderLastName = leader?.name.split(" ").pop()?.toUpperCase() ?? null;
+  const headlineState: "live" | "countdown" | "season" = liveSession
+    ? "live"
+    : weekend && targetTime
+      ? "countdown"
+      : "season";
 
   useGSAP(
     () => {
@@ -133,12 +156,15 @@ export function Hero({
     >
       {/* Background image + treatments (decorative — never intercepts clicks/drags) */}
       <div className="absolute inset-0 pointer-events-none" style={{ opacity: 0.45 }}>
+        {/* This is the page's LCP element (biggest paint). Optimized (NOT
+            unoptimized): phones get a ~750px variant instead of the full
+            1920px file, and priority+fetchPriority emit the preload hint. */}
         <Image
           src="/hero-bg.avif"
           alt=""
           fill
           priority
-          unoptimized
+          fetchPriority="high"
           className="object-cover"
           style={{ filter: "grayscale(0.4) contrast(1.1)" }}
           sizes="100vw"
@@ -166,48 +192,104 @@ export function Hero({
       >
         {/* LEFT — headline */}
         <div className="min-w-0">
-          <div className="flex items-center gap-4 mb-7">
-            <span style={{ width: 56, height: 1, background: F1.red, display: "inline-block" }} />
-            <Mono style={{ fontSize: 11, color: F1.red, letterSpacing: "0.24em" }}>
-              2026 SEASON · TELEMETRY & ANALYSIS
+          {/* Start lights: illuminate in sequence, extinguish together, once. */}
+          <div className="flex items-center gap-5 mb-7">
+            <StartLights size={12} />
+            <Mono style={{ fontSize: 11, color: F1.fg3, letterSpacing: "0.24em" }}>
+              {headlineState === "live" && liveSession
+                ? `ON AIR · ${SESSION_LABELS[liveSession.session]}`
+                : headlineState === "countdown" && nextRace
+                  ? `RD ${String(nextRace.round).padStart(2, "0")} · ${nextRace.fullName.toUpperCase()}`
+                  : "2026 SEASON · TELEMETRY & ANALYSIS"}
             </Mono>
           </div>
 
-          <h1
-            ref={headlineRef}
-            className="font-display uppercase m-0"
-            style={{
-              fontWeight: 700,
-              fontSize: "clamp(52px, 11.6vw, 168px)",
-              lineHeight: 0.86,
-              letterSpacing: "-0.045em",
-              color: F1.fg,
-            }}
-          >
-            FORMULA 1<span style={{ color: F1.red }}>,</span>
-            <br />
-            <span
+          {/* The countdown digits live in a SIBLING of the h1 (aria-hidden),
+              not inside it — crawlers and screen readers get a keyword-bearing
+              heading ("LIGHTS OUT · British Grand Prix"), never "--:--:--". */}
+          <div ref={headlineRef}>
+            <h1
+              className="font-display uppercase m-0"
               style={{
-                WebkitTextStroke: `2px ${F1.fg}`,
-                color: "transparent",
+                fontWeight: 700,
+                fontSize: "clamp(48px, 10.5vw, 148px)",
+                lineHeight: 0.88,
+                letterSpacing: "-0.04em",
+                color: F1.fg,
               }}
             >
-              DECODED.
-            </span>
-          </h1>
+              {headlineState === "live" && liveSession ? (
+                <>
+                  IT&apos;S LIVE<span style={{ color: F1.red }}>.</span>
+                  <br />
+                  <span style={{ WebkitTextStroke: `2px ${F1.fg}`, color: "transparent" }}>
+                    {SESSION_LABELS[liveSession.session]}.
+                  </span>
+                </>
+              ) : headlineState === "countdown" ? (
+                <>
+                  LIGHTS OUT
+                  {nextRace && <span className="sr-only"> · {nextRace.fullName}</span>}
+                </>
+              ) : leaderLastName && leaderGap ? (
+                <>
+                  {leaderLastName}
+                  <br />
+                  <span style={{ WebkitTextStroke: `2px ${F1.fg}`, color: "transparent" }}>
+                    LEADS BY {leaderGap}
+                  </span>
+                  <span style={{ color: F1.red }}>.</span>
+                </>
+              ) : (
+                <>
+                  FORMULA 1<span style={{ color: F1.red }}>,</span>
+                  <br />
+                  <span style={{ WebkitTextStroke: `2px ${F1.fg}`, color: "transparent" }}>
+                    DECODED.
+                  </span>
+                </>
+              )}
+            </h1>
+            {headlineState === "countdown" && (
+              <div
+                aria-hidden
+                className="font-display uppercase tabular-nums m-0"
+                style={{
+                  fontWeight: 700,
+                  fontSize: "clamp(48px, 10.5vw, 148px)",
+                  lineHeight: 0.88,
+                  letterSpacing: "-0.04em",
+                  WebkitTextStroke: `2px ${F1.red}`,
+                  color: "transparent",
+                }}
+              >
+                IN <span ref={hlTime}>--:--:--</span>
+              </div>
+            )}
+          </div>
 
           <div
             ref={subRef}
             className="mt-8"
             style={{ maxWidth: 520, fontSize: "clamp(15px, 4vw, 18px)", lineHeight: 1.5, color: F1.fg2 }}
           >
-            Standings, race analysis, telemetry and the full 2026 season — in one place.
+            {headlineState === "live"
+              ? "Positions, gaps and race control — streaming now on the live timing screen."
+              : headlineState === "countdown" && nextRace
+                ? `${nextRace.name} from ${nextRace.city}. Grid, schedule and live timing in one place.`
+                : "Standings, race analysis, telemetry and the full 2026 season — in one place."}
           </div>
 
-          {/* CTAs */}
+          {/* CTAs — the primary action follows the headline's state */}
           <div ref={ctaRef} className="mt-9 flex items-center flex-wrap" style={{ gap: 14 }}>
             <Link
-              href="/standings"
+              href={
+                headlineState === "live"
+                  ? "/live"
+                  : headlineState === "countdown" && weekend?.grid
+                    ? `/races/${weekend.raceSlug}#starting-grid`
+                    : "/standings"
+              }
               className="font-display inline-flex items-center cursor-pointer transition-opacity hover:opacity-90"
               style={{
                 background: F1.red,
@@ -218,10 +300,20 @@ export function Hero({
                 padding: "16px 32px",
               }}
             >
-              VIEW STANDINGS
+              {headlineState === "live"
+                ? "WATCH LIVE TIMING"
+                : headlineState === "countdown" && weekend?.grid
+                  ? "STARTING GRID"
+                  : "VIEW STANDINGS"}
             </Link>
             <Link
-              href="/races"
+              href={
+                headlineState === "live" && weekend
+                  ? `/races/${weekend.raceSlug}`
+                  : headlineState === "countdown"
+                    ? "/standings"
+                    : "/races"
+              }
               className="font-mono inline-flex items-center cursor-pointer hover:bg-white/5 transition-colors"
               style={{
                 padding: "17px 26px",
@@ -232,7 +324,11 @@ export function Hero({
                 letterSpacing: "0.18em",
               }}
             >
-              EXPLORE RACES →
+              {headlineState === "live" && weekend
+                ? "RACE CENTRE →"
+                : headlineState === "countdown"
+                  ? "VIEW STANDINGS →"
+                  : "EXPLORE RACES →"}
             </Link>
           </div>
 
@@ -274,7 +370,7 @@ export function Hero({
 
         {/* RIGHT — Up next + championship ticker. Nudged up slightly at lg so
             the standings card clears the fold. */}
-        <div ref={tickerRef} className="flex flex-col gap-4 min-w-0 lg:-mt-6">
+        <div ref={tickerRef} className="flex flex-col gap-4 min-w-0 lg:-mt-12">
           {/* LAST RACE card — podium of the GP that finished within 3 days */}
           {recentRace && recentRace.podium.length > 0 && (
             <div
@@ -713,36 +809,60 @@ export function Hero({
         </div>
       </div>
 
-      {/* Bottom red ticker tape — seamless scrolling marquee (content duplicated
-          so the -50% translate loops without a seam). Pinned to the section bottom. */}
-      <div
-        className="relative font-mono overflow-hidden"
+      {/* Bottom bar — season progress. One segment per round: red = raced,
+          amber = sprint weekend raced, white = next up, ghosted = cancelled.
+          The season's shape at a glance; links to the calendar. */}
+      <Link
+        href="/calendar"
+        className="flex items-center gap-4 transition-colors hover:bg-white/[0.03]"
         style={{
-          background: F1.red,
-          color: F1.ink,
-          padding: "10px 0",
-          fontSize: 11,
-          letterSpacing: "0.18em",
+          borderTop: `1px solid ${F1.line}`,
+          background: F1.ink,
+          padding: "12px clamp(16px, 4vw, 32px)",
+          textDecoration: "none",
         }}
+        aria-label={`Season progress: round ${nextRace ? nextRace.round : "—"} of ${CIRCUIT_LIST.length}. View calendar`}
       >
-        <div className="animate-ticker flex whitespace-nowrap" style={{ width: "max-content" }}>
-          {[0, 1].map((copy) => (
-            <div key={copy} className="flex shrink-0" style={{ gap: 32, paddingRight: 32 }} aria-hidden={copy === 1}>
-              <span>● 2026 SEASON · {CIRCUIT_LIST.filter((c) => !c.cancelled).length} ROUNDS · {TEAM_LIST.length} TEAMS · {DRIVER_LIST.length} DRIVERS</span>
-              {nextRace && (
-                <span>
-                  ● UP NEXT · {nextRace.fullName.toUpperCase()} ·{" "}
-                  {new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", timeZone: "UTC" })
-                    .format(new Date(`${nextRace.raceDate}T00:00:00Z`))
-                    .toUpperCase()}
-                </span>
-              )}
-              <span>● STANDINGS · TELEMETRY · STRATEGY</span>
-              <span>● FORMULA 1, DECODED</span>
-            </div>
-          ))}
+        <Mono
+          className="shrink-0"
+          style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.22em" }}
+        >
+          2026
+        </Mono>
+        <div className="flex flex-1" style={{ gap: 3 }} aria-hidden>
+          {CIRCUIT_LIST.map((c) => {
+            const isNext = nextRace ? c.round === nextRace.round : false;
+            const done = nextRace ? c.round < nextRace.round : false;
+            return (
+              <span
+                key={c.id}
+                title={c.fullName}
+                style={{
+                  flex: 1,
+                  height: 6,
+                  background: c.cancelled
+                    ? F1.bg3
+                    : isNext
+                      ? F1.fg
+                      : done
+                        ? c.isSprint
+                          ? F1.amber
+                          : F1.red
+                        : F1.bg4,
+                  opacity: c.cancelled ? 0.35 : 1,
+                }}
+              />
+            );
+          })}
         </div>
-      </div>
+        <Mono
+          className="shrink-0"
+          style={{ fontSize: 9, color: F1.fg2, letterSpacing: "0.18em" }}
+        >
+          RD {nextRace ? String(nextRace.round).padStart(2, "0") : "—"}/
+          {CIRCUIT_LIST.length}
+        </Mono>
+      </Link>
     </section>
   );
 }

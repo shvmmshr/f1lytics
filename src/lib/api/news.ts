@@ -227,7 +227,15 @@ export async function fetchAllNews(
         },
       });
       if (!res.ok) throw new Error(`${feed.name}: HTTP ${res.status}`);
-      const text = await res.text();
+      // Size guard: a compromised/misbehaving feed could serve an enormous
+      // body that the regex parser would then buffer and scan in full.
+      const MAX_FEED_BYTES = 3_000_000;
+      const declared = Number(res.headers.get("content-length"));
+      if (Number.isFinite(declared) && declared > MAX_FEED_BYTES) {
+        throw new Error(`${feed.name}: feed too large (${declared}b)`);
+      }
+      let text = await res.text();
+      if (text.length > MAX_FEED_BYTES) text = text.slice(0, MAX_FEED_BYTES);
       // A 200 that isn't a feed (e.g. a Cloudflare/bot challenge served to
       // datacenter IPs) parses to zero items silently — flag it instead.
       if (!/<(?:rss|feed|item|rdf)\b/i.test(text)) {

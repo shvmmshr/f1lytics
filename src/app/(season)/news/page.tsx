@@ -8,10 +8,10 @@ import { F1, Mono, Grid as BroadcastGrid } from "@/components/shared/broadcast";
 // images.remotePatterns in next.config.ts). Anything else — e.g. a feed
 // switching CDNs — renders as a plain <img> instead of crashing the page.
 const OPTIMIZED_IMAGE_HOSTS = [
-  /(^|\.)motorsport\.com$/,
-  /^ichef\.bbci\.co\.uk$/,
-  /\.cloudfront\.net$/,
-  /(^|\.)ghost\.io$/,
+  /^cdn-[\w-]+\.motorsport\.com$/, // motorsport.com + autosport
+  /^ichef\.bbci\.co\.uk$/, // BBC Sport
+  /^d3cm515ijfiu6w\.cloudfront\.net$/, // PlanetF1
+  /^storage\.ghost\.io$/, // The Race
 ];
 
 function canOptimizeImage(url: string): boolean {

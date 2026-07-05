@@ -7,6 +7,7 @@ import { useGSAP } from "@gsap/react";
 import { gsap } from "@/lib/gsap";
 import { cn } from "@/lib/utils";
 import { F1, LiveDot, Mono } from "@/components/shared/broadcast";
+import { Logo } from "@/components/shared/logo";
 import { getNextEvent, CIRCUIT_LIST } from "@/lib/constants";
 import { getActiveHeadlineSession } from "@/lib/constants/sessions";
 
@@ -140,71 +141,26 @@ export function Navbar() {
           className="flex items-stretch"
           style={{ height: 56 }}
         >
-          {/* Logo wedge */}
-          <Link
-            href="/"
-            className="flex items-center gap-3 relative overflow-hidden"
+          {/* Logo lockup — red F1 plate + sector ticks + LYTICS wordmark */}
+          <div
+            className="flex items-center"
             style={{
               padding: "0 20px",
               borderRight: `1px solid ${F1.line}`,
               background: F1.bg,
             }}
           >
-            <span
-              style={{
-                position: "absolute",
-                left: 0,
-                top: 0,
-                bottom: 0,
-                width: 3,
-                background: F1.red,
-              }}
-            />
-            <span
-              className="font-display flex items-center justify-center"
-              style={{
-                width: 32,
-                height: 32,
-                background: F1.red,
-                color: F1.ink,
-                fontWeight: 700,
-                fontSize: 18,
-                clipPath: "polygon(0 0, 100% 0, 85% 100%, 0 100%)",
-              }}
-            >
-              F1
-            </span>
-            <span className="hidden sm:flex flex-col">
-              <span
-                className="font-display"
-                style={{
-                  fontWeight: 600,
-                  fontSize: 18,
-                  letterSpacing: "-0.02em",
-                  lineHeight: 1,
-                  color: F1.fg,
-                }}
-              >
-                F1LYTICS
-              </span>
-              <Mono
-                style={{
-                  fontSize: 8,
-                  color: F1.fg3,
-                  letterSpacing: "0.2em",
-                  marginTop: 2,
-                }}
-              >
-                TELEMETRY · ANALYSIS
-              </Mono>
-            </span>
-          </Link>
+            <Logo />
+          </div>
 
           {/* Desktop nav items */}
           <ul className="hidden md:flex items-stretch flex-1 list-none m-0 p-0">
             {NAV_ITEMS.map((item) => {
               const isActive =
                 pathname === item.href || pathname.startsWith(item.href + "/");
+              // The LIVE item becomes a red plate while a competitive session
+              // is on-track — the one nav destination whose urgency changes.
+              const liveNow = Boolean(item.live && sessionLive);
               return (
                 <li key={item.href} className="flex">
                   <Link
@@ -216,9 +172,14 @@ export function Navbar() {
                       padding: "0 18px",
                       fontSize: 11,
                       letterSpacing: "0.14em",
-                      color: isActive ? F1.fg : F1.fg2,
+                      color: liveNow ? F1.ink : isActive ? F1.fg : F1.fg2,
+                      fontWeight: liveNow ? 700 : undefined,
                       borderRight: `1px solid ${F1.line}`,
-                      background: isActive ? F1.bg2 : "transparent",
+                      background: liveNow
+                        ? F1.red
+                        : isActive
+                          ? F1.bg2
+                          : "transparent",
                     }}
                   >
                     {isActive && (
@@ -234,7 +195,7 @@ export function Navbar() {
                         }}
                       />
                     )}
-                    {item.live && sessionLive && <LiveDot size={6} />}
+                    {liveNow && <LiveDot size={6} color={F1.ink} />}
                     {item.label}
                   </Link>
                 </li>

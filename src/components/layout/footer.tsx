@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { F1, Mono } from "@/components/shared/broadcast";
+import { Logo } from "@/components/shared/logo";
 
 export function Footer() {
   const year = new Date().getFullYear();
@@ -21,18 +21,7 @@ export function Footer() {
         }}
       >
         <div className="flex items-center gap-3">
-          <Link
-            href="/"
-            className="font-display"
-            style={{
-              color: F1.fg,
-              fontWeight: 700,
-              fontSize: 14,
-              letterSpacing: "-0.01em",
-            }}
-          >
-            F1LYTICS
-          </Link>
+          <Logo />
           <span style={{ width: 1, height: 12, background: F1.line }} />
           <Mono style={{ color: F1.fg3 }}>
             {year} · UNOFFICIAL FAN PROJECT

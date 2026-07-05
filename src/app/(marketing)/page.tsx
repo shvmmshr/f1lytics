@@ -13,6 +13,17 @@ import { DRIVER_LIST, TEAM_LIST, getNextEvent, getApiRound } from "@/lib/constan
 import { mapConstructorToTeamId } from "@/lib/constructor-map";
 import type { WeekendInfo } from "@/components/home/hero";
 
+// State-aware description so the homepage snippet matches what the hero shows
+// during race weekends (title stays the strong root default).
+export async function generateMetadata(): Promise<import("next").Metadata> {
+  const next = getNextEvent()?.circuit;
+  return {
+    description: next
+      ? `Formula 1 2026 standings, results and telemetry. Next up: the ${next.fullName} at ${next.name} — schedule, starting grid and live timing on F1lytics.`
+      : "Formula 1 2026 standings, race results, telemetry and live timing — the full season in one place on F1lytics.",
+  };
+}
+
 export default async function Home() {
   // Honest fallback (shown only if the API is unavailable): real names, 0 points
   // — never invented numbers. teamId is already an internal id here.

@@ -42,6 +42,34 @@ const RECONNECT_MARGIN_MS = 280_000; // close before the 300s function cap
 const HEARTBEAT_MS = 15_000; // SSE keep-alive to the browser
 const WS_PING_MS = 10_000; // SignalR Core ping to F1 to keep the socket open
 
+// ── Abuse guards ─────────────────────────────────────────────────────────
+// Every accepted request opens an outbound WebSocket to F1 and pins a
+// function invocation for up to 5 minutes. Cap concurrency per instance so a
+// burst of hostile clients can't exhaust the function pool or hammer F1's
+// hub from our IPs (best-effort: serverless instances each get their own
+// counter, but each instance is also what a burst would saturate).
+const MAX_STREAMS_PER_INSTANCE = 24;
+let activeStreams = 0;
+
+/** Browsers send our own origin on EventSource requests; other sites' pages
+ *  send theirs. Absent Origin (curl, server-side) is allowed — the cap above
+ *  is the real backstop — but hostile embedding is refused outright. */
+function originAllowed(origin: string | null): boolean {
+  if (!origin) return true;
+  try {
+    const host = new URL(origin).hostname;
+    return (
+      host === "f1lytics.com" ||
+      host.endsWith(".f1lytics.com") ||
+      host.endsWith(".vercel.app") ||
+      host === "localhost" ||
+      host === "127.0.0.1"
+    );
+  } catch {
+    return false;
+  }
+}
+
 /** Read F1's streaming status. Returns "Offline" on any failure (fail closed). */
 async function getStreamingStatus(): Promise<string> {
   try {
@@ -58,6 +86,16 @@ async function getStreamingStatus(): Promise<string> {
 
 export async function GET(req: NextRequest) {
   const encoder = new TextEncoder();
+
+  if (!originAllowed(req.headers.get("origin"))) {
+    return new Response("Forbidden", { status: 403 });
+  }
+  if (activeStreams >= MAX_STREAMS_PER_INSTANCE) {
+    return new Response("Busy — retry shortly", {
+      status: 503,
+      headers: { "Retry-After": "15" },
+    });
+  }
 
   // A one-shot stream that emits a single `offline` event then closes, so the
   // client stops retrying and falls back to OpenF1 / locked-live / idle.
@@ -110,6 +148,7 @@ export async function GET(req: NextRequest) {
       // The timers are declared const further down (assigned once, at setup);
       // cleanup() closes over them and only ever runs from async callbacks,
       // well after start() has finished initializing them.
+      activeStreams++;
 
       const ws = new WebSocket(wsUrl, {
         headers: {
@@ -133,6 +172,7 @@ export async function GET(req: NextRequest) {
       const cleanup = () => {
         if (closed) return;
         closed = true;
+        activeStreams = Math.max(0, activeStreams - 1);
         clearInterval(heartbeat);
         clearInterval(wsPing);
         clearTimeout(maxTimer);

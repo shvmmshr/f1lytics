@@ -5,24 +5,24 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Providers } from "@/lib/providers";
 import "./globals.css";
 
+// All three families ship Google variable-font builds: omitting `weight`
+// loads ONE variable woff2 per family (covering every weight we use) instead
+// of four static files each — ~4x fewer font bytes and requests on every page.
 const antonio = Antonio({
   variable: "--font-antonio",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
   display: "swap",
 });
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-space-grotesk",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
   display: "swap",
 });
 
 const jetbrainsMono = JetBrains_Mono({
   variable: "--font-jetbrains-mono",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
   display: "swap",
 });
 
@@ -64,21 +64,22 @@ export const metadata: Metadata = {
   authors: [{ name: SITE_NAME }],
   creator: SITE_NAME,
   alternates: {
-    canonical: "/",
+    // "./" resolves against each page's own path (via metadataBase), giving
+    // every route a SELF-referential canonical. A hardcoded "/" here told
+    // Google that every page on the site was a duplicate of the homepage.
+    canonical: "./",
   },
   category: "sports",
+  // No title/description/url inside openGraph/twitter: when these are absent,
+  // Next falls back to each page's own title and description, so shared links
+  // to a driver/race page get that page's card — not the homepage's.
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: SITE_URL,
     siteName: SITE_NAME,
-    title: TITLE,
-    description: DESCRIPTION,
   },
   twitter: {
     card: "summary_large_image",
-    title: TITLE,
-    description: DESCRIPTION,
   },
   robots: {
     index: true,

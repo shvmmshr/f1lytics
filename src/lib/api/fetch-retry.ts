@@ -19,13 +19,27 @@ export async function fetchWithRetry(
   const maxAttempts = attempts ?? (isBuild ? 6 : 4);
   const maxWaitMs = isBuild ? 30_000 : 8000;
 
-  let res: Response;
   for (let attempt = 0; ; attempt++) {
-    res = await fetch(url, init);
-    const retryable = res.status === 429 || res.status >= 500;
-    if (!retryable || attempt >= maxAttempts - 1) return res;
+    let res: Response | null = null;
+    try {
+      // Per-attempt timeout: a HUNG upstream (as opposed to an erroring one)
+      // would otherwise stall the render until the platform kills the function.
+      res = await fetch(url, {
+        ...init,
+        signal: init.signal ?? AbortSignal.timeout(10_000),
+      });
+    } catch (err) {
+      // Timeouts and connection resets are as transient as a 429 — retry
+      // them the same way; rethrow once attempts are exhausted.
+      if (attempt >= maxAttempts - 1) throw err;
+    }
 
-    const retryAfter = Number(res.headers.get("retry-after"));
+    if (res) {
+      const retryable = res.status === 429 || res.status >= 500;
+      if (!retryable || attempt >= maxAttempts - 1) return res;
+    }
+
+    const retryAfter = Number(res?.headers.get("retry-after"));
     // Exponential backoff (1s, 2s, 4s, ...) with jitter so parallel build
     // workers hitting the same limit don't retry in lockstep and collide again.
     const backoffMs = 1000 * 2 ** attempt + Math.floor(Math.random() * 400);

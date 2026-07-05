@@ -227,6 +227,48 @@
   }
 }
 
+/* ── Start lights (homepage hero) ─────────────────────────────
+   Five lights illuminate in sequence and extinguish together — the F1 start
+   procedure. One shared 2.8s animation per light; only the "on" instant is
+   staggered (via per-light keyframes), so lights-out is simultaneous. */
+.start-lights span {
+  background: #1c1c22;
+  border: 1px solid #3f3f46;
+  animation-duration: 2.8s;
+  animation-timing-function: steps(1, end);
+  animation-fill-mode: forwards;
+}
+.start-lights span:nth-child(1) { animation-name: start-light-1; }
+.start-lights span:nth-child(2) { animation-name: start-light-2; }
+.start-lights span:nth-child(3) { animation-name: start-light-3; }
+.start-lights span:nth-child(4) { animation-name: start-light-4; }
+.start-lights span:nth-child(5) { animation-name: start-light-5; }
+@keyframes start-light-1 {
+  14% { background: #ff1801; border-color: #ff1801; box-shadow: 0 0 10px rgba(255, 24, 1, 0.7); }
+  82%, 100% { background: #1c1c22; border-color: #3f3f46; box-shadow: none; }
+}
+@keyframes start-light-2 {
+  26% { background: #ff1801; border-color: #ff1801; box-shadow: 0 0 10px rgba(255, 24, 1, 0.7); }
+  82%, 100% { background: #1c1c22; border-color: #3f3f46; box-shadow: none; }
+}
+@keyframes start-light-3 {
+  38% { background: #ff1801; border-color: #ff1801; box-shadow: 0 0 10px rgba(255, 24, 1, 0.7); }
+  82%, 100% { background: #1c1c22; border-color: #3f3f46; box-shadow: none; }
+}
+@keyframes start-light-4 {
+  50% { background: #ff1801; border-color: #ff1801; box-shadow: 0 0 10px rgba(255, 24, 1, 0.7); }
+  82%, 100% { background: #1c1c22; border-color: #3f3f46; box-shadow: none; }
+}
+@keyframes start-light-5 {
+  62% { background: #ff1801; border-color: #ff1801; box-shadow: 0 0 10px rgba(255, 24, 1, 0.7); }
+  82%, 100% { background: #1c1c22; border-color: #3f3f46; box-shadow: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .start-lights span {
+    animation: none;
+  }
+}
+
 /* Right-edge fade on horizontally scrollable tables/timelines — mobile
    browsers hide scrollbars, so without this there's no hint that more
    columns exist off-screen. */

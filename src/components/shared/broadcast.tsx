@@ -291,7 +291,8 @@ export function SectionHeader({
           style={{ width: 28, height: 1, background: accent, alignSelf: "center" }}
         />
       )}
-      <h3
+      {/* h2, not h3 — these are the top-level sections under each page's h1 */}
+      <h2
         className="font-display flex-1 m-0 uppercase"
         style={{
           fontWeight: 500,
@@ -301,7 +302,7 @@ export function SectionHeader({
         }}
       >
         {label}
-      </h3>
+      </h2>
       {right && <div>{right}</div>}
     </div>
   );

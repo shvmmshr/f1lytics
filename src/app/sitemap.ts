@@ -62,6 +62,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "weekly",
       priority: 0.7,
     },
+    {
+      url: `${BASE_URL}/news`,
+      lastModified: now,
+      changeFrequency: "hourly",
+      priority: 0.7,
+    },
   ];
 
   // Dynamic circuit pages
@@ -88,13 +94,22 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.6,
   }));
 
-  // Dynamic race pages
-  const racePages: MetadataRoute.Sitemap = CIRCUIT_LIST.map((circuit) => ({
-    url: `${BASE_URL}/races/${circuit.slug}`,
-    lastModified: now,
-    changeFrequency: "weekly" as const,
-    priority: 0.6,
-  }));
+  // Dynamic race pages. Cancelled rounds render only a thin shell — keep them
+  // reachable in the UI but out of the sitemap so they don't drag content-
+  // quality signals down. Past races carry their real race date as
+  // lastModified (the results are settled); upcoming ones stay "now".
+  const racePages: MetadataRoute.Sitemap = CIRCUIT_LIST.filter(
+    (c) => !c.cancelled
+  ).map((circuit) => {
+    const raceDay = new Date(`${circuit.raceDate}T23:59:59Z`);
+    const isSettled = raceDay.getTime() < now.getTime() - 3 * 24 * 60 * 60 * 1000;
+    return {
+      url: `${BASE_URL}/races/${circuit.slug}`,
+      lastModified: isSettled ? raceDay : now,
+      changeFrequency: isSettled ? ("monthly" as const) : ("weekly" as const),
+      priority: 0.6,
+    };
+  });
 
   return [
     ...staticPages,
