@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import Link from "next/link";
 import { getConstructorStandings, getDriverStandings } from "@/lib/api/jolpica";
 import { DRIVER_LIST, TEAMS } from "@/lib/constants";
 import { mapConstructorToTeamId } from "@/lib/constructor-map";
@@ -12,11 +12,17 @@ import {
   Grid as BroadcastGrid,
 } from "@/components/shared/broadcast";
 import { AnimatedBar } from "@/components/shared/animated-bar";
+import { createPageMetadata } from "@/lib/seo/metadata";
+import { JsonLd } from "@/components/shared/json-ld";
+import { collectionSchema } from "@/lib/seo/schema";
 
-export const metadata: Metadata = {
-  title: "Standings",
-  description: "Driver and constructor championship standings for the 2026 F1 season",
-};
+const description =
+  "Follow the 2026 F1 driver and constructor standings with points, wins, leader gaps, and team contributions, updated after each round.";
+export const metadata = createPageMetadata({
+  title: "2026 F1 Standings: Drivers & Constructors",
+  description,
+  path: "/standings",
+});
 
 export default async function StandingsPage() {
   let driverStandings: Awaited<ReturnType<typeof getDriverStandings>> = [];
@@ -50,6 +56,7 @@ export default async function StandingsPage() {
         wins: Number.parseInt(s.wins, 10),
         teamName: team?.name ?? s.Constructors[0]?.name ?? "",
         color: team?.color ?? "#6B7280",
+        slug: localDriver?.slug,
       };
     })
     .sort((a, b) => a.position - b.position);
@@ -66,6 +73,7 @@ export default async function StandingsPage() {
         points: Number.parseFloat(s.points),
         wins: Number.parseInt(s.wins, 10),
         color: team?.color ?? "#6B7280",
+        slug: team?.slug,
       };
     })
     .sort((a, b) => a.position - b.position);
@@ -75,6 +83,20 @@ export default async function StandingsPage() {
 
   return (
     <PageTransition>
+      {drivers.length > 0 && (
+        <JsonLd
+          data={collectionSchema(
+            "2026 F1 standings",
+            description,
+            "/standings",
+            drivers.map((driver) => ({
+              name: `${driver.first} ${driver.last}`,
+              ...(driver.slug ? { path: `/drivers/${driver.slug}` as const } : {}),
+              ...(!driver.slug ? { url: "https://f1lytics.com/standings" } : {}),
+            })),
+          )[1]}
+        />
+      )}
       <div style={{ background: F1.bg, color: F1.fg, position: "relative" }}>
         <BroadcastGrid color={F1.line} size={64} opacity={0.18} />
 
@@ -205,8 +227,9 @@ export default async function StandingsPage() {
                     {d.code}
                   </Mono>
                   <div className="relative flex flex-col min-w-0">
-                    <span
-                      className="font-display truncate"
+                    {d.slug ? <Link
+                      href={`/drivers/${d.slug}`}
+                      className="font-display truncate hover:underline"
                       style={{
                         fontSize: 22,
                         fontWeight: 600,
@@ -219,7 +242,9 @@ export default async function StandingsPage() {
                       }}
                     >
                       {d.first} {d.last.toUpperCase()}
-                    </span>
+                    </Link> : <span className="font-display truncate" style={{ fontSize: 22, fontWeight: 600 }}>
+                      {d.first} {d.last.toUpperCase()}
+                    </span>}
                     <Mono
                       style={{
                         fontSize: 10,
@@ -299,7 +324,8 @@ export default async function StandingsPage() {
                     </Mono>
                     <span style={{ width: 4, height: 28, background: c.color }} />
                     <div className="flex-1 min-w-0">
-                      <span
+                      {c.slug ? <Link
+                        href={`/teams/${c.slug}`}
                         className="font-display truncate inline-block max-w-full"
                         style={{
                           fontSize: 18,
@@ -308,7 +334,9 @@ export default async function StandingsPage() {
                         }}
                       >
                         {c.name.toUpperCase()}
-                      </span>
+                      </Link> : <span className="font-display truncate inline-block max-w-full" style={{ fontSize: 18, fontWeight: 600 }}>
+                        {c.name.toUpperCase()}
+                      </span>}
                     </div>
                     <div style={{ textAlign: "right" }}>
                       <StatValue size={20}>{c.points}</StatValue>

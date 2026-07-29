@@ -15,6 +15,10 @@ import {
   StatValue,
   SectionHeader,
 } from "@/components/shared/broadcast";
+import { Breadcrumbs, type BreadcrumbItem } from "@/components/shared/breadcrumbs";
+import { JsonLd } from "@/components/shared/json-ld";
+import { createPageMetadata } from "@/lib/seo/metadata";
+import { breadcrumbSchema, teamSchema } from "@/lib/seo/schema";
 
 interface TeamPageProps {
   params: Promise<{ slug: string }>;
@@ -28,10 +32,12 @@ export async function generateMetadata({ params }: TeamPageProps): Promise<Metad
   const { slug } = await params;
   const team = getTeamBySlug(slug);
   if (!team) return { title: "Not Found" };
-  return {
-    title: `${team.name}`,
-    description: `${team.fullName} team profile, drivers, and season results`,
-  };
+  const drivers = getTeamDrivers(team.drivers);
+  return createPageMetadata({
+    title: `${team.name} F1 Team: Drivers, Stats & Results (2026)`,
+    description: `${team.name}'s 2026 F1 team profile with ${drivers.map((driver) => `${driver.firstName} ${driver.lastName}`).join(" and ")}, constructor standings, results, ${team.engine} engine, ${team.base} base, and history.`,
+    path: `/teams/${team.slug}`,
+  });
 }
 
 function getTeamDrivers(ids: [string, string]): Driver[] {
@@ -78,6 +84,11 @@ export default async function TeamPage({ params }: TeamPageProps) {
   if (!team) notFound();
 
   const teamDrivers = getTeamDrivers(team.drivers);
+  const breadcrumbs: readonly BreadcrumbItem[] = [
+    { name: "Home", href: "/" },
+    { name: "Teams", href: "/teams" },
+    { name: team.name },
+  ];
   const driverCodeSet = new Set(teamDrivers.map((d) => d.abbreviation));
 
   let constructorStandings: Awaited<ReturnType<typeof getConstructorStandings>> = [];
@@ -173,6 +184,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
 
   return (
     <PageTransition>
+      <JsonLd data={[breadcrumbSchema(breadcrumbs), teamSchema(team, teamDrivers)]} />
       <div style={{ background: F1.bg, color: F1.fg, position: "relative" }}>
         <BroadcastGrid color={F1.line} size={64} opacity={0.18} />
 
@@ -210,9 +222,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
                 CONSTRUCTOR
               </Mono>
               <span style={{ width: 40, height: 1, background: F1.line }} />
-              <Mono style={{ color: F1.fg3, fontSize: 11, letterSpacing: "0.18em" }}>
-                <Link href="/teams" className="hover:text-white transition-colors" style={{ color: F1.fg3 }}>SEASON / TEAMS</Link> / {teamSlugUpper}
-              </Mono>
+              <Breadcrumbs items={breadcrumbs} />
             </div>
 
             <div

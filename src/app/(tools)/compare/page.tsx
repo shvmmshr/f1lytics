@@ -1,9 +1,9 @@
-import type { Metadata } from "next";
 import { getDriverStandings, getConstructorStandings, getRaceResults, getAllQualifyingResults } from "@/lib/api/jolpica";
 import { mapConstructorToTeamId } from "@/lib/constructor-map";
 import { PageTransition } from "@/components/layout/page-transition";
 import { F1, Mono, Grid as BroadcastGrid } from "@/components/shared/broadcast";
 import { CompareTool } from "./compare-tool";
+import { createPageMetadata } from "@/lib/seo/metadata";
 
 /** Driver 3-letter code, falling back to the first 3 letters of the surname when
  *  Jolpica omits `code` (can happen for rookies). Keeps the same key across the
@@ -12,10 +12,12 @@ function driverCode(driver: { code?: string; familyName: string }): string {
   return (driver.code ?? driver.familyName.slice(0, 3)).toUpperCase();
 }
 
-export const metadata: Metadata = {
-  title: "Compare",
-  description: "Head-to-head comparison of F1 drivers and teams",
-};
+export const metadata = createPageMetadata({
+  title: "F1 Driver & Team Comparison Tool",
+  description:
+    "Compare F1 drivers and teams head to head across points, wins, podiums, qualifying pace, finishes, and recent form.",
+  path: "/compare",
+});
 
 export interface RecentFormEntry {
   round: number;

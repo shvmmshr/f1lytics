@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { fetchAllNews, type NewsItem } from "@/lib/api/news";
 import { F1, Mono } from "@/components/shared/broadcast";
+import { NewsImage } from "@/components/shared/news-image";
 
 // Server component — top headlines for the home page. Renders nothing if all
 // feeds are unavailable, so it never breaks the landing page.
@@ -59,12 +60,10 @@ export async function NewsStrip() {
               style={{ background: F1.bg, textDecoration: "none", color: F1.fg }}
             >
               {item.imageUrl && (
-                <div style={{ aspectRatio: "16 / 9", overflow: "hidden", background: F1.bg2 }}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
+                <div className="relative" style={{ aspectRatio: "16 / 9", overflow: "hidden", background: F1.bg2 }}>
+                  <NewsImage
                     src={item.imageUrl}
-                    alt=""
-                    loading="lazy"
+                    sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 33vw"
                     className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
                   />
                 </div>

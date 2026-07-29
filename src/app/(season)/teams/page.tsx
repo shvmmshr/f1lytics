@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { getConstructorStandings } from "@/lib/api/jolpica";
@@ -13,11 +12,17 @@ import {
   StatValue,
 } from "@/components/shared/broadcast";
 import { TeamsGrid } from "./teams-grid";
+import { JsonLd } from "@/components/shared/json-ld";
+import { createPageMetadata } from "@/lib/seo/metadata";
+import { collectionSchema } from "@/lib/seo/schema";
 
-export const metadata: Metadata = {
-  title: "Teams",
-  description: "Every team competing in the 2026 Formula 1 season",
-};
+const description =
+  "Explore 2026 F1 team lineups, constructor points, race results, engines, bases, team principals, and history.";
+export const metadata = createPageMetadata({
+  title: "2026 F1 Teams: Drivers, Standings & Results",
+  description,
+  path: "/teams",
+});
 
 export default async function TeamsPage() {
   let constructorStandings: Awaited<ReturnType<typeof getConstructorStandings>> = [];
@@ -51,6 +56,14 @@ export default async function TeamsPage() {
 
   return (
     <PageTransition>
+      <JsonLd
+        data={collectionSchema(
+          "2026 F1 teams",
+          description,
+          "/teams",
+          TEAM_LIST.map((team) => ({ name: team.name, path: `/teams/${team.slug}` as const })),
+        )}
+      />
       <div style={{ background: F1.bg, color: F1.fg, position: "relative" }}>
         <BroadcastGrid color={F1.line} size={64} opacity={0.18} />
 
@@ -244,6 +257,7 @@ export default async function TeamsPage() {
                           src={d.image}
                           alt={`${d.firstName} ${d.lastName}`}
                           fill
+                          sizes="28px"
                           className="object-cover object-top"
                         />
                       </div>

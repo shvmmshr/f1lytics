@@ -14,6 +14,10 @@ import {
   PosPill,
   SectionHeader,
 } from "@/components/shared/broadcast";
+import { Breadcrumbs, type BreadcrumbItem } from "@/components/shared/breadcrumbs";
+import { JsonLd } from "@/components/shared/json-ld";
+import { createPageMetadata } from "@/lib/seo/metadata";
+import { breadcrumbSchema, driverSchema } from "@/lib/seo/schema";
 
 interface DriverProfilePageProps {
   params: Promise<{ slug: string }>;
@@ -27,10 +31,12 @@ export async function generateMetadata({ params }: DriverProfilePageProps): Prom
   const { slug } = await params;
   const driver = getDriverBySlug(slug);
   if (!driver) return { title: "Not Found" };
-  return {
-    title: `${driver.firstName} ${driver.lastName}`,
-    description: `${driver.firstName} ${driver.lastName} driver profile, stats, and season results`,
-  };
+  const team = TEAMS[driver.teamId];
+  return createPageMetadata({
+    title: `${driver.firstName} ${driver.lastName} F1 Stats, Results & Profile (2026)`,
+    description: `${driver.firstName} ${driver.lastName} drives car ${driver.number} for ${team.name}. Follow 2026 standings, race form, wins, podiums, teammate comparison, and career history.`,
+    path: `/drivers/${driver.slug}`,
+  });
 }
 
 function countryCodeToFlag(code: string): string {
@@ -67,6 +73,11 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
   if (!driver) notFound();
 
   const team = TEAMS[driver.teamId];
+  const breadcrumbs: readonly BreadcrumbItem[] = [
+    { name: "Home", href: "/" },
+    { name: "Drivers", href: "/drivers" },
+    { name: `${driver.firstName} ${driver.lastName}` },
+  ];
 
   let raceResults: Awaited<ReturnType<typeof getRaceResults>> = [];
   let standings: Awaited<ReturnType<typeof getDriverStandings>> = [];
@@ -165,6 +176,7 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
 
   return (
     <PageTransition>
+      <JsonLd data={[breadcrumbSchema(breadcrumbs), driverSchema(driver, team)]} />
       <div style={{ background: F1.bg, color: F1.fg, position: "relative" }}>
         <BroadcastGrid color={F1.line} size={64} opacity={0.18} />
 
@@ -210,20 +222,11 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
             {driver.number}
           </div>
 
-          {/* Breadcrumb */}
           <div
-            className="relative flex items-center gap-3"
+            className="relative"
             style={{ padding: "20px clamp(16px, 4vw, 32px) 0" }}
           >
-            <Mono style={{ fontSize: 10, color: F1.fg3, letterSpacing: "0.18em" }}>
-              <Link href="/" className="hover:text-white transition-colors">F1LYTICS</Link>
-              {" › "}
-              <Link href="/drivers" className="hover:text-white transition-colors">DRIVERS · 2026</Link>
-              {" › "}
-              <span style={{ color: F1.fg }}>
-                {driver.lastName.toUpperCase()} · #{driver.number}
-              </span>
-            </Mono>
+            <Breadcrumbs items={breadcrumbs} />
           </div>
 
           {/* Identity */}
@@ -621,6 +624,7 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
                               src={d.image}
                               alt={`${d.firstName} ${d.lastName}`}
                               fill
+                              sizes="40px"
                               className="object-cover object-top"
                             />
                           </div>

@@ -41,8 +41,12 @@ yarn-error.log*
 next-env.d.ts
 
 # claude code / tools
-docs/superpowers
-excalidraw.log
+docs/superpowers/
+plans/
+.agents/
+AGENTS.md
 CLAUDE.md
+skills-lock.json
+excalidraw.log
 .claude/
 .claude.local.md

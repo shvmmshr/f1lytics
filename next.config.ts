@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
     // News thumbnails come from the feeds' CDNs. Literal hosts only — a
     // wildcard like **.cloudfront.net would let a compromised feed point the
     // image optimizer at ANY CloudFront tenant (open-proxy surface). Keep in
-    // sync with OPTIMIZED_IMAGE_HOSTS in src/app/(season)/news/page.tsx —
+    // sync with OPTIMIZED_IMAGE_HOSTS in src/components/shared/news-image.tsx —
     // unknown hosts fall back to a plain <img> there, so a feed switching
     // CDNs degrades gracefully instead of crashing.
     remotePatterns: [
@@ -17,6 +17,10 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "d3cm515ijfiu6w.cloudfront.net" }, // PlanetF1
       { protocol: "https", hostname: "storage.ghost.io" }, // The Race
     ],
+  },
+
+  async redirects() {
+    return [{ source: "/index", destination: "/", permanent: true }];
   },
 
   async headers() {

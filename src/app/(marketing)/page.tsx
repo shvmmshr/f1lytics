@@ -12,16 +12,21 @@ import { getStartingGrid, getRecentRace, type RecentRace } from "@/lib/api/weeke
 import { DRIVER_LIST, TEAM_LIST, getNextEvent, getApiRound } from "@/lib/constants";
 import { mapConstructorToTeamId } from "@/lib/constructor-map";
 import type { WeekendInfo } from "@/components/home/hero";
+import { createPageMetadata, ROOT_TITLE } from "@/lib/seo/metadata";
 
 // State-aware description so the homepage snippet matches what the hero shows
 // during race weekends (title stays the strong root default).
 export async function generateMetadata(): Promise<import("next").Metadata> {
   const next = getNextEvent()?.circuit;
-  return {
-    description: next
+  const description = next
       ? `Formula 1 2026 standings, results and telemetry. Next up: the ${next.fullName} at ${next.name} — schedule, starting grid and live timing on F1lytics.`
-      : "Formula 1 2026 standings, race results, telemetry and live timing — the full season in one place on F1lytics.",
-  };
+      : "Formula 1 2026 standings, race results, telemetry and live timing — the full season in one place on F1lytics.";
+  return createPageMetadata({
+    title: ROOT_TITLE,
+    description,
+    path: "/",
+    absoluteTitle: true,
+  });
 }
 
 export default async function Home() {
@@ -142,7 +147,7 @@ export default async function Home() {
             padding: "18px 24px",
             fontSize: 9,
             letterSpacing: "0.18em",
-            color: "#5C5C66",
+            color: "#A1A1AA",
             background: "#08080A",
             borderTop: "1px solid #27272A",
           }}

@@ -1268,6 +1268,7 @@ function TeamComparison({ stats }: { stats: Record<string, ConstructorStat> }) {
                         src={d.image}
                         alt={d.lastName}
                         fill
+                        sizes="28px"
                         className="object-cover object-top"
                       />
                     </div>

@@ -4,7 +4,8 @@ import { getRaceResults, getSprintResults } from "@/lib/api/jolpica";
 import { getStartingGrid, type GridRow } from "@/lib/api/weekend";
 import type { ResultItem, SprintRace } from "@/lib/api/types";
 import { getLaps, getRaceControl, getSessions, getStints } from "@/lib/api/openf1";
-import { CIRCUIT_LIST, TEAMS, getApiRound, getCircuitBySlug } from "@/lib/constants";
+import { CIRCUIT_LIST, DRIVER_LIST, TEAMS, getApiRound, getCircuitBySlug } from "@/lib/constants";
+import { mapConstructorToTeamId } from "@/lib/constructor-map";
 import { getWeekendSchedule } from "@/lib/constants/sessions";
 import { SessionSchedule } from "@/components/shared/session-schedule";
 import { PageTransition } from "@/components/layout/page-transition";
@@ -21,6 +22,10 @@ import Link from "next/link";
 import { formatLapTime, positionChange } from "@/lib/utils";
 import { TireStrategyViz } from "@/components/charts/tire-strategy-viz";
 import { LapTimeChart } from "@/components/charts/lap-time-chart";
+import { Breadcrumbs, type BreadcrumbItem } from "@/components/shared/breadcrumbs";
+import { JsonLd } from "@/components/shared/json-ld";
+import { createPageMetadata, type RaceSeoState } from "@/lib/seo/metadata";
+import { breadcrumbSchema, raceSchema } from "@/lib/seo/schema";
 
 interface RacePageProps {
   params: Promise<{
@@ -72,6 +77,15 @@ export function generateStaticParams() {
   }));
 }
 
+function getRaceSeoState(circuit: NonNullable<ReturnType<typeof getCircuitBySlug>>): RaceSeoState {
+  if (circuit.cancelled) return "cancelled";
+  const start = new Date(`${circuit.raceDate}T${circuit.raceTime}`).getTime();
+  const now = Date.now();
+  if (now < start - 72 * 60 * 60 * 1000) return "upcoming";
+  if (now <= start + 6 * 60 * 60 * 1000) return "weekend";
+  return "completed";
+}
+
 export async function generateMetadata({ params }: RacePageProps): Promise<Metadata> {
   const { slug } = await params;
   const circuit = getCircuitBySlug(slug);
@@ -82,14 +96,47 @@ export async function generateMetadata({ params }: RacePageProps): Promise<Metad
     };
   }
 
-  return {
-    title: `${circuit.fullName} Results`,
-    description: `Race results, podium, and telemetry overview for the ${circuit.fullName}`,
+  const state = getRaceSeoState(circuit);
+  const titles: Record<RaceSeoState, string> = {
+    upcoming: `2026 ${circuit.fullName}: Schedule & Start Time`,
+    weekend: `2026 ${circuit.fullName}: Starting Grid & Schedule`,
+    completed: `2026 ${circuit.fullName} Results & Race Analysis`,
+    cancelled: `${circuit.fullName} 2026: Race Cancelled`,
   };
+  const descriptions: Record<RaceSeoState, string> = {
+    upcoming: `Schedule, session times, circuit guide, and countdown for the 2026 ${circuit.fullName} at ${circuit.name}.`,
+    weekend: `Starting grid, weekend schedule, session times, and live timing links for the 2026 ${circuit.fullName}.`,
+    completed: `Results, podium, lap charts, tyre strategies, race control, and analysis for the 2026 ${circuit.fullName}.`,
+    cancelled: `The 2026 ${circuit.fullName} at ${circuit.name} was cancelled. View the circuit guide and season context.`,
+  };
+  return createPageMetadata({
+    title: titles[state],
+    description: descriptions[state],
+    path: `/races/${circuit.slug}`,
+    noIndex: state === "cancelled",
+  });
 }
 
 function normalize(value: string): string {
   return value.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function driverHref(driver: { code?: string; driverId?: string; familyName: string }) {
+  const code = driver.code?.toUpperCase();
+  const normalizedFamily = normalize(driver.familyName);
+  const local = DRIVER_LIST.find(
+    (candidate) =>
+      (code && candidate.abbreviation === code) ||
+      candidate.id === driver.driverId ||
+      normalize(candidate.lastName) === normalizedFamily,
+  );
+  return local ? `/drivers/${local.slug}` as const : null;
+}
+
+function teamHref(constructor: { constructorId?: string; name: string }) {
+  const id = mapConstructorToTeamId(constructor.constructorId ?? "", constructor.name);
+  const team = id ? TEAMS[id] : undefined;
+  return team ? `/teams/${team.slug}` as const : null;
 }
 
 function mapConstructorToTeamColor(constructorName: string): string {
@@ -121,6 +168,23 @@ export default async function RacePage({ params }: RacePageProps) {
   const circuit = getCircuitBySlug(slug);
 
   if (!circuit) notFound();
+  const raceState = getRaceSeoState(circuit);
+  const raceDescription =
+    raceState === "cancelled"
+      ? `The 2026 ${circuit.fullName} was cancelled.`
+      : `2026 ${circuit.fullName} schedule, results, and race analysis at ${circuit.name}.`;
+  const breadcrumbs: readonly BreadcrumbItem[] = [
+    { name: "Home", href: "/" },
+    { name: "Races", href: "/races" },
+    { name: circuit.fullName },
+  ];
+  const activeRaces = CIRCUIT_LIST.filter((candidate) => !candidate.cancelled);
+  const activeIndex = activeRaces.findIndex((candidate) => candidate.id === circuit.id);
+  const previousRace = activeIndex > 0 ? activeRaces[activeIndex - 1] : null;
+  const nextRace =
+    activeIndex >= 0 && activeIndex < activeRaces.length - 1
+      ? activeRaces[activeIndex + 1]
+      : null;
 
   const raceDate = new Date(`${circuit.raceDate}T00:00:00Z`);
   const weekendSchedule = getWeekendSchedule(circuit.raceDate);
@@ -271,6 +335,7 @@ export default async function RacePage({ params }: RacePageProps) {
 
   return (
     <PageTransition>
+      <JsonLd data={[breadcrumbSchema(breadcrumbs), raceSchema(circuit, raceDescription)]} />
       <div style={{ background: F1.bg, color: F1.fg, position: "relative" }}>
         <BroadcastGrid color={F1.line} size={64} opacity={0.18} />
 
@@ -304,10 +369,7 @@ export default async function RacePage({ params }: RacePageProps) {
                 ROUND {String(circuit.round).padStart(2, "0")}
               </Mono>
               <span style={{ width: 40, height: 1, background: F1.line }} />
-              <Mono style={{ color: F1.fg3, fontSize: 11, letterSpacing: "0.18em" }}>
-                <Link href="/races" className="hover:text-white transition-colors" style={{ color: F1.fg3 }}>SEASON / RACES</Link> /{" "}
-                {circuit.country.toUpperCase()}
-              </Mono>
+              <Breadcrumbs items={breadcrumbs} />
             </div>
             <h1
               className="font-display uppercase m-0"
@@ -386,7 +448,8 @@ export default async function RacePage({ params }: RacePageProps) {
                     >
                       <PositionBadge position={row.position} />
                       <div className="flex flex-col min-w-0 flex-1">
-                        <span
+                        {driverHref({ familyName: row.familyName }) ? <Link
+                          href={driverHref({ familyName: row.familyName })!}
                           className="font-display truncate"
                           style={{
                             fontSize: "clamp(14px, 3.4vw, 16px)",
@@ -397,12 +460,16 @@ export default async function RacePage({ params }: RacePageProps) {
                           }}
                         >
                           {row.driverName.toUpperCase()}
-                        </span>
+                        </Link> : <span className="font-display truncate">{row.driverName.toUpperCase()}</span>}
                         <Mono
                           className="truncate"
                           style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.14em", marginTop: 2 }}
                         >
-                          {row.teamName.toUpperCase()}
+                          {teamHref({ name: row.teamName }) ? (
+                            <Link href={teamHref({ name: row.teamName })!} className="hover:text-white">
+                              {row.teamName.toUpperCase()}
+                            </Link>
+                          ) : row.teamName.toUpperCase()}
                         </Mono>
                       </div>
                       <Mono
@@ -478,14 +545,25 @@ export default async function RacePage({ params }: RacePageProps) {
                           lineHeight: 1.05,
                         }}
                       >
-                        {result.Driver.givenName.toUpperCase()}{" "}
-                        <span style={{ color }}>{result.Driver.familyName.toUpperCase()}</span>
+                        {driverHref(result.Driver) ? (
+                          <Link href={driverHref(result.Driver)!} className="hover:underline">
+                            {result.Driver.givenName.toUpperCase()}{" "}
+                            <span style={{ color }}>{result.Driver.familyName.toUpperCase()}</span>
+                          </Link>
+                        ) : (
+                          <>{result.Driver.givenName.toUpperCase()}{" "}
+                            <span style={{ color }}>{result.Driver.familyName.toUpperCase()}</span></>
+                        )}
                       </div>
                       <Mono
                         className="block mt-1.5"
                         style={{ fontSize: 11, color: F1.fg3, letterSpacing: "0.16em" }}
                       >
-                        {result.Constructor.name.toUpperCase()}
+                        {teamHref(result.Constructor) ? (
+                          <Link href={teamHref(result.Constructor)!} className="inline-flex min-h-6 items-center py-1.5 hover:text-white">
+                            {result.Constructor.name.toUpperCase()}
+                          </Link>
+                        ) : result.Constructor.name.toUpperCase()}
                       </Mono>
                       <div className="mt-4 flex items-baseline gap-2">
                         <StatValue size={28} color={F1.fg}>
@@ -588,13 +666,21 @@ export default async function RacePage({ params }: RacePageProps) {
                                 verticalAlign: "middle",
                               }}
                             />
-                            {result.Driver.givenName} {result.Driver.familyName}
+                            {driverHref(result.Driver) ? (
+                              <Link href={driverHref(result.Driver)!} className="hover:underline">
+                                {result.Driver.givenName} {result.Driver.familyName}
+                              </Link>
+                            ) : <>{result.Driver.givenName} {result.Driver.familyName}</>}
                           </td>
                           <td
                             className="font-mono"
                             style={{ padding: "12px 16px", color: F1.fg2, fontSize: 12 }}
                           >
-                            {result.Constructor.name}
+                            {teamHref(result.Constructor) ? (
+                              <Link href={teamHref(result.Constructor)!} className="hover:underline">
+                                {result.Constructor.name}
+                              </Link>
+                            ) : result.Constructor.name}
                           </td>
                           <td
                             className="font-mono tabular-nums"
@@ -722,13 +808,21 @@ export default async function RacePage({ params }: RacePageProps) {
                                   verticalAlign: "middle",
                                 }}
                               />
-                              {result.Driver.givenName} {result.Driver.familyName}
+                              {driverHref(result.Driver) ? (
+                                <Link href={driverHref(result.Driver)!} className="hover:underline">
+                                  {result.Driver.givenName} {result.Driver.familyName}
+                                </Link>
+                              ) : <>{result.Driver.givenName} {result.Driver.familyName}</>}
                             </td>
                             <td
                               className="font-mono"
                               style={{ padding: "12px 16px", color: F1.fg2, fontSize: 12 }}
                             >
-                              {result.Constructor.name}
+                              {teamHref(result.Constructor) ? (
+                                <Link href={teamHref(result.Constructor)!} className="hover:underline">
+                                  {result.Constructor.name}
+                                </Link>
+                              ) : result.Constructor.name}
                             </td>
                             <td
                               className="font-mono tabular-nums"
@@ -875,6 +969,41 @@ export default async function RacePage({ params }: RacePageProps) {
             </div>
           </div>
         </section>
+
+        <nav
+          aria-label="Race navigation"
+          className="relative grid grid-cols-1 gap-px sm:grid-cols-3"
+          style={{ background: F1.line, borderBlock: `1px solid ${F1.line}` }}
+        >
+          {previousRace ? (
+            <Link
+              href={`/races/${previousRace.slug}`}
+              className="p-5 transition-colors hover:bg-white/[0.04]"
+              style={{ background: F1.bg }}
+            >
+              <Mono style={{ color: F1.fg3, fontSize: 9, letterSpacing: "0.16em" }}>PREVIOUS RACE</Mono>
+              <div className="mt-1">{previousRace.fullName}</div>
+            </Link>
+          ) : <span style={{ background: F1.bg }} />}
+          <Link
+            href={`/circuits/${circuit.slug}`}
+            className="p-5 text-center transition-colors hover:bg-white/[0.04]"
+            style={{ background: F1.bg }}
+          >
+            <Mono style={{ color: F1.red, fontSize: 9, letterSpacing: "0.16em" }}>CIRCUIT GUIDE</Mono>
+            <div className="mt-1">{circuit.name}</div>
+          </Link>
+          {nextRace ? (
+            <Link
+              href={`/races/${nextRace.slug}`}
+              className="p-5 text-right transition-colors hover:bg-white/[0.04]"
+              style={{ background: F1.bg }}
+            >
+              <Mono style={{ color: F1.fg3, fontSize: 9, letterSpacing: "0.16em" }}>NEXT RACE</Mono>
+              <div className="mt-1">{nextRace.fullName}</div>
+            </Link>
+          ) : <span style={{ background: F1.bg }} />}
+        </nav>
 
         {/* CHARTS */}
         <section className="relative" style={{ padding: "40px clamp(16px, 4vw, 32px) 60px" }}>

@@ -1,5 +1,6 @@
 import { F1, Mono } from "@/components/shared/broadcast";
 import { Logo } from "@/components/shared/logo";
+import Link from "next/link";
 
 export function Footer() {
   const year = new Date().getFullYear();
@@ -28,6 +29,9 @@ export function Footer() {
           </Mono>
         </div>
         <div className="flex items-center gap-4">
+          <Link href="/about" className="hover:text-white" style={{ color: F1.fg2 }}>
+            ABOUT
+          </Link>
           <a
             href="https://github.com/shvmmshr/f1lytics"
             target="_blank"

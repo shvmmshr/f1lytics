@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { CIRCUIT_LIST } from "@/lib/constants";
@@ -6,11 +5,17 @@ import { PageTransition } from "@/components/layout/page-transition";
 import { F1, Mono, Grid as BroadcastGrid } from "@/components/shared/broadcast";
 import { CircuitGlobeWrapper } from "./circuit-globe-wrapper";
 import { CircuitsGrid } from "./circuits-grid";
+import { JsonLd } from "@/components/shared/json-ld";
+import { createPageMetadata } from "@/lib/seo/metadata";
+import { collectionSchema } from "@/lib/seo/schema";
 
-export const metadata: Metadata = {
-  title: "Circuits",
-  description: "All 24 circuits on the 2026 Formula 1 calendar",
-};
+const description =
+  "Explore 2026 F1 circuit maps, lap records, track lengths, turns, race dates, weekend schedules, and results.";
+export const metadata = createPageMetadata({
+  title: "2026 F1 Circuits: Track Guides & Calendar",
+  description,
+  path: "/circuits",
+});
 
 function formatRaceDate(date: string): string {
   return new Intl.DateTimeFormat("en-US", {
@@ -43,6 +48,17 @@ export default function CircuitsPage() {
 
   return (
     <PageTransition>
+      <JsonLd
+        data={collectionSchema(
+          "2026 F1 circuits",
+          description,
+          "/circuits",
+          CIRCUIT_LIST.map((circuit) => ({
+            name: circuit.name,
+            path: `/circuits/${circuit.slug}` as const,
+          })),
+        )}
+      />
       <div style={{ background: F1.bg, color: F1.fg, position: "relative" }}>
         <BroadcastGrid color={F1.line} size={64} opacity={0.18} />
 

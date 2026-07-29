@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { getRaceResults } from "@/lib/api/jolpica";
@@ -17,11 +16,14 @@ import {
   SectionHeader,
   Grid as BroadcastGrid,
 } from "@/components/shared/broadcast";
+import { createPageMetadata } from "@/lib/seo/metadata";
 
-export const metadata: Metadata = {
-  title: "Race Calendar",
-  description: "2026 Formula 1 calendar timeline with countdown to the next race",
-};
+export const metadata = createPageMetadata({
+  title: "2026 F1 Calendar: Race Dates & Start Times",
+  description:
+    "View every 2026 F1 race date, sprint weekend, and session start time with automatic timezone conversion and a countdown to the next Grand Prix.",
+  path: "/calendar",
+});
 
 function formatDateMonthDay(date: string): string {
   return new Intl.DateTimeFormat("en-US", { month: "short", day: "2-digit" })
@@ -338,11 +340,10 @@ export default async function CalendarPage() {
                     : F1.fg4;
 
               return (
-                <Link
+                <div
                   key={c.id}
-                  href={`/circuits/${c.slug}`}
                   data-cal-card
-                  className="relative block transition-colors hover:bg-white/5"
+                  className="group relative block transition-colors hover:bg-white/5"
                   style={{
                     background: isNext ? F1.bg2 : F1.bg,
                     padding: 16,
@@ -350,6 +351,11 @@ export default async function CalendarPage() {
                     borderTop: `2px solid ${stateColor}`,
                   }}
                 >
+                  <Link
+                    href={`/races/${c.slug}`}
+                    aria-label={`${c.fullName} race centre`}
+                    className="absolute inset-0 z-10"
+                  />
                   {isNext && <RacingStripes color={F1.amber} opacity={0.06} size={12} />}
                   <div className="relative flex justify-between items-baseline">
                     <Mono
@@ -464,7 +470,13 @@ export default async function CalendarPage() {
                       </Mono>
                     </div>
                   )}
-                </Link>
+                  <Link
+                    href={`/circuits/${c.slug}`}
+                    className="relative z-20 mt-3 inline-block font-mono text-[9px] tracking-[0.14em] text-zinc-400 hover:text-white"
+                  >
+                    CIRCUIT GUIDE →
+                  </Link>
+                </div>
               );
             })}
           </CalendarGrid>

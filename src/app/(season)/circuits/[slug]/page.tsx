@@ -3,7 +3,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getRaceResults } from "@/lib/api/jolpica";
-import { CIRCUIT_LIST, getApiRound, getCircuitBySlug } from "@/lib/constants";
+import { CIRCUIT_LIST, DRIVER_LIST, TEAMS, getApiRound, getCircuitBySlug } from "@/lib/constants";
+import { mapConstructorToTeamId } from "@/lib/constructor-map";
 import { PageTransition } from "@/components/layout/page-transition";
 import {
   F1,
@@ -11,6 +12,10 @@ import {
   Grid as BroadcastGrid,
   SectionHeader,
 } from "@/components/shared/broadcast";
+import { Breadcrumbs, type BreadcrumbItem } from "@/components/shared/breadcrumbs";
+import { JsonLd } from "@/components/shared/json-ld";
+import { createPageMetadata } from "@/lib/seo/metadata";
+import { breadcrumbSchema, circuitSchema } from "@/lib/seo/schema";
 
 interface CircuitPageProps {
   params: Promise<{ slug: string }>;
@@ -24,10 +29,11 @@ export async function generateMetadata({ params }: CircuitPageProps): Promise<Me
   const { slug } = await params;
   const circuit = getCircuitBySlug(slug);
   if (!circuit) return { title: "Not Found" };
-  return {
-    title: `${circuit.fullName}`,
-    description: `${circuit.fullName} circuit stats, schedule, and track information`,
-  };
+  return createPageMetadata({
+    title: `${circuit.name} F1 Circuit Guide`,
+    description: `${circuit.fullName} guide for ${circuit.name} in ${circuit.city}, ${circuit.country}: ${circuit.length} km, ${circuit.turns} turns, ${circuit.lapRecord} lap record, schedule, and results.`,
+    path: `/circuits/${circuit.slug}`,
+  });
 }
 
 function formatDate(date: string) {
@@ -48,10 +54,26 @@ function countryCodeToFlag(code: string): string {
     .join("");
 }
 
+function resultDriverHref(driverId: string) {
+  const driver = DRIVER_LIST.find((candidate) => candidate.id === driverId);
+  return driver ? `/drivers/${driver.slug}` as const : null;
+}
+
+function resultTeamHref(name: string) {
+  const teamId = mapConstructorToTeamId("", name);
+  const team = teamId ? TEAMS[teamId] : undefined;
+  return team ? `/teams/${team.slug}` as const : null;
+}
+
 export default async function CircuitPage({ params }: CircuitPageProps) {
   const { slug } = await params;
   const circuit = getCircuitBySlug(slug);
   if (!circuit) notFound();
+  const breadcrumbs: readonly BreadcrumbItem[] = [
+    { name: "Home", href: "/" },
+    { name: "Circuits", href: "/circuits" },
+    { name: circuit.name },
+  ];
 
   // Find adjacent circuits for prev/next nav
   const idx = CIRCUIT_LIST.findIndex((c) => c.id === circuit.id);
@@ -90,6 +112,7 @@ export default async function CircuitPage({ params }: CircuitPageProps) {
 
   return (
     <PageTransition>
+      <JsonLd data={[breadcrumbSchema(breadcrumbs), circuitSchema(circuit)]} />
       <div style={{ background: F1.bg, color: F1.fg, position: "relative" }}>
         <BroadcastGrid color={F1.line} size={64} opacity={0.18} />
 
@@ -122,12 +145,7 @@ export default async function CircuitPage({ params }: CircuitPageProps) {
                 ROUND {String(circuit.round).padStart(2, "0")}
               </Mono>
               <span style={{ width: 40, height: 1, background: F1.line }} />
-              <Mono style={{ color: F1.fg3, fontSize: 11, letterSpacing: "0.18em" }}>
-                <Link href="/circuits" className="hover:text-white transition-colors" style={{ color: F1.fg3 }}>
-                  SEASON / CIRCUITS
-                </Link>{" "}
-                / {circuit.country.toUpperCase()}
-              </Mono>
+              <Breadcrumbs items={breadcrumbs} />
               {circuit.isSprint && !circuit.cancelled && (
                 <Mono
                   style={{
@@ -340,13 +358,21 @@ export default async function CircuitPage({ params }: CircuitPageProps) {
                             fontWeight: 500,
                           }}
                         >
-                          {r.driver}
+                          {resultDriverHref(r.driverId) ? (
+                            <Link href={resultDriverHref(r.driverId)!} className="hover:underline">
+                              {r.driver}
+                            </Link>
+                          ) : r.driver}
                         </td>
                         <td
                           className="font-mono hidden sm:table-cell"
                           style={{ padding: "14px 18px", color: F1.fg3, fontSize: 12 }}
                         >
-                          {r.team}
+                          {resultTeamHref(r.team) ? (
+                            <Link href={resultTeamHref(r.team)!} className="hover:underline">
+                              {r.team}
+                            </Link>
+                          ) : r.team}
                         </td>
                         <td
                           className="font-mono text-right tabular-nums"
@@ -389,6 +415,21 @@ export default async function CircuitPage({ params }: CircuitPageProps) {
             )}
           </div>
         </section>
+
+        {!circuit.cancelled && (
+          <div className="relative mx-auto px-8 pt-8" style={{ maxWidth: 1464 }}>
+            <Link
+              href={`/races/${circuit.slug}`}
+              className="block border p-5 text-center transition-colors hover:bg-white/[0.04]"
+              style={{ borderColor: F1.line }}
+            >
+              <Mono style={{ color: F1.red, fontSize: 10, letterSpacing: "0.18em" }}>
+                RACE CENTRE →
+              </Mono>
+              <div className="mt-1">{circuit.fullName}</div>
+            </Link>
+          </div>
+        )}
 
         {/* PREV / NEXT */}
         <section className="relative" style={{ padding: "32px 32px 60px" }}>

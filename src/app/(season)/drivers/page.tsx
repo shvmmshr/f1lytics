@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { DRIVER_LIST, TEAMS } from "@/lib/constants";
@@ -12,11 +11,17 @@ import {
   PosPill,
 } from "@/components/shared/broadcast";
 import { DriversGrid } from "./drivers-grid";
+import { JsonLd } from "@/components/shared/json-ld";
+import { createPageMetadata } from "@/lib/seo/metadata";
+import { collectionSchema } from "@/lib/seo/schema";
 
-export const metadata: Metadata = {
-  title: "Drivers",
-  description: "Every driver competing in the 2026 Formula 1 season",
-};
+const description =
+  "Explore every 2026 F1 driver with championship points, wins, teams, race form, career history, and teammate comparisons.";
+export const metadata = createPageMetadata({
+  title: "2026 F1 Drivers: Profiles, Teams & Standings",
+  description,
+  path: "/drivers",
+});
 
 export default async function DriversPage() {
   let standings: Awaited<ReturnType<typeof getDriverStandings>> = [];
@@ -47,6 +52,17 @@ export default async function DriversPage() {
 
   return (
     <PageTransition>
+      <JsonLd
+        data={collectionSchema(
+          "2026 F1 drivers",
+          description,
+          "/drivers",
+          DRIVER_LIST.map((driver) => ({
+            name: `${driver.firstName} ${driver.lastName}`,
+            path: `/drivers/${driver.slug}` as const,
+          })),
+        )}
+      />
       <div style={{ background: F1.bg, color: F1.fg, position: "relative" }}>
         <BroadcastGrid color={F1.line} size={64} opacity={0.18} />
 

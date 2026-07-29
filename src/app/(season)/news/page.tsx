@@ -1,69 +1,18 @@
-import type { Metadata } from "next";
-import Image from "next/image";
 import { fetchAllNews, scoreImportance, type NewsItem } from "@/lib/api/news";
 import { PageTransition } from "@/components/layout/page-transition";
 import { F1, Mono, Grid as BroadcastGrid } from "@/components/shared/broadcast";
+import { NewsImage } from "@/components/shared/news-image";
+import { JsonLd } from "@/components/shared/json-ld";
+import { createPageMetadata } from "@/lib/seo/metadata";
+import { collectionSchema } from "@/lib/seo/schema";
 
-// CDN hosts allowed through the Next image optimizer (must stay in sync with
-// images.remotePatterns in next.config.ts). Anything else — e.g. a feed
-// switching CDNs — renders as a plain <img> instead of crashing the page.
-const OPTIMIZED_IMAGE_HOSTS = [
-  /^cdn-[\w-]+\.motorsport\.com$/, // motorsport.com + autosport
-  /^ichef\.bbci\.co\.uk$/, // BBC Sport
-  /^d3cm515ijfiu6w\.cloudfront\.net$/, // PlanetF1
-  /^storage\.ghost\.io$/, // The Race
-];
-
-function canOptimizeImage(url: string): boolean {
-  try {
-    return OPTIMIZED_IMAGE_HOSTS.some((re) => re.test(new URL(url).hostname));
-  } catch {
-    return false;
-  }
-}
-
-/** Feed thumbnail: next/image (resized, AVIF/WebP srcset) for known CDNs,
- *  plain <img> fallback for unknown hosts. Fills its aspect-ratio container. */
-function NewsImage({
-  src,
-  sizes,
-  eager,
-  className,
-}: {
-  src: string;
-  sizes: string;
-  eager?: boolean;
-  className: string;
-}) {
-  if (canOptimizeImage(src)) {
-    return (
-      <Image
-        src={src}
-        alt=""
-        fill
-        sizes={sizes}
-        priority={eager}
-        className={className}
-        style={{ objectFit: "cover" }}
-      />
-    );
-  }
-  return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={src}
-      alt=""
-      loading={eager ? "eager" : "lazy"}
-      className={`h-full w-full object-cover ${className}`}
-    />
-  );
-}
-
-export const metadata: Metadata = {
-  title: "F1 News",
-  description:
-    "Latest Formula 1 news aggregated from BBC Sport, Motorsport.com, Autosport, The Race and PlanetF1.",
-};
+const description =
+  "Latest Formula 1 news aggregated from BBC Sport, Motorsport.com, Autosport, The Race, and PlanetF1, with clear publisher attribution.";
+export const metadata = createPageMetadata({
+  title: "Latest Formula 1 News",
+  description,
+  path: "/news",
+});
 
 export const revalidate = 900;
 
@@ -115,6 +64,16 @@ export default async function NewsPage() {
 
   return (
     <PageTransition>
+      {items.length > 0 && (
+        <JsonLd
+          data={collectionSchema(
+            "Latest Formula 1 news",
+            description,
+            "/news",
+            items.map((item) => ({ name: item.title, url: item.url })),
+          )}
+        />
+      )}
       <div style={{ background: F1.bg, color: F1.fg, position: "relative" }}>
         <BroadcastGrid color={F1.line} size={48} opacity={0.18} />
 

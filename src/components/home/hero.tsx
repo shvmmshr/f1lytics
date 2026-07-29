@@ -61,7 +61,6 @@ export function Hero({
 }) {
   const [view, setView] = useState<"drivers" | "constructors">("drivers");
   const heroRef = useRef<HTMLElement>(null);
-  const headlineRef = useRef<HTMLDivElement>(null);
   const subRef = useRef<HTMLDivElement>(null);
   const ctaRef = useRef<HTMLDivElement>(null);
   const tickerRef = useRef<HTMLDivElement>(null);
@@ -134,8 +133,7 @@ export function Hero({
       // renders visible instead of being stuck invisible-but-interactive.
       gsap.set([subRef.current, ctaRef.current, statsRef.current, tickerRef.current], { y: 24, opacity: 0 });
       const tl = gsap.timeline({ defaults: { ease: "power3.out" }, delay: 0.1 });
-      tl.from(headlineRef.current, { y: 40, opacity: 0, duration: 0.8 }, 0)
-        .to(subRef.current, { y: 0, opacity: 1, duration: 0.5 }, 0.5)
+      tl.to(subRef.current, { y: 0, opacity: 1, duration: 0.5 }, 0.15)
         .to(ctaRef.current, { y: 0, opacity: 1, duration: 0.5 }, 0.65)
         .to(tickerRef.current, { y: 0, opacity: 1, duration: 0.5 }, 0.6)
         .to(statsRef.current, { y: 0, opacity: 1, duration: 0.5 }, 0.8)
@@ -166,14 +164,13 @@ export function Hero({
           priority
           fetchPriority="high"
           className="object-cover"
-          style={{ filter: "grayscale(0.4) contrast(1.1)" }}
           sizes="100vw"
         />
       </div>
       <div
         className="absolute inset-0"
         style={{
-          background: `linear-gradient(180deg, rgba(8,8,10,0.4) 0%, rgba(8,8,10,0.85) 50%, ${F1.ink} 100%)`,
+          background: `linear-gradient(180deg, rgba(8,8,10,0.48) 0%, rgba(8,8,10,0.88) 50%, ${F1.ink} 100%)`,
         }}
       />
       <RacingStripes color={F1.red} opacity={0.04} size={20} />
@@ -212,7 +209,7 @@ export function Hero({
           {/* The countdown digits live in a SIBLING of the h1 (aria-hidden),
               not inside it — crawlers and screen readers get a keyword-bearing
               heading ("LIGHTS OUT · British Grand Prix"), never "--:--:--". */}
-          <div ref={headlineRef}>
+          <div>
             <h1
               className="font-display uppercase m-0"
               style={{
@@ -278,8 +275,8 @@ export function Hero({
 
           <div
             ref={subRef}
-            className="mt-8"
-            style={{ maxWidth: 520, fontSize: "clamp(15px, 4vw, 18px)", lineHeight: 1.5, color: F1.fg2 }}
+            className="mt-8 max-w-full"
+            style={{ width: "100%", maxWidth: 520, fontSize: "clamp(15px, 4vw, 18px)", lineHeight: 1.5, color: F1.fg2 }}
           >
             {headlineState === "live"
               ? "Positions, gaps and race control — streaming now on the live timing screen."
@@ -836,7 +833,7 @@ export function Hero({
           padding: "12px clamp(16px, 4vw, 32px)",
           textDecoration: "none",
         }}
-        aria-label={`Season progress: round ${nextRace ? nextRace.round : "—"} of ${CIRCUIT_LIST.length}. View calendar`}
+        aria-label={`2026 RD ${nextRace ? String(nextRace.round).padStart(2, "0") : "—"}/${CIRCUIT_LIST.length} · season progress · view calendar`}
       >
         <Mono
           className="shrink-0"

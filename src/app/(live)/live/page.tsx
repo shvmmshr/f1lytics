@@ -1,13 +1,14 @@
-import type { Metadata } from "next";
 import { PageTransition } from "@/components/layout/page-transition";
 import { getLatestCompletedRaceKey } from "@/lib/api/openf1";
 import { LiveContent } from "./live-content";
+import { createPageMetadata } from "@/lib/seo/metadata";
 
-export const metadata: Metadata = {
-  title: "Live Timing",
+export const metadata = createPageMetadata({
+  title: "F1 Live Timing, Telemetry & Race Tracker",
   description:
-    "Live F1 session timing, positions, and race control data for the 2026 season",
-};
+    "Follow F1 positions, gaps, sectors, tyres, race control, weather, and replay data, with clear limitations when live timing is locked.",
+  path: "/live",
+});
 
 export const dynamic = "force-dynamic";
 

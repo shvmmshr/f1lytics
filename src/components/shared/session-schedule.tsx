@@ -339,7 +339,7 @@ export function SessionSchedule({
           {title}
         </Mono>
         <div className="flex items-center gap-2 min-w-0">
-          <Mono style={{ fontSize: 9, color: F1.fg4, letterSpacing: "0.18em" }}>
+          <Mono style={{ fontSize: 9, color: F1.fg2, letterSpacing: "0.18em" }}>
             TIMEZONE
           </Mono>
           <TimezoneSelect zone={zone} zones={zones} onSelect={select} />

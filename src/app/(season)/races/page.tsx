@@ -1,14 +1,19 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { CIRCUIT_LIST } from "@/lib/constants";
 import { getRaceResults } from "@/lib/api/jolpica";
 import { PageTransition } from "@/components/layout/page-transition";
 import { F1, Mono, Grid as BroadcastGrid } from "@/components/shared/broadcast";
+import { JsonLd } from "@/components/shared/json-ld";
+import { createPageMetadata } from "@/lib/seo/metadata";
+import { collectionSchema } from "@/lib/seo/schema";
 
-export const metadata: Metadata = {
-  title: "Races",
-  description: "Every round of the 2026 Formula 1 season with results",
-};
+const description =
+  "Browse the 2026 F1 schedule, winners, starting grids, race and sprint results, lap charts, and tyre strategies.";
+export const metadata = createPageMetadata({
+  title: "2026 F1 Race Results & Grand Prix Schedule",
+  description,
+  path: "/races",
+});
 
 /** Compact, scannable date: "SUN · MAR 8". Year is implied (whole page is 2026). */
 function formatRaceDate(date: string): string {
@@ -58,6 +63,17 @@ export default async function RacesPage() {
 
   return (
     <PageTransition>
+      <JsonLd
+        data={collectionSchema(
+          "2026 F1 races",
+          description,
+          "/races",
+          CIRCUIT_LIST.filter((circuit) => !circuit.cancelled).map((circuit) => ({
+            name: circuit.fullName,
+            path: `/races/${circuit.slug}` as const,
+          })),
+        )}
+      />
       <div style={{ background: F1.bg, color: F1.fg, position: "relative" }}>
         <BroadcastGrid color={F1.line} size={64} opacity={0.18} />
 
