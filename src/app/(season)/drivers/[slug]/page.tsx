@@ -79,25 +79,32 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
     { name: `${driver.firstName} ${driver.lastName}` },
   ];
 
-  let raceResults: Awaited<ReturnType<typeof getRaceResults>> = [];
-  let standings: Awaited<ReturnType<typeof getDriverStandings>> = [];
-
-  try {
-    [raceResults, standings] = await Promise.all([
-      getRaceResults("2026"),
-      getDriverStandings("2026"),
-    ]);
-  } catch (err) {
-    console.error("[f1lytics] driver page data fetch failed:", err);
-  }
-
   const historyYears = ["2022", "2023", "2024", "2025"];
   const historicalStandings: { year: string; position: number | null; points: number; wins: number }[] = [];
 
+  // Start both groups together so an uncached render does not wait for the
+  // current season before requesting history. Historical seasons are complete,
+  // so a one-day cache is sufficient and avoids needless five-minute refreshes.
+  const currentDataPromise = Promise.all([
+    getRaceResults("2026").catch((err) => {
+      console.warn("[f1lytics] driver race results fetch failed:", err);
+      return [];
+    }),
+    getDriverStandings("2026").catch((err) => {
+      console.warn("[f1lytics] driver standings fetch failed:", err);
+      return [];
+    }),
+  ] as const);
+  const historyDataPromise = Promise.all(
+    historyYears.map((y) => getDriverStandings(y, 86_400).catch(() => []))
+  );
+
+  const [[raceResults, standings], histResults] = await Promise.all([
+    currentDataPromise,
+    historyDataPromise,
+  ]);
+
   try {
-    const histResults = await Promise.all(
-      historyYears.map((y) => getDriverStandings(y).catch(() => []))
-    );
     for (let i = 0; i < historyYears.length; i++) {
       const yearStandings = histResults[i];
       const entry = yearStandings.find(

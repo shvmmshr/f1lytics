@@ -111,14 +111,16 @@ export async function getRaceResults(
 /**
  * Fetch driver standings for a given season.
  * Returns an array of DriverStanding entries.
- * Revalidates every 5 minutes (300s) so points update promptly after a session.
+ * Defaults to 5-minute revalidation so current points update promptly; callers
+ * may use a longer lifetime for completed seasons.
  */
 export async function getDriverStandings(
-  season: string = "current"
+  season: string = "current",
+  revalidate: number = 300
 ): Promise<DriverStanding[]> {
   const data = await fetchJolpica<StandingsTable>(
     `/${season}/driverStandings.json`,
-    300
+    revalidate
   );
   const lists = data.MRData.StandingsTable.StandingsLists;
   return lists.length > 0 ? (lists[0].DriverStandings ?? []) : [];
@@ -127,14 +129,16 @@ export async function getDriverStandings(
 /**
  * Fetch constructor standings for a given season.
  * Returns an array of ConstructorStanding entries.
- * Revalidates every 5 minutes (300s) so points update promptly after a session.
+ * Defaults to 5-minute revalidation so current points update promptly; callers
+ * may use a longer lifetime for completed seasons.
  */
 export async function getConstructorStandings(
-  season: string = "current"
+  season: string = "current",
+  revalidate: number = 300
 ): Promise<ConstructorStanding[]> {
   const data = await fetchJolpica<StandingsTable>(
     `/${season}/constructorStandings.json`,
-    300
+    revalidate
   );
   const lists = data.MRData.StandingsTable.StandingsLists;
   return lists.length > 0 ? (lists[0].ConstructorStandings ?? []) : [];

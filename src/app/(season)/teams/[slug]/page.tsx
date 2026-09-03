@@ -54,7 +54,12 @@ async function getHistoricalStandings(teamName: string) {
   const results: { year: string; position: number | null; points: number; wins: number }[] = [];
 
   try {
-    const all = await Promise.all(years.map((y) => getConstructorStandings(y).catch(() => [])));
+    // Completed seasons are immutable. Keeping these cached for a day avoids
+    // needlessly putting four historical requests on the five-minute live-data
+    // refresh cadence.
+    const all = await Promise.all(
+      years.map((y) => getConstructorStandings(y, 86_400).catch(() => []))
+    );
     for (let i = 0; i < years.length; i++) {
       const n = normalize(teamName);
       const entry = all[i].find((s) => {
@@ -91,22 +96,25 @@ export default async function TeamPage({ params }: TeamPageProps) {
   ];
   const driverCodeSet = new Set(teamDrivers.map((d) => d.abbreviation));
 
-  let constructorStandings: Awaited<ReturnType<typeof getConstructorStandings>> = [];
-  let driverStandings: Awaited<ReturnType<typeof getDriverStandings>> = [];
-  let raceResults: Awaited<ReturnType<typeof getRaceResults>> = [];
-
-  try {
-    [constructorStandings, driverStandings, raceResults] = await Promise.all([
-      getConstructorStandings("2026"),
-      getDriverStandings("2026"),
-      getRaceResults("2026"),
+  // Start live and historical data together. On a cold ISR render this removes
+  // a second network waterfall, while per-source fallbacks preserve any data
+  // that did load when another optional request fails.
+  const [constructorStandings, driverStandings, raceResults, historicalStandings] =
+    await Promise.all([
+      getConstructorStandings("2026").catch((err) => {
+        console.warn("[f1lytics] team constructor standings fetch failed:", err);
+        return [];
+      }),
+      getDriverStandings("2026").catch((err) => {
+        console.warn("[f1lytics] team driver standings fetch failed:", err);
+        return [];
+      }),
+      getRaceResults("2026").catch((err) => {
+        console.warn("[f1lytics] team race results fetch failed:", err);
+        return [];
+      }),
+      getHistoricalStandings(team.name),
     ]);
-  } catch (err) {
-    console.error("[f1lytics] team page data fetch failed:", err);
-    // API unavailable
-  }
-
-  const historicalStandings = await getHistoricalStandings(team.name);
 
   const constructorStanding = constructorStandings.find(
     (s) => mapConstructorToTeamId(s.Constructor.constructorId, s.Constructor.name) === team.id
