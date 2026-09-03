@@ -49,19 +49,21 @@ export const WEEKEND_SCHEDULES: Record<string, WeekendSchedule> = {
   "2026-09-13": { fp1: "2026-09-11T11:30:00Z", fp2: "2026-09-11T15:00:00Z", fp3: "2026-09-12T10:30:00Z", qualifying: "2026-09-12T14:00:00Z", race: "2026-09-13T13:00:00Z" },
   // R15 Azerbaijan Grand Prix
   "2026-09-26": { fp1: "2026-09-24T08:30:00Z", fp2: "2026-09-24T12:00:00Z", fp3: "2026-09-25T08:30:00Z", qualifying: "2026-09-25T12:00:00Z", race: "2026-09-26T11:00:00Z" },
-  // R16 Singapore Grand Prix
+  // R16 Bahrain Grand Prix in Malaysia
+  "2026-10-04": { fp1: "2026-10-02T04:30:00Z", fp2: "2026-10-02T08:00:00Z", fp3: "2026-10-03T04:30:00Z", qualifying: "2026-10-03T08:00:00Z", race: "2026-10-04T07:00:00Z" },
+  // R17 Singapore Grand Prix
   "2026-10-11": { fp1: "2026-10-09T08:30:00Z", sprintQualifying: "2026-10-09T12:30:00Z", sprint: "2026-10-10T09:00:00Z", qualifying: "2026-10-10T13:00:00Z", race: "2026-10-11T12:00:00Z" },
-  // R17 United States Grand Prix
+  // R18 United States Grand Prix
   "2026-10-25": { fp1: "2026-10-23T17:30:00Z", fp2: "2026-10-23T21:00:00Z", fp3: "2026-10-24T17:30:00Z", qualifying: "2026-10-24T21:00:00Z", race: "2026-10-25T20:00:00Z" },
-  // R18 Mexico City Grand Prix
+  // R19 Mexico City Grand Prix
   "2026-11-01": { fp1: "2026-10-30T18:30:00Z", fp2: "2026-10-30T22:00:00Z", fp3: "2026-10-31T17:30:00Z", qualifying: "2026-10-31T21:00:00Z", race: "2026-11-01T20:00:00Z" },
-  // R19 Brazilian Grand Prix
+  // R20 Brazilian Grand Prix
   "2026-11-08": { fp1: "2026-11-06T15:30:00Z", fp2: "2026-11-06T19:00:00Z", fp3: "2026-11-07T14:30:00Z", qualifying: "2026-11-07T18:00:00Z", race: "2026-11-08T17:00:00Z" },
-  // R20 Las Vegas Grand Prix
+  // R21 Las Vegas Grand Prix
   "2026-11-22": { fp1: "2026-11-20T00:30:00Z", fp2: "2026-11-20T04:00:00Z", fp3: "2026-11-21T00:30:00Z", qualifying: "2026-11-21T04:00:00Z", race: "2026-11-22T04:00:00Z" },
-  // R21 Qatar Grand Prix
+  // R22 Qatar Grand Prix
   "2026-11-29": { fp1: "2026-11-27T13:30:00Z", fp2: "2026-11-27T17:00:00Z", fp3: "2026-11-28T14:30:00Z", qualifying: "2026-11-28T18:00:00Z", race: "2026-11-29T16:00:00Z" },
-  // R22 Abu Dhabi Grand Prix
+  // R23 Abu Dhabi Grand Prix
   "2026-12-06": { fp1: "2026-12-04T09:30:00Z", fp2: "2026-12-04T13:00:00Z", fp3: "2026-12-05T10:30:00Z", qualifying: "2026-12-05T14:00:00Z", race: "2026-12-06T13:00:00Z" },
 };
 

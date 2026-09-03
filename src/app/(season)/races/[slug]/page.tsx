@@ -197,7 +197,7 @@ export default async function RacePage({ params }: RacePageProps) {
 
   // No data exists for races that haven't run — skip both APIs for them.
   // This also keeps the build's request burst well under the free-tier
-  // rate limits (16 of 24 races are in the future at season midpoint).
+  // rate limits when much of the season is still in the future.
   const raceHasHappened = circuit.raceDate <= new Date().toISOString().split("T")[0];
 
   // Qualifying (→ starting grid) and sprint results exist BEFORE the race —

@@ -26,6 +26,7 @@ const POPULAR_ZONES = [
   "Europe/Madrid",
   "Asia/Dubai",
   "Asia/Kolkata",
+  "Asia/Kuala_Lumpur",
   "Asia/Singapore",
   "Asia/Shanghai",
   "Asia/Tokyo",

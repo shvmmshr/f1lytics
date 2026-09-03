@@ -216,9 +216,8 @@ export default async function CircuitPage({ params }: CircuitPageProps) {
                 </Mono>
 
                 <div
-                  className="grid mt-7"
+                  className="grid grid-cols-2 lg:grid-cols-4 mt-7"
                   style={{
-                    gridTemplateColumns: "repeat(auto-fit, minmax(min(140px, 100%), 1fr))",
                     gap: 1,
                     background: F1.line,
                     border: `1px solid ${F1.line}`,
