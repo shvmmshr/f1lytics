@@ -15,17 +15,23 @@
     "lint": "eslint src",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "seo:check": "node scripts/seo-check.mjs"
+    "seo:check": "node scripts/seo-check.mjs",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate"
   },
   "dependencies": {
+    "@better-auth/drizzle-adapter": "1.7.2",
     "@gsap/react": "^2.1.2",
+    "@neondatabase/serverless": "1.1.0",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.5.0",
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",
+    "better-auth": "1.7.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "drizzle-orm": "0.45.2",
     "gsap": "^3.14.2",
     "lucide-react": "^0.575.0",
     "next": "16.3.4",
@@ -33,9 +39,11 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "recharts": "^3.7.0",
+    "resend": "6.26.0",
     "tailwind-merge": "^3.5.0",
     "three": "^0.183.2",
-    "ws": "^8.21.0"
+    "ws": "^8.21.0",
+    "zod": "4.5.4"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -44,6 +52,7 @@
     "@types/react-dom": "^19",
     "@types/three": "^0.183.1",
     "@types/ws": "^8.18.1",
+    "drizzle-kit": "0.31.10",
     "eslint": "^9",
     "eslint-config-next": "16.3.4",
     "schema-dts": "^2.0.0",

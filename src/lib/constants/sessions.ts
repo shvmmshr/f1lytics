@@ -78,7 +78,7 @@ export function getWeekendSchedule(raceDate: string): WeekendSchedule | undefine
  * bleeding into the next one. Used purely to decide whether something is
  * on-track right now (e.g. the navbar LIVE indicator) — not for exact timing.
  */
-const SESSION_DURATIONS_MS: Record<keyof WeekendSchedule, number> = {
+export const SESSION_DURATIONS_MS: Record<keyof WeekendSchedule, number> = {
   fp1: 75 * 60_000,
   fp2: 75 * 60_000,
   fp3: 75 * 60_000,

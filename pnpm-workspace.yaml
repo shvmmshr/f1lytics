@@ -1,6 +1,7 @@
 # pnpm 11 key. Nothing here needs a postinstall build: sharp and unrs-resolver
 # ship prebuilt binaries, msw is a dev-only transitive dependency of vitest.
 allowBuilds:
+  esbuild: false
   msw: false
   sharp: false
   unrs-resolver: false
