@@ -14,8 +14,12 @@ import type {
 } from "./types";
 
 import { fetchWithRetry } from "./fetch-retry";
+import packageJson from "../../../package.json";
 
 const BASE_URL = "https://api.jolpi.ca/ergast/f1";
+
+// Jolpica's terms require an identifying user agent (app name + version).
+const USER_AGENT = `F1lytics/${packageJson.version} (https://f1lytics.com)`;
 
 /**
  * Generic fetch helper for the Jolpica-F1 API.
@@ -30,6 +34,7 @@ async function fetchJolpica<T>(
   const url = `${BASE_URL}${path}`;
 
   const res = await fetchWithRetry(url, {
+    headers: { "User-Agent": USER_AGENT },
     next: { revalidate },
   });
 
