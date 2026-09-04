@@ -65,6 +65,12 @@ function resultTeamHref(name: string) {
   return team ? `/teams/${team.slug}` as const : null;
 }
 
+// Regenerate every 5 minutes. A circuit page built BEFORE its race skips its
+// only data fetch (raceHasHappened is false at build time), so Next.js would
+// otherwise mark it fully static and it would never show the winner until the
+// next deploy: the same bug class that once hid race results on races/[slug].
+export const revalidate = 300;
+
 export default async function CircuitPage({ params }: CircuitPageProps) {
   const { slug } = await params;
   const circuit = getCircuitBySlug(slug);

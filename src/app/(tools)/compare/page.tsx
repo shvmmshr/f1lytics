@@ -64,6 +64,9 @@ export interface ConstructorStat {
   pointsPerRound: PointsPerRound[];
 }
 
+// Post-session-sensitive data (results/standings/grid); see AGENTS.md caching rules.
+export const revalidate = 300;
+
 export default async function ComparePage() {
   let driverStandings: Awaited<ReturnType<typeof getDriverStandings>> = [];
   let constructorStandings: Awaited<ReturnType<typeof getConstructorStandings>> = [];

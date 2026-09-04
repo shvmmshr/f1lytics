@@ -83,6 +83,9 @@ async function getHistoricalStandings(teamName: string) {
   return results;
 }
 
+// Post-session-sensitive data (results/standings/grid); see AGENTS.md caching rules.
+export const revalidate = 300;
+
 export default async function TeamPage({ params }: TeamPageProps) {
   const { slug } = await params;
   const team = getTeamBySlug(slug);

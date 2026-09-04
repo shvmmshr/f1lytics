@@ -29,6 +29,9 @@ export async function generateMetadata(): Promise<import("next").Metadata> {
   });
 }
 
+// Post-session-sensitive data (results/standings/grid); see AGENTS.md caching rules.
+export const revalidate = 300;
+
 export default async function Home() {
   // Honest fallback (shown only if the API is unavailable): real names, 0 points
   // — never invented numbers. teamId is already an internal id here.

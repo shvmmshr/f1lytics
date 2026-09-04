@@ -24,6 +24,9 @@ export const metadata = createPageMetadata({
   path: "/teams",
 });
 
+// Post-session-sensitive data (results/standings/grid); see AGENTS.md caching rules.
+export const revalidate = 300;
+
 export default async function TeamsPage() {
   let constructorStandings: Awaited<ReturnType<typeof getConstructorStandings>> = [];
   try {
