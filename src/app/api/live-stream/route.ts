@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
 import WebSocket from "ws";
+import { getLiveWindowSession } from "@/lib/constants/sessions";
 
 // F1's free live-timing feed, proxied as Server-Sent Events so the browser gets
 // real-time timing without F1 auth or CORS issues.
@@ -109,6 +110,11 @@ export async function GET(req: NextRequest) {
       }),
       { headers: sseHeaders() },
     );
+
+  // F1's status file reads "Available" for entire weekends, so on its own it
+  // would have us forward a finished session as live. Only negotiate inside a
+  // scheduled session's generous window (30 min lead, 120 min tail).
+  if (!getLiveWindowSession(Date.now())) return offlineStream();
 
   const status = await getStreamingStatus();
   if (status === "Offline") return offlineStream();

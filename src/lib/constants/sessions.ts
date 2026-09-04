@@ -146,3 +146,38 @@ export function getActiveSession(nowMs: number): ActiveSession | null {
   }
   return null;
 }
+
+/** How early the live path may connect before a session, and how long it may
+ *  stay connected past the nominal end (rain delays, red flags, podium). */
+const LIVE_WINDOW_LEAD_MS = 30 * 60_000;
+const LIVE_WINDOW_TAIL_MS = 120 * 60_000;
+
+/**
+ * The scheduled session whose generous live window contains `nowMs`, or null.
+ * Used to decide whether the live relay may negotiate and whether a "locked
+ * live" state is plausible. F1's StreamingStatus says "Available" for whole
+ * weekends, so on its own it presents finished sessions as live.
+ *
+ * Windows overlap on a busy day (one session's tail reaches into the next
+ * one's lead), so candidates are ranked: running now, then about to start,
+ * then recently ended. Ties go to the nearest start.
+ */
+export function getLiveWindowSession(nowMs: number): ActiveSession | null {
+  let best: { session: ActiveSession; rank: number; distance: number } | null = null;
+  for (const raceDate of Object.keys(WEEKEND_SCHEDULES)) {
+    const sched = WEEKEND_SCHEDULES[raceDate];
+    for (const key of Object.keys(sched) as (keyof WeekendSchedule)[]) {
+      const iso = sched[key];
+      if (!iso) continue;
+      const start = new Date(iso).getTime();
+      const end = start + SESSION_DURATIONS_MS[key];
+      if (nowMs < start - LIVE_WINDOW_LEAD_MS || nowMs > end + LIVE_WINDOW_TAIL_MS) continue;
+      const rank = nowMs >= start && nowMs <= end ? 0 : nowMs < start ? 1 : 2;
+      const distance = Math.abs(nowMs - start);
+      if (!best || rank < best.rank || (rank === best.rank && distance < best.distance)) {
+        best = { session: { raceDate, session: key }, rank, distance };
+      }
+    }
+  }
+  return best?.session ?? null;
+}

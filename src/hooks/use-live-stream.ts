@@ -9,6 +9,7 @@ import type {
   OpenF1RaceControl,
 } from "@/lib/api/types";
 import type { LapStats, LiveWeather } from "@/hooks/use-live-session";
+import { parseTrackLocal, type LiveSessionInfo } from "@/hooks/live-stream-status";
 
 // ── F1 SignalR feed → app view-model adapter ───────────────────────────────
 //
@@ -33,12 +34,7 @@ export interface AdaptedLiveData {
   raceControl: OpenF1RaceControl[];
   weather: LiveWeather | null;
   currentLap: number | null;
-  session: {
-    name: string;
-    type: string;
-    circuitShortName: string;
-    countryName: string;
-  } | null;
+  session: LiveSessionInfo | null;
 }
 
 export interface UseLiveStreamReturn {
@@ -256,11 +252,15 @@ function deriveSession(state: FeedState): AdaptedLiveData["session"] {
   const meeting = isPlainObject(si.Meeting) ? si.Meeting : {};
   const circuit = isPlainObject(meeting.Circuit) ? meeting.Circuit : {};
   const country = isPlainObject(meeting.Country) ? meeting.Country : {};
+  const clock = isPlainObject(state.ExtrapolatedClock) ? state.ExtrapolatedClock : {};
   return {
     name: String(si.Name ?? meeting.Name ?? "SESSION"),
     type: String(si.Type ?? ""),
     circuitShortName: String(circuit.ShortName ?? meeting.Name ?? ""),
     countryName: String(country.Name ?? ""),
+    status: typeof si.SessionStatus === "string" ? si.SessionStatus : null,
+    endsAtMs: parseTrackLocal(si.EndDate, si.GmtOffset),
+    extrapolating: clock.Extrapolating === true,
   };
 }
 

@@ -8,6 +8,7 @@ import { ReplayBanner } from "@/components/live/replay-banner";
 import { TEAMS } from "@/lib/constants";
 import { useLiveSession, type LapStats } from "@/hooks/use-live-session";
 import { useLiveStream } from "@/hooks/use-live-stream";
+import { isStreamCurrent } from "@/hooks/live-stream-status";
 import type {
   OpenF1Position,
   OpenF1Interval,
@@ -1152,7 +1153,14 @@ export function LiveContent({
   const { focusedDriverNumber, setFocusedDriverNumber } = live;
 
   // Prefer the real-time SSE feed whenever it is actively delivering data.
-  const usingStream = stream.state === "live" && stream.data !== null;
+  // A snapshot alone is not a live session: F1 serves the last session all
+  // weekend. Only trust the stream while its own status says it is running,
+  // or for 45 minutes after it ended. lastUpdated is set on every message, so
+  // this re-evaluates as data arrives without calling Date.now() in render.
+  const usingStream =
+    stream.state === "live" &&
+    stream.data !== null &&
+    isStreamCurrent(stream.data.session, stream.lastUpdated?.getTime() ?? 0);
 
   // Unified view model from whichever source is active.
   const view = useMemo(() => {

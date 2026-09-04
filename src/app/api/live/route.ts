@@ -11,7 +11,7 @@ import {
   getCarData,
   getWeather,
 } from "@/lib/api/openf1";
-import { getActiveSession, type WeekendSchedule } from "@/lib/constants/sessions";
+import { getLiveWindowSession, type WeekendSchedule } from "@/lib/constants/sessions";
 import { CIRCUIT_LIST } from "@/lib/constants/circuits";
 
 export const dynamic = "force-dynamic";
@@ -58,14 +58,13 @@ async function getStreamingStatus(): Promise<string> {
  * (which session / circuit). Returns null when F1 says nothing is streaming.
  */
 async function scheduledLiveResponse() {
+  // Both must hold: a session is scheduled now AND F1 says it is streaming.
+  // The status file alone says "Available" for entire weekends.
+  const active = getLiveWindowSession(Date.now());
+  if (!active) return null;
   if ((await getStreamingStatus()) !== "Available") return null;
-  const active = getActiveSession(Date.now());
-  const circuit = active
-    ? CIRCUIT_LIST.find((c) => c.raceDate === active.raceDate)
-    : undefined;
-  const label = active
-    ? SESSION_LABELS[active.session]
-    : { name: "LIVE SESSION", type: "" };
+  const circuit = CIRCUIT_LIST.find((c) => c.raceDate === active.raceDate);
+  const label = SESSION_LABELS[active.session];
   return NextResponse.json({
     isLive: true,
     status: "LIVE_LOCKED",
