@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+
 export default function GlobalError({
   error,
   reset,
@@ -7,6 +9,12 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  useEffect(() => {
+    // The root boundary replaces the whole document, so this is the only
+    // record of what failed once the page is gone.
+    console.error("[f1lytics] global error boundary:", error);
+  }, [error]);
+
   return (
     <html lang="en">
       <body
