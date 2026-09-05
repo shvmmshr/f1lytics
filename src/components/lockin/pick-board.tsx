@@ -77,6 +77,10 @@ export function PickBoard({ round, drivers, initialPicks, signedIn, signInHref }
         const raw = localStorage.getItem(draftKey(round.raceDate));
         if (!raw) return;
         const parsed = JSON.parse(raw) as Partial<Draft>;
+        const hasContent =
+          Boolean(parsed.pole || parsed.p1 || parsed.p2 || parsed.p3 || parsed.fastestLap || parsed.sprintWinner) ||
+          Boolean(parsed.marginSeconds);
+        if (!hasContent) return; // a blank draft from a previous visit is not worth announcing
         setDraft((d) => ({ ...d, ...parsed }));
         setRestored(true);
       } catch {
