@@ -32,9 +32,6 @@ export function Footer() {
           <Link href="/about" className="hover:text-white" style={{ color: F1.fg2 }}>
             ABOUT
           </Link>
-          <Link href="/garage" className="hover:text-white" style={{ color: F1.fg2 }}>
-            GARAGE
-          </Link>
           <Link href="/support" className="hover:text-white" style={{ color: F1.fg2 }}>
             SUPPORT
           </Link>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { F1, Mono, Grid as BroadcastGrid, SectionHeader, Brackets } from "@/components/shared/broadcast";
 import { createPageMetadata } from "@/lib/seo/metadata";
+import { env } from "@/lib/env";
 
 const description = "F1lytics is free, open source and ad-free. If it makes your race weekends better, you can keep it running for the price of a coffee.";
 
@@ -70,9 +71,11 @@ export default function SupportPage() {
         <section>
           <SectionHeader label="FREE WAYS THAT MATTER JUST AS MUCH" />
           <ul className="grid gap-2" style={{ color: F1.fg2, paddingLeft: 18 }}>
-            <li>Share a Lock In card or a race page with the people you watch with.</li>
+            <li>Share {env.lockInEnabled ? "a Lock In card or a race page" : "a race page"} with the people you watch with.</li>
             <li>Star the repository on GitHub and report anything that looks wrong.</li>
-            <li>Play <Link href="/lockin" className="underline hover:text-white">Lock In</Link> every weekend and bring a league.</li>
+            {env.lockInEnabled && (
+              <li>Play <Link href="/lockin" className="underline hover:text-white">Lock In</Link> every weekend and bring a league.</li>
+            )}
           </ul>
         </section>
       </div>

@@ -9,6 +9,8 @@ export const metadata = createPageMetadata({
   description:
     "Orbit a stylised open-wheel car in 3D and paint it in any 2026 team colourway or a classic era scheme. Built from geometry, so it loads fast on any device.",
   path: "/garage",
+  // Unlisted for now: no footer link, no sitemap entry, no indexing.
+  noIndex: true,
   imageEyebrow: "THE GARAGE · 3D",
 });
 
