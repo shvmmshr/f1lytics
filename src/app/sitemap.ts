@@ -21,6 +21,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/about",
     "/privacy",
     "/support",
+    "/garage",
     ...(env.lockInEnabled ? (["/lockin", "/lockin/leaderboard", "/lockin/leagues"] as const) : []),
   ];
 
