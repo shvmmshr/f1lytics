@@ -24,6 +24,7 @@ import {
 } from "@/components/shared/broadcast";
 import { StartLights } from "@/components/home/start-lights";
 import { SessionSchedule } from "@/components/shared/session-schedule";
+import { LiveNow } from "@/components/home/live-now";
 import type { GridRow, RecentRace } from "@/lib/api/weekend";
 
 type Standing = {
@@ -386,6 +387,9 @@ export function Hero({
         {/* RIGHT — Up next + championship ticker. Nudged up slightly at lg so
             the standings card clears the fold. */}
         <div ref={tickerRef} className="flex flex-col gap-4 min-w-0 lg:-mt-12">
+          {/* Live session panel: renders nothing outside a session window */}
+          <LiveNow />
+
           {/* LAST RACE card — podium of the GP that finished within 3 days */}
           {recentRace && recentRace.podium.length > 0 && (
             <div

@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import WebSocket from "ws";
 import { getLiveWindowSession } from "@/lib/constants/sessions";
+import { CONNECT_URL, RS, TOPICS, getStreamingStatus, negotiate } from "@/lib/live/f1-signalr";
 
 // F1's free live-timing feed, proxied as Server-Sent Events so the browser gets
 // real-time timing without F1 auth or CORS issues.
@@ -15,29 +16,6 @@ import { getLiveWindowSession } from "@/lib/constants/sessions";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
-
-const STATUS_URL = "https://livetiming.formula1.com/static/StreamingStatus.json";
-const NEGOTIATE_URL =
-  "https://livetiming.formula1.com/signalrcore/negotiate?negotiateVersion=1";
-const CONNECT_URL = "wss://livetiming.formula1.com/signalrcore";
-
-// ASP.NET Core SignalR frames each message with the 0x1e record separator.
-const RS = "\x1e";
-
-// Timing topics for the tower + side panel. We deliberately skip Position.z /
-// CarData.z (zlib-deflated, and gated behind F1TV since the 2025 Dutch GP).
-const TOPICS = [
-  "SessionInfo",
-  "DriverList",
-  "TimingData",
-  "TimingAppData",
-  "TimingStats",
-  "TrackStatus",
-  "LapCount",
-  "WeatherData",
-  "RaceControlMessages",
-  "ExtrapolatedClock",
-];
 
 const RECONNECT_MARGIN_MS = 280_000; // close before the 300s function cap
 const HEARTBEAT_MS = 15_000; // SSE keep-alive to the browser
@@ -68,20 +46,6 @@ function originAllowed(origin: string | null): boolean {
     );
   } catch {
     return false;
-  }
-}
-
-/** Read F1's streaming status. Returns "Offline" on any failure (fail closed). */
-async function getStreamingStatus(): Promise<string> {
-  try {
-    const res = await fetch(STATUS_URL, { cache: "no-store" });
-    if (!res.ok) return "Offline";
-    const text = await res.text();
-    // The file is served with a UTF-8 BOM, which breaks JSON.parse.
-    const parsed = JSON.parse(text.replace(/^﻿/, "")) as { Status?: string };
-    return parsed.Status ?? "Offline";
-  } catch {
-    return "Offline";
   }
 }
 
@@ -121,29 +85,15 @@ export async function GET(req: NextRequest) {
 
   // Negotiate (POST, SignalR Core): returns a connectionToken + AWS load-balancer
   // cookies that must be echoed back on the WebSocket upgrade (else CloudFront 404s).
-  let token: string;
-  let cookieHeader: string;
+  let negotiated: Awaited<ReturnType<typeof negotiate>>;
   try {
-    const negRes = await fetch(NEGOTIATE_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "User-Agent": "Mozilla/5.0",
-        "Accept-Encoding": "gzip,identity",
-      },
-      body: "{}",
-      cache: "no-store",
-    });
-    if (!negRes.ok) return offlineStream();
-    const negJson = (await negRes.json()) as { connectionToken?: string };
-    if (!negJson.connectionToken) return offlineStream();
-    token = negJson.connectionToken;
-    const setCookies = negRes.headers.getSetCookie?.() ?? [];
-    cookieHeader = setCookies.map((c) => c.split(";")[0]).join("; ");
+    negotiated = await negotiate();
   } catch (err) {
     console.error("[f1lytics] live-stream negotiate failed:", err);
     return offlineStream();
   }
+  if (!negotiated) return offlineStream();
+  const { token, cookieHeader } = negotiated;
 
   const wsUrl = `${CONNECT_URL}?id=${encodeURIComponent(token)}`;
 
