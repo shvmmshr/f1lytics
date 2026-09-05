@@ -37,6 +37,7 @@ export async function generateMetadata({ params }: TeamPageProps): Promise<Metad
     title: `${team.name} F1 Team: Drivers, Stats & Results (2026)`,
     description: `${team.name}'s 2026 F1 team profile with ${drivers.map((driver) => `${driver.firstName} ${driver.lastName}`).join(" and ")}, constructor standings, results, ${team.engine} engine, ${team.base} base, and history.`,
     path: `/teams/${team.slug}`,
+    imageEyebrow: "TEAM PROFILE · 2026",
   });
 }
 

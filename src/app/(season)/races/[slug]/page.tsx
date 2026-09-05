@@ -5,7 +5,7 @@ import { getStartingGrid, type GridRow } from "@/lib/api/weekend";
 import type { ResultItem, SprintRace } from "@/lib/api/types";
 import { getLaps, getRaceControl, getSessions, getStints } from "@/lib/api/openf1";
 import { CIRCUIT_LIST, DRIVER_LIST, TEAMS, getApiRound, getCircuitBySlug } from "@/lib/constants";
-import { mapConstructorToTeamId } from "@/lib/constructor-map";
+import { mapConstructorToTeamId, teamColorForName } from "@/lib/constructor-map";
 import { getWeekendSchedule } from "@/lib/constants/sessions";
 import { SessionSchedule } from "@/components/shared/session-schedule";
 import { PageTransition } from "@/components/layout/page-transition";
@@ -21,7 +21,7 @@ import {
 import Link from "next/link";
 import { formatLapTime, positionChange } from "@/lib/utils";
 import { TireStrategyViz } from "@/components/charts/tire-strategy-viz";
-import { LapTimeChart } from "@/components/charts/lap-time-chart";
+import { LapTimeChart } from "@/components/charts/lap-time-chart-lazy";
 import { Breadcrumbs, type BreadcrumbItem } from "@/components/shared/breadcrumbs";
 import { JsonLd } from "@/components/shared/json-ld";
 import { createPageMetadata, type RaceSeoState } from "@/lib/seo/metadata";
@@ -115,6 +115,7 @@ export async function generateMetadata({ params }: RacePageProps): Promise<Metad
     description: descriptions[state],
     path: `/races/${circuit.slug}`,
     noIndex: state === "cancelled",
+    imageEyebrow: `ROUND ${String(circuit.round).padStart(2, "0")} · ${state === "completed" ? "RESULTS" : state === "weekend" ? "RACE WEEKEND" : state === "cancelled" ? "CANCELLED" : "SCHEDULE"}`,
   });
 }
 
@@ -141,19 +142,7 @@ function teamHref(constructor: { constructorId?: string; name: string }) {
 }
 
 function mapConstructorToTeamColor(constructorName: string): string {
-  const normalizedConstructor = normalize(constructorName);
-
-  const team = Object.values(TEAMS).find((candidate) => {
-    const normalizedName = normalize(candidate.name);
-    const normalizedFullName = normalize(candidate.fullName);
-    return (
-      normalizedConstructor === normalizedName ||
-      normalizedFullName.includes(normalizedConstructor) ||
-      normalizedConstructor.includes(normalizedName)
-    );
-  });
-
-  return team?.color ?? "#6B7280";
+  return teamColorForName(constructorName, "#6B7280");
 }
 
 function formatRaceDate(date: string): string {
@@ -308,17 +297,7 @@ export default async function RacePage({ params }: RacePageProps) {
     const driverNumber = Number.parseInt(result.number, 10);
     const label = result.Driver.code ?? result.Driver.familyName.slice(0, 3).toUpperCase();
     const color = mapConstructorToTeamColor(result.Constructor.name);
-    const normalizedConstructor = normalize(result.Constructor.name);
-    const teamEntry = Object.entries(TEAMS).find(([, team]) => {
-      const normalizedName = normalize(team.name);
-      const normalizedFullName = normalize(team.fullName);
-      return (
-        normalizedConstructor === normalizedName ||
-        normalizedFullName.includes(normalizedConstructor) ||
-        normalizedConstructor.includes(normalizedName)
-      );
-    });
-    const teamId = teamEntry?.[0];
+    const teamId = mapConstructorToTeamId(result.Constructor.constructorId ?? "", result.Constructor.name);
 
     return { driverNumber, label, color, teamId };
   });

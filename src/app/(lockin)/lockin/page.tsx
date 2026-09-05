@@ -21,6 +21,7 @@ export const metadata = createPageMetadata({
   description:
     "Free F1 predictions game. Lock in pole, the podium, fastest lap and the winning margin before qualifying, then see who called it. Leagues with friends, season leaderboard.",
   path: "/lockin",
+  imageEyebrow: "LOCK IN · FREE PREDICTIONS GAME",
 });
 
 export default async function LockInPage() {

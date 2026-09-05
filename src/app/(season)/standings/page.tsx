@@ -22,6 +22,7 @@ export const metadata = createPageMetadata({
   title: "2026 F1 Standings: Drivers & Constructors",
   description,
   path: "/standings",
+  imageEyebrow: "CHAMPIONSHIP STANDINGS",
 });
 
 // Post-session-sensitive data (results/standings/grid); see AGENTS.md caching rules.

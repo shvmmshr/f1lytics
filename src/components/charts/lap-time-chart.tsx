@@ -87,7 +87,7 @@ export function LapTimeChart({
   raceControl = [],
   height = "clamp(300px, 55vw, 420px)",
 }: LapTimeChartProps) {
-  if (laps.length === 0) {
+  if (laps.length === 0 || !laps.some((lap) => lap.lap_duration !== null && lap.lap_number > 0)) {
     return (
       <div
         style={{

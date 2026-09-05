@@ -9,6 +9,7 @@ export const metadata = createPageMetadata({
   description:
     "Follow F1 positions, gaps, sectors, tyres, race control, weather, and replay data, with clear limitations when live timing is locked.",
   path: "/live",
+  imageEyebrow: "LIVE TIMING",
 });
 
 export const dynamic = "force-dynamic";

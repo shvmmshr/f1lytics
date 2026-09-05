@@ -8,6 +8,7 @@ export const metadata = createPageMetadata({
   title: "Privacy",
   description,
   path: "/privacy",
+  imageEyebrow: "PRIVACY",
 });
 
 export default function PrivacyPage() {

@@ -40,6 +40,14 @@
 - **Weekend Mode** — during a race weekend the homepage switches state automatically: countdown to lights out, sprint winner, grid preview; after the flag, the podium takes over for three days.
 - **Sprint Results** — full sprint classification on every sprint-weekend race page.
 - **Race Review** — replay the timing tower of any completed session.
+- **Homepage live panel** — during a session the homepage shows the running session, lap count, track status and top five, from a CDN-cached snapshot of the feed.
+
+### Lock In, the predictions game
+- **Call it before qualifying** — pole, the podium in order, fastest lap, the winning margin and, on sprint weekends, the sprint winner.
+- **Settled from the official classification** — scores, CALLED IT / CLOSE / COOKED stamps, round and season leaderboards.
+- **Leagues with friends** — private leagues with an invite link, up to 200 players each.
+- **Share cards** — every locked-in round gets a public card with its own social image.
+- **Your calls on the live tower** — the timing screen tags the drivers you called while the race runs.
 
 ### The season, analyzed
 - **Standings** — driver and constructor championships with points gaps and per-driver team contributions.
@@ -59,10 +67,11 @@ Fully responsive, dark broadcast-style UI with a state-aware homepage — the he
 | Framework | [Next.js 16](https://nextjs.org) (App Router, ISR) |
 | Language | [TypeScript 5](https://typescriptlang.org) (strict mode) |
 | Styling | [Tailwind CSS 4](https://tailwindcss.com) |
-| Animations | [GSAP 3](https://gsap.com) + ScrollTrigger, [Framer Motion](https://motion.dev) |
+| Animations | [GSAP 3](https://gsap.com) + ScrollTrigger |
 | Charts | [Recharts 3](https://recharts.org) |
 | 3D | [Three.js](https://threejs.org) + [React Three Fiber](https://r3f.docs.pmnd.rs) |
 | Data | [Jolpica-F1](https://github.com/jolpica/jolpica-f1), [OpenF1](https://openf1.org), F1 live timing |
+| Database / auth | [Neon](https://neon.com) Postgres via [Drizzle](https://orm.drizzle.team), [Better Auth](https://better-auth.com) (Google, magic link) |
 | UI Components | [Radix UI](https://radix-ui.com), [Lucide Icons](https://lucide.dev) |
 | Analytics | [Vercel Analytics](https://vercel.com/analytics) + [Speed Insights](https://vercel.com/docs/speed-insights) |
 | Deployment | [Vercel](https://vercel.com) |

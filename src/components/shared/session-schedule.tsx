@@ -311,7 +311,7 @@ export function SessionSchedule({
                 <Mono
                   style={{
                     fontSize: 7,
-                    color: F1.fg4,
+                    color: F1.fg3,
                     letterSpacing: "0.12em",
                     display: "block",
                     marginTop: 2,

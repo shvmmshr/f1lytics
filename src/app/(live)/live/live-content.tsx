@@ -5,7 +5,7 @@ import Link from "next/link";
 import { getNextEvent } from "@/lib/constants/circuits";
 import { CountdownTimer } from "@/components/shared/countdown-timer";
 import { ReplayBanner } from "@/components/live/replay-banner";
-import { TEAMS } from "@/lib/constants";
+import { teamColorForName } from "@/lib/constructor-map";
 import { useLiveSession, type LapStats } from "@/hooks/use-live-session";
 import { useLiveStream } from "@/hooks/use-live-stream";
 import { isStreamCurrent } from "@/hooks/live-stream-status";
@@ -60,21 +60,8 @@ function formatTimeSince(date: Date): string {
   return `${minutes}m AGO`;
 }
 
-function teamColorFromDriverTeam(teamName: string): string {
-  const normalized = teamName.toLowerCase().replace(/\s+/g, "_");
-  if (TEAMS[normalized]) return TEAMS[normalized].color;
-  for (const [key, team] of Object.entries(TEAMS)) {
-    if (
-      normalized.includes(key) ||
-      key.includes(normalized) ||
-      team.name.toLowerCase().includes(teamName.toLowerCase()) ||
-      teamName.toLowerCase().includes(team.name.toLowerCase())
-    ) {
-      return team.color;
-    }
-  }
-  return F1.fg4;
-}
+/** Team colour for an F1 feed or OpenF1 team name; dim grey when unknown. */
+const teamColorFromDriverTeam = (teamName: string): string => teamColorForName(teamName, F1.fg4);
 
 function compoundShort(c: string | null): "S" | "M" | "H" | "I" | "W" | "?" {
   if (!c) return "?"; // OpenF1 sometimes reports stints with a null compound
@@ -762,7 +749,8 @@ function RaceControlFeed({
   return (
     <div style={{ padding: 24 }}>
       <BroadcastSectionHeader label="RACE CONTROL" />
-      <div className="mt-4 space-y-3">
+      {/* Low-frequency, high-significance updates (flags, safety car): a polite live region. */}
+      <div className="mt-4 space-y-3" aria-live="polite" aria-relevant="additions">
         {raceControl.length === 0 && (
           <Mono style={{ fontSize: 11, color: F1.fg3, letterSpacing: "0.18em" }}>
             NO MESSAGES

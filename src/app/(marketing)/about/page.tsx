@@ -10,6 +10,7 @@ export const metadata = createPageMetadata({
   title: "About F1lytics: Data Sources & Methodology",
   description,
   path: "/about",
+  imageEyebrow: "ABOUT F1LYTICS",
 });
 
 const sources = [

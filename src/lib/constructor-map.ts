@@ -63,3 +63,14 @@ export function mapConstructorToTeamId(
 
   return matchedTeam?.id;
 }
+
+/**
+ * Brand colour for an external team name in either Jolpica or OpenF1 spelling
+ * ("Red Bull", "Red Bull Racing", "Racing Bulls", "Alpine F1 Team", …), or
+ * `fallback` when nothing matches with confidence. The single place for this;
+ * pages must not grow their own fuzzy copies.
+ */
+export function teamColorForName(name: string, fallback = "#84848F"): string {
+  const id = mapConstructorToTeamId("", name);
+  return (id && TEAMS[id]?.color) || fallback;
+}

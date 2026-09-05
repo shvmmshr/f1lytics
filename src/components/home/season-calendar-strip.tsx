@@ -1,16 +1,9 @@
 import { CIRCUIT_LIST, getNextRace } from "@/lib/constants";
+import { countryCodeToFlag } from "@/lib/utils";
 import { format, parseISO } from "date-fns";
 import { F1, Mono, LiveDot } from "@/components/shared/broadcast";
 import { ScrollRow } from "@/components/shared/scroll-row";
 
-function countryCodeToFlag(countryCode: string): string {
-  return String.fromCodePoint(
-    ...countryCode
-      .toUpperCase()
-      .split("")
-      .map((c) => 0x1f1e6 + c.charCodeAt(0) - 65)
-  );
-}
 
 export function SeasonCalendarStrip() {
   const nextRace = getNextRace();

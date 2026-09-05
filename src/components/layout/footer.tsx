@@ -32,6 +32,12 @@ export function Footer() {
           <Link href="/about" className="hover:text-white" style={{ color: F1.fg2 }}>
             ABOUT
           </Link>
+          <Link href="/support" className="hover:text-white" style={{ color: F1.fg2 }}>
+            SUPPORT
+          </Link>
+          <Link href="/privacy" className="hover:text-white" style={{ color: F1.fg2 }}>
+            PRIVACY
+          </Link>
           <a
             href="https://github.com/shvmmshr/f1lytics"
             target="_blank"

@@ -2,6 +2,7 @@
 
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { isHistoryNavigation } from "@/lib/navigation-state";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -21,7 +22,13 @@ export function animateCounter(
   element: HTMLElement,
   target: number,
   duration = 1.5
-) {
+): gsap.core.Tween | null {
+  // A back/forward mount should never replay the count-up; it reads as a
+  // reload. Land the final value immediately and skip the tween entirely.
+  if (isHistoryNavigation()) {
+    element.textContent = String(target);
+    return null;
+  }
   return gsap.to(element, {
     textContent: target,
     duration,
@@ -46,6 +53,9 @@ export function staggerEntrance(selector: string, container: HTMLElement) {
     container.querySelectorAll(selector)
   );
   if (targets.length === 0) return;
+  // Back/forward mount: elements are already at their natural (visible)
+  // state; hiding then revealing them is the "reload" flicker this removes.
+  if (isHistoryNavigation()) return;
 
   gsap.set(targets, { opacity: 0, y: 14 });
   ScrollTrigger.batch(targets, {
@@ -89,7 +99,12 @@ export function staggerEntrance(selector: string, container: HTMLElement) {
   });
 }
 
-export function barFill(element: HTMLElement, targetWidthPercent: number) {
+export function barFill(element: HTMLElement, targetWidthPercent: number): gsap.core.Tween | null {
+  // Back/forward mount: land the bar at its final width instead of replaying the fill.
+  if (isHistoryNavigation()) {
+    element.style.width = `${targetWidthPercent}%`;
+    return null;
+  }
   return gsap.fromTo(
     element,
     { width: "0%" },

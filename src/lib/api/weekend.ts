@@ -2,7 +2,7 @@ import { getSessions, getSessionResult, getDrivers } from "./openf1";
 import { getQualifyingResults, getRaceResults } from "./jolpica";
 import type { OpenF1Session } from "./types";
 import { CIRCUIT_LIST, getApiRound, type Circuit } from "@/lib/constants";
-import { TEAMS } from "@/lib/constants/teams";
+import { teamColorForName } from "@/lib/constructor-map";
 import { getWeekendSchedule } from "@/lib/constants/sessions";
 import { formatLapTime } from "@/lib/utils";
 
@@ -31,23 +31,8 @@ const RECENT_RACE_WINDOW_MS = 3 * 24 * 60 * 60 * 1000;
 const RACE_DURATION_MS = 2.5 * 60 * 60 * 1000;
 const WEEKEND_MS = 4 * 24 * 60 * 60 * 1000;
 
-/** Fuzzy team-name → brand colour, tolerant of OpenF1 vs Jolpica naming
- *  ("Red Bull Racing" / "Red Bull" / "Racing Bulls" …). */
-function teamColorFromName(teamName: string): string {
-  const normalized = teamName.toLowerCase();
-  let best: { color: string; score: number } | null = null;
-  for (const team of Object.values(TEAMS)) {
-    const name = team.name.toLowerCase();
-    const full = team.fullName.toLowerCase();
-    let score = 0;
-    if (normalized === name) score = 3;
-    else if (full.includes(normalized) || normalized.includes(name)) score = 2;
-    else if (name.includes(normalized)) score = 1;
-    // Longer matches win so "Racing Bulls" beats "Red Bull" partial overlap.
-    if (score > 0 && (!best || score > best.score)) best = { color: team.color, score };
-  }
-  return best?.color ?? "#84848F";
-}
+/** Team colour for a Jolpica or OpenF1 team name; one matcher for the whole app. */
+const teamColorFromName = (teamName: string): string => teamColorForName(teamName);
 
 /** Find an OpenF1 session of the given name inside a circuit's race weekend. */
 async function findWeekendSession(

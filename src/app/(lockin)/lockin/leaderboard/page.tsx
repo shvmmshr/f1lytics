@@ -14,6 +14,7 @@ export const metadata = createPageMetadata({
   title: "Lock In Leaderboard: 2026 F1 Predictions Standings",
   description: "Season standings for Lock In, the free F1 predictions game on F1lytics, plus the latest round's scores.",
   path: "/lockin/leaderboard",
+  imageEyebrow: "LOCK IN LEADERBOARD",
 });
 
 export default async function LeaderboardPage() {

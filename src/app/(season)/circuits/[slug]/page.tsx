@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { countryCodeToFlag } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -33,6 +34,7 @@ export async function generateMetadata({ params }: CircuitPageProps): Promise<Me
     title: `${circuit.name} F1 Circuit Guide`,
     description: `${circuit.fullName} guide for ${circuit.name} in ${circuit.city}, ${circuit.country}: ${circuit.length} km, ${circuit.turns} turns, ${circuit.lapRecord} lap record, schedule, and results.`,
     path: `/circuits/${circuit.slug}`,
+    imageEyebrow: `CIRCUIT GUIDE · ${circuit.country.toUpperCase()}`,
   });
 }
 
@@ -45,14 +47,6 @@ function formatDate(date: string) {
   }).format(new Date(`${date}T00:00:00Z`));
 }
 
-function countryCodeToFlag(code: string): string {
-  if (!/^[A-Za-z]{2}$/.test(code)) return "";
-  return code
-    .toUpperCase()
-    .split("")
-    .map((c) => String.fromCodePoint(127397 + c.charCodeAt(0)))
-    .join("");
-}
 
 function resultDriverHref(driverId: string) {
   const driver = DRIVER_LIST.find((candidate) => candidate.id === driverId);

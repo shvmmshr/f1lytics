@@ -14,6 +14,8 @@ export interface PageMetadataInput {
   absoluteTitle?: boolean;
   noIndex?: boolean;
   imagePath?: `/${string}`;
+  /** Eyebrow on the generated social card, e.g. "DRIVER PROFILE". */
+  imageEyebrow?: string;
 }
 
 export type RaceSeoState =
@@ -33,11 +35,11 @@ export function createPageMetadata({
   absoluteTitle = false,
   noIndex = false,
   imagePath,
+  imageEyebrow,
 }: PageMetadataInput): Metadata {
   const url = absoluteUrl(path);
-  const image = absoluteUrl(
-    imagePath ?? (`/api/og?title=${encodeURIComponent(title)}` as `/${string}`),
-  );
+  const generated = `/api/og?title=${encodeURIComponent(title)}${imageEyebrow ? `&sub=${encodeURIComponent(imageEyebrow)}` : ""}`;
+  const image = absoluteUrl(imagePath ?? (generated as `/${string}`));
 
   return {
     title: absoluteTitle ? { absolute: title } : title,

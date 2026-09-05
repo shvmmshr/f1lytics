@@ -132,9 +132,11 @@ function CircuitMarker({
 function CircuitInfoCard({ circuit }: { circuit: GlobeCircuit }) {
   // Brand red, amber on sprint weekends.
   const accent = circuit.isSprint ? "#EAB308" : "#FF1801";
+  // UTC, so the card agrees with the server-rendered grid for visitors west of UTC.
   const formattedDate = new Intl.DateTimeFormat("en-US", {
     month: "short",
     day: "numeric",
+    timeZone: "UTC",
   }).format(new Date(`${circuit.raceDate}T00:00:00Z`));
 
   return (

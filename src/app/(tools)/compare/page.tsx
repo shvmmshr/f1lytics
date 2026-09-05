@@ -17,6 +17,7 @@ export const metadata = createPageMetadata({
   description:
     "Compare F1 drivers and teams head to head across points, wins, podiums, qualifying pace, finishes, and recent form.",
   path: "/compare",
+  imageEyebrow: "HEAD TO HEAD",
 });
 
 export interface RecentFormEntry {

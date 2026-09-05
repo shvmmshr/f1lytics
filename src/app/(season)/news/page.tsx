@@ -12,6 +12,7 @@ export const metadata = createPageMetadata({
   title: "Latest Formula 1 News",
   description,
   path: "/news",
+  imageEyebrow: "F1 NEWS",
 });
 
 export const revalidate = 900;

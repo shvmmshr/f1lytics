@@ -229,7 +229,7 @@ export default async function RacesPage() {
                 {/* Footer pinned to the bottom: the row's "result" line. */}
                 <div className="mt-auto pt-3" style={{ borderTop: `1px solid ${F1.line}` }}>
                   {isCancelled ? (
-                    <Mono style={{ fontSize: 10, color: F1.fg4, letterSpacing: "0.16em" }}>
+                    <Mono style={{ fontSize: 10, color: F1.fg3, letterSpacing: "0.16em" }}>
                       NOT HELD IN 2026
                     </Mono>
                   ) : winner ? (
@@ -258,7 +258,7 @@ export default async function RacesPage() {
                       </span>
                     </div>
                   ) : isPast ? (
-                    <Mono style={{ fontSize: 10, color: F1.fg4, letterSpacing: "0.16em" }}>
+                    <Mono style={{ fontSize: 10, color: F1.fg3, letterSpacing: "0.16em" }}>
                       RESULT PENDING
                     </Mono>
                   ) : circuit.isSprint && circuit.sprintDate ? (
@@ -269,7 +269,7 @@ export default async function RacesPage() {
                     <Mono
                       style={{
                         fontSize: 10,
-                        color: isNext ? F1.amber : F1.fg4,
+                        color: isNext ? F1.amber : F1.fg3,
                         letterSpacing: "0.16em",
                       }}
                     >

@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { countryCodeToFlag } from "@/lib/utils";
 import Link from "next/link";
 import { getRaceResults } from "@/lib/api/jolpica";
 import { CIRCUIT_LIST } from "@/lib/constants";
@@ -23,6 +24,7 @@ export const metadata = createPageMetadata({
   description:
     "View every 2026 F1 race date, sprint weekend, and session start time with automatic timezone conversion and a countdown to the next Grand Prix.",
   path: "/calendar",
+  imageEyebrow: "2026 CALENDAR",
 });
 
 function formatDateMonthDay(date: string): string {
@@ -31,14 +33,6 @@ function formatDateMonthDay(date: string): string {
     .toUpperCase();
 }
 
-function countryCodeToFlag(countryCode: string): string {
-  if (!/^[A-Za-z]{2}$/.test(countryCode)) return "🏁";
-  return countryCode
-    .toUpperCase()
-    .split("")
-    .map((char) => String.fromCodePoint(127397 + char.charCodeAt(0)))
-    .join("");
-}
 
 // Post-session-sensitive data (results/standings/grid); see AGENTS.md caching rules.
 export const revalidate = 300;

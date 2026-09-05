@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { countryCodeToFlag } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -36,17 +37,10 @@ export async function generateMetadata({ params }: DriverProfilePageProps): Prom
     title: `${driver.firstName} ${driver.lastName} F1 Stats, Results & Profile (2026)`,
     description: `${driver.firstName} ${driver.lastName} drives car ${driver.number} for ${team.name}. Follow 2026 standings, race form, wins, podiums, teammate comparison, and career history.`,
     path: `/drivers/${driver.slug}`,
+    imageEyebrow: `DRIVER PROFILE · ${team.name.toUpperCase()}`,
   });
 }
 
-function countryCodeToFlag(code: string): string {
-  if (!/^[A-Za-z]{2}$/.test(code)) return "";
-  return code
-    .toUpperCase()
-    .split("")
-    .map((c) => String.fromCodePoint(127397 + c.charCodeAt(0)))
-    .join("");
-}
 
 function calculateAge(dob: string): number {
   const birth = new Date(dob);

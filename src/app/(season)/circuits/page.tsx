@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { countryCodeToFlag } from "@/lib/utils";
 import Image from "next/image";
 import { CIRCUIT_LIST } from "@/lib/constants";
 import { PageTransition } from "@/components/layout/page-transition";
@@ -24,14 +25,6 @@ function formatRaceDate(date: string): string {
   }).format(new Date(`${date}T00:00:00Z`));
 }
 
-function countryCodeToFlag(countryCode: string): string {
-  if (!/^[A-Za-z]{2}$/.test(countryCode)) return "\u{1F3C1}";
-  return countryCode
-    .toUpperCase()
-    .split("")
-    .map((char) => String.fromCodePoint(127397 + char.charCodeAt(0)))
-    .join("");
-}
 
 export default function CircuitsPage() {
   const globeCircuits = CIRCUIT_LIST.map((circuit) => ({

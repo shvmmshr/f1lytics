@@ -33,6 +33,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: `Lock In: 2026 ${round.fullName} Predictions`,
     description: `Call pole, the podium and fastest lap for the 2026 ${round.fullName}, then see who called it. Free, with leagues and a season leaderboard.`,
     path: `/lockin/${round.slug}`,
+    imageEyebrow: `LOCK IN · ROUND ${String(round.round).padStart(2, "0")}`,
   });
 }
 

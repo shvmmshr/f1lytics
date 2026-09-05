@@ -13,6 +13,7 @@ export const metadata = createPageMetadata({
   title: "Lock In Leagues: Play F1 Predictions With Friends",
   description: "Start a private Lock In league, share the invite link, and race your friends on the season leaderboard.",
   path: "/lockin/leagues",
+  imageEyebrow: "LOCK IN LEAGUES",
 });
 
 export default async function LeaguesPage() {

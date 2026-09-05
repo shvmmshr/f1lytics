@@ -37,6 +37,20 @@ export function formatGap(gap: number | null): string {
 }
 
 // ---------------------------------------------------------------------------
+// Country flags
+// ---------------------------------------------------------------------------
+
+/** "GB" → 🇬🇧. Returns `fallback` for anything that is not two ASCII letters. */
+export function countryCodeToFlag(countryCode: string, fallback = ""): string {
+  if (!/^[A-Za-z]{2}$/.test(countryCode)) return fallback;
+  return countryCode
+    .toUpperCase()
+    .split("")
+    .map((c) => String.fromCodePoint(127397 + c.charCodeAt(0)))
+    .join("");
+}
+
+// ---------------------------------------------------------------------------
 // Team helpers
 // ---------------------------------------------------------------------------
 

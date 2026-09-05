@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useGSAP } from "@gsap/react";
 import { gsap, ScrollTrigger } from "@/lib/gsap";
+import { isHistoryNavigation } from "@/lib/navigation-state";
 import { useCountdownTick } from "@/hooks/use-countdown-tick";
 import Image from "next/image";
 import Link from "next/link";
@@ -132,6 +133,10 @@ export function Hero({
 
   useGSAP(
     () => {
+      // Back/forward mount: refs are already at their natural (visible)
+      // state, which is exactly where this timeline ends up. Skip the whole
+      // entrance so the hero does not replay a "reload" flicker.
+      if (isHistoryNavigation()) return;
       // Initial hidden state is set HERE (pre-paint via useGSAP's layout
       // effect), never inline in JSX — if GSAP fails to run, the content
       // renders visible instead of being stuck invisible-but-interactive.
