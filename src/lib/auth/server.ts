@@ -27,6 +27,9 @@ function buildAuth() {
       "https://www.f1lytics.com",
       ...(env.isProduction ? [] : ["http://localhost:3000", "http://localhost:3200"]),
     ],
+    // Off in production. Locally it lets the whole flow run end to end
+    // (sign-up, picks, leagues, share cards) without Google or Resend.
+    emailAndPassword: { enabled: !env.isProduction },
     session: {
       expiresIn: 90 * DAY,
       updateAge: DAY,

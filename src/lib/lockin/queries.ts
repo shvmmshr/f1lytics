@@ -310,3 +310,16 @@ export async function getLeagueStandings(leagueId: string): Promise<LeagueStandi
     return { userId: r.userId, displayName: r.displayName, tier: r.tier, points: r.points, exactHits: r.exactHits, rounds: r.rounds, rank };
   });
 }
+
+// ── Rounds ───────────────────────────────────────────────────────────────
+
+/** Race date of the most recently settled round, or null before the first one. */
+export async function getLatestSettledRaceDate(): Promise<string | null> {
+  const rows = await getDb()
+    .select({ raceDate: roundResults.raceDate })
+    .from(roundResults)
+    .where(sql`${roundResults.raceSettledAt} is not null`)
+    .orderBy(desc(roundResults.raceDate))
+    .limit(1);
+  return rows[0]?.raceDate ?? null;
+}

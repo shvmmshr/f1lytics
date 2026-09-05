@@ -33,13 +33,16 @@ export function Mono({
   children,
   className,
   style,
+  id,
 }: {
   children: React.ReactNode;
   className?: string;
   style?: React.CSSProperties;
+  /** For aria-labelledby targets. */
+  id?: string;
 }) {
   return (
-    <span className={cn("font-mono", className)} style={style}>
+    <span id={id} className={cn("font-mono", className)} style={style}>
       {children}
     </span>
   );

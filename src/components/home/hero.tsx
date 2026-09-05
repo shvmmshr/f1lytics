@@ -53,11 +53,14 @@ export function Hero({
   constructorStandings = [] as Standing[],
   weekend = null,
   recentRace = null,
+  lockInOpen = false,
 }: {
   driverStandings?: Standing[];
   constructorStandings?: Standing[];
   weekend?: WeekendInfo | null;
   recentRace?: RecentRace | null;
+  /** Server-computed: the Lock In game is configured and the next round accepts calls. */
+  lockInOpen?: boolean;
 }) {
   const [view, setView] = useState<"drivers" | "constructors">("drivers");
   const heroRef = useRef<HTMLElement>(null);
@@ -551,6 +554,33 @@ export function Hero({
               >
                 {nextRace.fullName.toUpperCase()}
               </div>
+
+              {lockInOpen && (
+                <Link
+                  href="/lockin"
+                  className="flex items-center justify-between gap-3 transition-opacity hover:opacity-90"
+                  style={{
+                    marginTop: 14,
+                    background: F1.bg,
+                    border: `1px solid ${F1.lineHi}`,
+                    borderLeft: `3px solid ${F1.red}`,
+                    padding: "10px 12px",
+                    textDecoration: "none",
+                  }}
+                >
+                  <span className="min-w-0">
+                    <Mono className="block" style={{ fontSize: 10, color: F1.red, letterSpacing: "0.2em", fontWeight: 700 }}>
+                      LOCK IN
+                    </Mono>
+                    <span className="font-display block truncate" style={{ fontSize: 15, fontWeight: 600, color: F1.fg, marginTop: 2 }}>
+                      Call pole, the podium and fastest lap
+                    </span>
+                  </span>
+                  <Mono className="shrink-0" style={{ fontSize: 10, color: F1.fg2, letterSpacing: "0.14em", fontWeight: 700 }}>
+                    PLAY
+                  </Mono>
+                </Link>
+              )}
 
               {/* Weekend context — sprint winner + starting grid preview as
                   they get decided (grid is OpenF1-live, minutes after quali) */}

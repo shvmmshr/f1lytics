@@ -2,6 +2,7 @@ import { PageTransition } from "@/components/layout/page-transition";
 import { getLatestCompletedRaceKey } from "@/lib/api/openf1";
 import { LiveContent } from "./live-content";
 import { createPageMetadata } from "@/lib/seo/metadata";
+import { getLiveCallouts } from "@/lib/lockin/callouts";
 
 export const metadata = createPageMetadata({
   title: "F1 Live Timing, Telemetry & Race Tracker",
@@ -22,7 +23,7 @@ export default async function LivePage({ searchParams }: LivePageProps) {
   const replaySessionKey = Number.isNaN(parsed) ? null : parsed;
 
   // Most recently completed race — powers the "Replay last race" demo button.
-  const lastRaceSessionKey = await getLatestCompletedRaceKey();
+  const [lastRaceSessionKey, callouts] = await Promise.all([getLatestCompletedRaceKey(), getLiveCallouts()]);
 
   return (
     <PageTransition>
@@ -32,6 +33,7 @@ export default async function LivePage({ searchParams }: LivePageProps) {
       <LiveContent
         replaySessionKey={replaySessionKey}
         lastRaceSessionKey={lastRaceSessionKey}
+        callouts={callouts}
       />
     </PageTransition>
   );

@@ -26,6 +26,7 @@ import { Breadcrumbs, type BreadcrumbItem } from "@/components/shared/breadcrumb
 import { JsonLd } from "@/components/shared/json-ld";
 import { createPageMetadata, type RaceSeoState } from "@/lib/seo/metadata";
 import { breadcrumbSchema, raceSchema } from "@/lib/seo/schema";
+import { LockInPanel } from "@/components/lockin/lockin-panel";
 
 interface RacePageProps {
   params: Promise<{
@@ -370,6 +371,11 @@ export default async function RacePage({ params }: RacePageProps) {
               </Mono>
               <span style={{ width: 40, height: 1, background: F1.line }} />
               <Breadcrumbs items={breadcrumbs} />
+              {!circuit.cancelled && (
+                <div style={{ marginTop: 14 }}>
+                  <LockInPanel raceDate={circuit.raceDate} slug={circuit.slug} />
+                </div>
+              )}
             </div>
             <h1
               className="font-display uppercase m-0"

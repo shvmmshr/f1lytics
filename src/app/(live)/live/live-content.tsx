@@ -9,6 +9,7 @@ import { TEAMS } from "@/lib/constants";
 import { useLiveSession, type LapStats } from "@/hooks/use-live-session";
 import { useLiveStream } from "@/hooks/use-live-stream";
 import { isStreamCurrent } from "@/hooks/live-stream-status";
+import type { Callouts } from "@/lib/lockin/callouts";
 import type {
   OpenF1Position,
   OpenF1Interval,
@@ -245,6 +246,8 @@ function TopTile({
 // ─── Timing Tower ──────────────────────────────────────────────────────
 
 interface TimingTowerProps {
+  /** Lock In calls of the signed-in player, keyed by driver number. */
+  callouts: Callouts;
   positions: OpenF1Position[];
   intervals: OpenF1Interval[];
   drivers: OpenF1Driver[];
@@ -255,6 +258,7 @@ interface TimingTowerProps {
 }
 
 function TimingTower({
+  callouts,
   positions,
   intervals,
   drivers,
@@ -403,16 +407,26 @@ function TimingTower({
                 alignSelf: "center",
               }}
             />
-            <Mono
-              style={{
-                fontSize: "clamp(11px, 2.8vw, 13px)",
-                fontWeight: 700,
-                letterSpacing: "0.06em",
-                color: F1.fg,
-              }}
-            >
-              {code}
-            </Mono>
+            <span className="flex min-w-0 flex-col">
+              <Mono
+                style={{
+                  fontSize: "clamp(11px, 2.8vw, 13px)",
+                  fontWeight: 700,
+                  letterSpacing: "0.06em",
+                  color: F1.fg,
+                }}
+              >
+                {code}
+              </Mono>
+              {callouts[pos.driver_number] && (
+                <Mono
+                  aria-label={`Your Lock In call: ${callouts[pos.driver_number].join(", ")}`}
+                  style={{ fontSize: 8, color: F1.ink, background: F1.amber, letterSpacing: "0.12em", fontWeight: 700, padding: "1px 4px", marginTop: 3, alignSelf: "flex-start" }}
+                >
+                  {callouts[pos.driver_number].join("·")}
+                </Mono>
+              )}
+            </span>
             <div className="flex flex-col min-w-0">
               <span
                 className="font-display truncate"
@@ -1131,6 +1145,8 @@ function LiveLockedView({
 // ─── Main ──────────────────────────────────────────────────────────────
 
 interface LiveContentProps {
+  /** Signed-in player's Lock In calls for this weekend, by driver number. */
+  callouts?: Callouts;
   /** When set, load this past session's OpenF1 data (replay mode). */
   replaySessionKey?: number | null;
   /** Most recent completed race key, for the idle "replay last race" button. */
@@ -1138,6 +1154,7 @@ interface LiveContentProps {
 }
 
 export function LiveContent({
+  callouts = {},
   replaySessionKey = null,
   lastRaceSessionKey = null,
 }: LiveContentProps) {
@@ -1294,6 +1311,7 @@ export function LiveContent({
                 </div>
               ) : (
                 <TimingTower
+                  callouts={callouts}
                   positions={view.positions}
                   intervals={view.intervals}
                   drivers={view.drivers}

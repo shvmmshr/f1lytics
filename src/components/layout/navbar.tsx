@@ -20,6 +20,8 @@ const NAV_ITEMS = [
   { label: "CIRCUITS", href: "/circuits" },
   { label: "NEWS", href: "/news" },
   { label: "COMPARE", href: "/compare" },
+  // Inlined at build time from next.config.ts; hidden until the game is configured.
+  ...(process.env.NEXT_PUBLIC_LOCKIN_ENABLED === "true" ? [{ label: "LOCK IN", href: "/lockin" }] : []),
   { label: "LIVE", href: "/live", live: true },
 ];
 

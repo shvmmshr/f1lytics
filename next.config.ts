@@ -1,6 +1,13 @@
 import type { NextConfig } from "next";
 
+// Lock In is on only when the database and auth secrets exist. The navbar is a
+// client component, so the decision is inlined at build time as a public flag.
+const lockInEnabled = Boolean(
+  process.env.DATABASE_URL && process.env.BETTER_AUTH_SECRET && process.env.BETTER_AUTH_URL,
+);
+
 const nextConfig: NextConfig = {
+  env: { NEXT_PUBLIC_LOCKIN_ENABLED: lockInEnabled ? "true" : "false" },
   images: {
     // Serve modern formats; the optimizer resizes to device-appropriate widths
     // and emits a srcset.

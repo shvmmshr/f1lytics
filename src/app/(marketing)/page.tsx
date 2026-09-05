@@ -13,6 +13,8 @@ import { DRIVER_LIST, TEAM_LIST, getNextEvent, getApiRound } from "@/lib/constan
 import { mapConstructorToTeamId } from "@/lib/constructor-map";
 import type { WeekendInfo } from "@/components/home/hero";
 import { createPageMetadata, ROOT_TITLE } from "@/lib/seo/metadata";
+import { env } from "@/lib/env";
+import { getOpenRound } from "@/lib/lockin/rounds";
 
 // State-aware description so the homepage snippet matches what the hero shows
 // during race weekends (title stays the strong root default).
@@ -136,6 +138,7 @@ export default async function Home() {
         constructorStandings={constructorStandings}
         weekend={weekend}
         recentRace={recentRace}
+        lockInOpen={env.lockInEnabled && getOpenRound(Date.now()) !== undefined}
       />
       <div className="space-y-0">
         <NextRaceCountdown />

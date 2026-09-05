@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { CIRCUIT_LIST, DRIVER_LIST, TEAM_LIST } from "@/lib/constants";
 import { SITE_URL } from "@/lib/seo/metadata";
+import { env } from "@/lib/env";
 
 export const revalidate = 86400;
 
@@ -18,7 +19,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/compare",
     "/news",
     "/about",
-  ] as const;
+    "/privacy",
+    ...(env.lockInEnabled ? (["/lockin", "/lockin/leaderboard", "/lockin/leagues"] as const) : []),
+  ];
 
   const staticPages = staticPaths.map((path) => ({
     url: path === "/" ? SITE_URL : `${SITE_URL}${path}`,
