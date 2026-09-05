@@ -297,7 +297,8 @@ export function Hero({
                 : "Standings, race analysis, telemetry and the full 2026 season — in one place."}
           </div>
 
-          {/* CTAs — the primary action follows the headline's state */}
+          {/* CTAs — the primary action follows the headline's state. Before the grid is
+              out it goes to the race centre, so the pair never repeats a label. */}
           {/* Stacked full-width on phones (side-by-side wraps ragged below
               ~440px); intrinsic-width row from sm up. */}
           <div ref={ctaRef} className="mt-9 flex flex-col sm:flex-row sm:items-center sm:flex-wrap" style={{ gap: 14 }}>
@@ -305,8 +306,10 @@ export function Hero({
               href={
                 headlineState === "live"
                   ? "/live"
-                  : headlineState === "countdown" && weekend?.grid
-                    ? `/races/${weekend.raceSlug}#starting-grid`
+                  : headlineState === "countdown" && weekend
+                    ? weekend.grid
+                      ? `/races/${weekend.raceSlug}#starting-grid`
+                      : `/races/${weekend.raceSlug}`
                     : "/standings"
               }
               className="font-display inline-flex items-center justify-center cursor-pointer transition-opacity hover:opacity-90"
@@ -321,8 +324,10 @@ export function Hero({
             >
               {headlineState === "live"
                 ? "WATCH LIVE TIMING"
-                : headlineState === "countdown" && weekend?.grid
-                  ? "STARTING GRID"
+                : headlineState === "countdown" && weekend
+                  ? weekend.grid
+                    ? "STARTING GRID"
+                    : "RACE CENTRE"
                   : "VIEW STANDINGS"}
             </Link>
             <Link
