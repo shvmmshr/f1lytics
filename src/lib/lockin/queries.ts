@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, sql } from "drizzle-orm";
 import { getDb } from "@/lib/db/client";
 import { leagueMembers, leagues, predictions, profiles, roundResults, scores } from "@/lib/db/schema";
 import { newId, newShareId } from "./ids";
@@ -126,9 +126,7 @@ export async function getSeasonLeaderboard(limit = 100, filterUserIds?: string[]
     .innerJoin(profiles, eq(profiles.userId, scores.userId))
     .groupBy(scores.userId, profiles.displayName, profiles.tier, profiles.createdAt)
     .limit(SEASON_CAP);
-  const rows = await (filterUserIds
-    ? base.where(sql`${scores.userId} in ${filterUserIds}`)
-    : base);
+  const rows = await (filterUserIds ? base.where(inArray(scores.userId, filterUserIds)) : base);
   const ranked = rows
     .map((r) => ({ ...r, joinedAtMs: r.joinedAt.getTime() }))
     .sort(compareSeason);
@@ -269,7 +267,7 @@ export async function getUserLeagues(userId: string): Promise<(League & { member
   const counts = await db
     .select({ leagueId: leagueMembers.leagueId, n: count() })
     .from(leagueMembers)
-    .where(sql`${leagueMembers.leagueId} in ${ids}`)
+    .where(inArray(leagueMembers.leagueId, ids))
     .groupBy(leagueMembers.leagueId);
   const byId = new Map(counts.map((c) => [c.leagueId, c.n]));
   return mine.map((m) => ({ ...m.league, members: byId.get(m.league.id) ?? 0 }));

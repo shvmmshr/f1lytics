@@ -28,6 +28,16 @@ export function parseTrackLocal(local: unknown, gmtOffset: unknown): number | nu
 }
 
 const RUNNING_STATUSES = new Set(["Inactive", "Started", "Aborted"]);
+
+/**
+ * Whether the session is on (or about to be on) rather than in its post-flag
+ * grace period. Drives the red LIVE pill; a Finalised session still shows its
+ * data for 45 minutes but under a FINISHED label.
+ */
+export function isSessionRunning(session: LiveSessionInfo | null): boolean {
+  if (!session || session.status === null) return true;
+  return RUNNING_STATUSES.has(session.status);
+}
 const ENDED_STATUSES = new Set(["Finished", "Finalised", "Ends"]);
 const ENDED_GRACE_MS = 45 * 60_000;
 

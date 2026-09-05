@@ -87,7 +87,7 @@ pnpm dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-No environment variables are required — all data comes from free, public APIs. (Optionally set `REVALIDATION_SECRET` in production to protect the on-demand cache revalidation endpoint.)
+No environment variables are required for the analytics site: all data comes from free, public APIs. Lock In needs the database and auth variables listed in `docs/lockin/SETUP.md` and shows a coming-soon state without them. (Optionally set `REVALIDATION_SECRET` in production to protect the on-demand cache revalidation endpoint.)
 
 ## Project Structure
 

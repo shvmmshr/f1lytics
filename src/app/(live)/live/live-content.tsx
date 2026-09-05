@@ -8,7 +8,7 @@ import { ReplayBanner } from "@/components/live/replay-banner";
 import { teamColorForName } from "@/lib/constructor-map";
 import { useLiveSession, type LapStats } from "@/hooks/use-live-session";
 import { useLiveStream } from "@/hooks/use-live-stream";
-import { isStreamCurrent } from "@/hooks/live-stream-status";
+import { isSessionRunning, isStreamCurrent } from "@/hooks/live-stream-status";
 import type { Callouts } from "@/lib/lockin/callouts";
 import type {
   OpenF1Position,
@@ -1188,7 +1188,8 @@ export function LiveContent({
         countryName: s.session?.countryName ?? "",
         feedLabel: "F1 LIVE TIMING",
         lastUpdated: stream.lastUpdated,
-        isLive: true,
+        // Finalised sessions stay on screen for 45 minutes, but not as LIVE.
+        isLive: isSessionRunning(s.session),
         hasSession: s.session !== null || s.positions.length > 0,
         loading: false,
       };
