@@ -27,6 +27,7 @@ import { StartLights } from "@/components/home/start-lights";
 import { SessionSchedule } from "@/components/shared/session-schedule";
 import { LiveNow } from "@/components/home/live-now";
 import type { GridRow, RecentRace } from "@/lib/api/weekend";
+import { heroCopy } from "@/lib/home/hero-copy";
 
 type Standing = {
   position: number;
@@ -49,6 +50,17 @@ function pad(n: number) {
   return String(n).padStart(2, "0");
 }
 
+/** Trailing full stop or comma in brand red: the broadcast lower-third flourish. */
+function mark(text: string) {
+  const end = /[.,]$/.exec(text);
+  if (!end) return text;
+  return (
+    <>
+      {text.slice(0, -1)}
+      <span style={{ color: F1.red, WebkitTextStroke: 0 }}>{end[0]}</span>
+    </>
+  );
+}
 
 export function Hero({
   driverStandings = [] as Standing[],
@@ -116,20 +128,17 @@ export function Hero({
   });
 
   // ── The headline is generated from season state, not a slogan ──
-  // live session → "IT'S LIVE."; race weekend → "LIGHTS OUT" + ticking clock;
-  // otherwise → the championship story from the standings we already fetched.
-  const leader = driverStandings[0];
-  const runnerUp = driverStandings[1];
-  const leaderGap =
-    leader && runnerUp && leader.points > runnerUp.points
-      ? Math.round(leader.points - runnerUp.points)
-      : null;
-  const leaderLastName = leader?.name.split(" ").pop()?.toUpperCase() ?? null;
-  const headlineState: "live" | "countdown" | "season" = liveSession
-    ? "live"
-    : weekend && targetTime
-      ? "countdown"
-      : "season";
+  // Session on track, grid set, sprint won, weekend countdown, race just
+  // finished, or the championship story: see src/lib/home/hero-copy.ts.
+  const copy = heroCopy({
+    liveSession,
+    nextRace: nextRace ?? null,
+    eventType: event?.eventType ?? null,
+    weekend,
+    recentRace,
+    leader: driverStandings[0],
+    runnerUp: driverStandings[1],
+  });
 
   useGSAP(
     () => {
@@ -207,11 +216,7 @@ export function Hero({
               className="truncate text-[10px] tracking-[0.16em] sm:text-[11px] sm:tracking-[0.24em]"
               style={{ color: F1.fg3 }}
             >
-              {headlineState === "live" && liveSession
-                ? `ON AIR · ${SESSION_LABELS[liveSession.session]}`
-                : headlineState === "countdown" && nextRace
-                  ? `RD ${String(nextRace.round).padStart(2, "0")} · ${nextRace.fullName.toUpperCase()}`
-                  : "2026 SEASON · TELEMETRY & ANALYSIS"}
+              {copy.eyebrow}
             </Mono>
           </div>
 
@@ -229,39 +234,18 @@ export function Hero({
                 color: F1.fg,
               }}
             >
-              {headlineState === "live" && liveSession ? (
+              {mark(copy.line1)}
+              {copy.line2 && (
                 <>
-                  IT&apos;S LIVE<span style={{ color: F1.red }}>.</span>
                   <br />
                   <span style={{ WebkitTextStroke: `2px ${F1.fg}`, color: "transparent" }}>
-                    {SESSION_LABELS[liveSession.session]}.
-                  </span>
-                </>
-              ) : headlineState === "countdown" ? (
-                <>
-                  LIGHTS OUT
-                  {nextRace && <span className="sr-only"> · {nextRace.fullName}</span>}
-                </>
-              ) : leaderLastName && leaderGap ? (
-                <>
-                  {leaderLastName}
-                  <br />
-                  <span style={{ WebkitTextStroke: `2px ${F1.fg}`, color: "transparent" }}>
-                    LEADS BY {leaderGap}
-                  </span>
-                  <span style={{ color: F1.red }}>.</span>
-                </>
-              ) : (
-                <>
-                  FORMULA 1<span style={{ color: F1.red }}>,</span>
-                  <br />
-                  <span style={{ WebkitTextStroke: `2px ${F1.fg}`, color: "transparent" }}>
-                    DECODED.
+                    {mark(copy.line2)}
                   </span>
                 </>
               )}
+              {copy.srSuffix && <span className="sr-only">{copy.srSuffix}</span>}
             </h1>
-            {headlineState === "countdown" && (
+            {copy.clock && (
               <div
                 aria-hidden
                 className="font-display uppercase tabular-nums m-0"
@@ -277,7 +261,30 @@ export function Hero({
                   color: "transparent",
                 }}
               >
-                IN <span ref={hlTime}>--:--:--</span>
+                {copy.clock.label ? (
+                  // The headline is taken by a name (pole, sprint winner), so the
+                  // clock keeps its meaning through a small label above the digits.
+                  <>
+                    <Mono
+                      className="block"
+                      style={{
+                        fontSize: 11,
+                        letterSpacing: "0.22em",
+                        lineHeight: 1.6,
+                        marginBottom: 6,
+                        color: F1.fg3,
+                        WebkitTextStroke: 0,
+                      }}
+                    >
+                      {copy.clock.label}
+                    </Mono>
+                    <span ref={hlTime}>--:--:--</span>
+                  </>
+                ) : (
+                  <>
+                    IN <span ref={hlTime}>--:--:--</span>
+                  </>
+                )}
               </div>
             )}
           </div>
@@ -287,31 +294,16 @@ export function Hero({
             className="mt-8 max-w-full"
             style={{ width: "100%", maxWidth: 520, fontSize: "clamp(15px, 4vw, 18px)", lineHeight: 1.5, color: F1.fg2 }}
           >
-            {headlineState === "live"
-              ? "Positions, gaps and race control — streaming now on the live timing screen."
-              : headlineState === "countdown" && nextRace
-                ? // fullName is the GP name ("British Grand Prix") — the circuit
-                  // name can contain the city ("Silverstone Circuit from
-                  // Silverstone") and read like a stutter.
-                  `The ${nextRace.fullName} from ${nextRace.city}. Starting grid, schedule and live timing in one place.`
-                : "Standings, race analysis, telemetry and the full 2026 season — in one place."}
+            {copy.description}
           </div>
 
-          {/* CTAs — the primary action follows the headline's state. Before the grid is
-              out it goes to the race centre, so the pair never repeats a label. */}
+          {/* CTAs — both follow the headline's phase (hero-copy.ts), and the
+              pair never repeats a label. */}
           {/* Stacked full-width on phones (side-by-side wraps ragged below
               ~440px); intrinsic-width row from sm up. */}
           <div ref={ctaRef} className="mt-9 flex flex-col sm:flex-row sm:items-center sm:flex-wrap" style={{ gap: 14 }}>
             <Link
-              href={
-                headlineState === "live"
-                  ? "/live"
-                  : headlineState === "countdown" && weekend
-                    ? weekend.grid
-                      ? `/races/${weekend.raceSlug}#starting-grid`
-                      : `/races/${weekend.raceSlug}`
-                    : "/standings"
-              }
+              href={copy.primary.href}
               className="font-display inline-flex items-center justify-center cursor-pointer transition-opacity hover:opacity-90"
               style={{
                 background: F1.red,
@@ -322,22 +314,10 @@ export function Hero({
                 padding: "16px 32px",
               }}
             >
-              {headlineState === "live"
-                ? "WATCH LIVE TIMING"
-                : headlineState === "countdown" && weekend
-                  ? weekend.grid
-                    ? "STARTING GRID"
-                    : "RACE CENTRE"
-                  : "VIEW STANDINGS"}
+              {copy.primary.label}
             </Link>
             <Link
-              href={
-                headlineState === "live" && weekend
-                  ? `/races/${weekend.raceSlug}`
-                  : headlineState === "countdown"
-                    ? "/standings"
-                    : "/races"
-              }
+              href={copy.secondary.href}
               className="font-mono inline-flex items-center justify-center whitespace-nowrap cursor-pointer hover:bg-white/5 transition-colors"
               style={{
                 // 18px mono line + 18px×2 + 2px border = 56px — matches the
@@ -350,11 +330,7 @@ export function Hero({
                 letterSpacing: "0.18em",
               }}
             >
-              {headlineState === "live" && weekend
-                ? "RACE CENTRE →"
-                : headlineState === "countdown"
-                  ? "VIEW STANDINGS →"
-                  : "EXPLORE RACES →"}
+              {copy.secondary.label}
             </Link>
           </div>
 
