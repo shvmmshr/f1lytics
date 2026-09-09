@@ -216,10 +216,12 @@ export function Navbar() {
           </ul>
 
           {/* Right utilities (desktop) */}
-          <div className="hidden md:flex items-center">
+          <div className="ml-auto flex min-w-0 items-center">
             {nextRace && (
-              <span
-                className="hidden 2xl:flex flex-col justify-center whitespace-nowrap"
+              <Link
+                href={`/races/${nextRace.slug}`}
+                aria-label={`Next race: ${nextRace.name}, round ${nextRace.round}`}
+                className="hidden min-[520px]:flex max-w-[180px] flex-col justify-center transition-colors hover:bg-white/5"
                 style={{
                   padding: "0 16px",
                   height: "100%",
@@ -239,15 +241,15 @@ export function Navbar() {
                     marginTop: 3,
                   }}
                 >
-                  {nextRace.country.toUpperCase()}
+                  <span className="block truncate">{nextRace.country.toUpperCase()} <span aria-hidden>→</span></span>
                 </Mono>
-              </span>
+              </Link>
             )}
             <a
               href="https://github.com/shvmmshr/f1lytics"
               target="_blank"
               rel="noopener noreferrer"
-              className="font-mono inline-flex items-center transition-colors hover:bg-white/5"
+              className="font-mono hidden md:inline-flex items-center transition-colors hover:bg-white/5"
               aria-label="GitHub"
               style={{
                 padding: "0 14px",
@@ -272,7 +274,7 @@ export function Navbar() {
             aria-controls="mobile-navigation"
             aria-expanded={mobileMenuOpen}
             aria-label="Toggle navigation menu"
-            className="xl:hidden inline-flex items-center justify-center transition-colors ml-auto"
+            className="xl:hidden inline-flex items-center justify-center transition-colors shrink-0"
             style={{
               padding: "0 18px",
               borderLeft: `1px solid ${F1.line}`,
@@ -318,6 +320,14 @@ export function Navbar() {
             <Mono style={{ fontSize: 12, letterSpacing: "0.18em" }}>EXPLORE F1LYTICS</Mono>
             <button type="button" onClick={closeMobileMenu} aria-label="Close navigation menu" className="flex h-11 w-11 items-center justify-center text-2xl">×</button>
           </div>
+          {nextRace && (
+            <Link href={`/races/${nextRace.slug}`} onClick={closeMobileMenu}
+              className="mx-6 mt-5 flex min-h-12 items-center justify-between gap-4 border px-4 py-3 font-mono text-xs uppercase tracking-wider hover:bg-white/5"
+              style={{ borderColor: F1.line, color: F1.fg }}>
+              <span><span style={{ color: F1.red }}>Next · </span>{nextRace.name}</span>
+              <span aria-hidden>→</span>
+            </Link>
+          )}
           <ul className="m-0 flex list-none flex-col gap-1 px-6 py-6">
             {NAV_ITEMS.map((item, index) => {
               const isActive =
