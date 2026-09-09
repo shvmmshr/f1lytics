@@ -13,7 +13,7 @@ export function Footer() {
       }}
     >
       <div
-        className="flex flex-col items-center gap-4 sm:flex-row sm:justify-between"
+        className="flex flex-col items-center gap-4 lg:flex-row lg:justify-between"
         style={{
           padding: "20px 24px",
           fontFamily: "var(--font-mono)",
@@ -21,7 +21,7 @@ export function Footer() {
           letterSpacing: "0.18em",
         }}
       >
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center justify-center gap-3 text-center">
           <Logo />
           <span style={{ width: 1, height: 12, background: F1.line }} />
           <Mono style={{ color: F1.fg3 }}>
@@ -29,13 +29,13 @@ export function Footer() {
           </Mono>
         </div>
         <div className="flex items-center gap-4">
-          <Link href="/about" className="hover:text-white" style={{ color: F1.fg2 }}>
+          <Link href="/about" className="inline-flex min-h-11 items-center hover:text-white" style={{ color: F1.fg2 }}>
             ABOUT
           </Link>
-          <Link href="/support" className="hover:text-white" style={{ color: F1.fg2 }}>
+          <Link href="/support" className="inline-flex min-h-11 items-center hover:text-white" style={{ color: F1.fg2 }}>
             SUPPORT
           </Link>
-          <Link href="/privacy" className="hover:text-white" style={{ color: F1.fg2 }}>
+          <Link href="/privacy" className="inline-flex min-h-11 items-center hover:text-white" style={{ color: F1.fg2 }}>
             PRIVACY
           </Link>
           <a
@@ -52,6 +52,13 @@ export function Footer() {
             </svg>
           </a>
         </div>
+      </div>
+      <div className="flex flex-wrap items-start justify-between gap-x-6 border-t px-6 py-2 text-xs" style={{ borderColor: F1.line }}>
+        <details className="group max-w-sm">
+          <summary className="flex min-h-11 cursor-pointer items-center font-mono text-[11px] tracking-widest hover:text-white">TEAM RADIO <span aria-hidden className="ml-2 group-open:hidden">+</span><span aria-hidden className="ml-2 hidden group-open:inline">−</span></summary>
+          <p className="pb-4 leading-relaxed">Box, box. You’ve reached the end of the lap. Thanks for riding along.</p>
+        </details>
+        <a href="#main-content" className="inline-flex min-h-11 items-center gap-2 hover:text-white">Back to top <span aria-hidden>↑</span></a>
       </div>
     </footer>
   );

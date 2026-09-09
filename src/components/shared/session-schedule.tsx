@@ -75,8 +75,15 @@ function useTimezone() {
 
   useEffect(() => {
     const detected = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    const stored = localStorage.getItem(TZ_STORAGE_KEY);
-    const raf = requestAnimationFrame(() => setZone(stored || detected));
+    let preferred = detected;
+    try {
+      const stored = localStorage.getItem(TZ_STORAGE_KEY);
+      if (stored) {
+        new Intl.DateTimeFormat("en-US", { timeZone: stored });
+        preferred = stored;
+      }
+    } catch { /* Storage may be blocked, or an old saved zone may be invalid. */ }
+    const raf = requestAnimationFrame(() => setZone(preferred));
 
     const onChange = (e: Event) => {
       const next = (e as CustomEvent<string>).detail;
@@ -91,12 +98,12 @@ function useTimezone() {
 
   const select = (next: string) => {
     if (next === "auto") {
-      localStorage.removeItem(TZ_STORAGE_KEY);
+      try { localStorage.removeItem(TZ_STORAGE_KEY); } catch { /* Use session-only preference. */ }
       const detected = Intl.DateTimeFormat().resolvedOptions().timeZone;
       setZone(detected);
       window.dispatchEvent(new CustomEvent(TZ_CHANGE_EVENT, { detail: detected }));
     } else {
-      localStorage.setItem(TZ_STORAGE_KEY, next);
+      try { localStorage.setItem(TZ_STORAGE_KEY, next); } catch { /* Use session-only preference. */ }
       setZone(next);
       window.dispatchEvent(new CustomEvent(TZ_CHANGE_EVENT, { detail: next }));
     }
@@ -127,21 +134,27 @@ function TimezoneSelect({
   onSelect: (next: string) => void;
   compact?: boolean;
 }) {
+  // Labels depend on the weekend and selected zone, not the minute ticker.
+  const labels = useMemo(() => ({
+    selected: zone ? zoneLabel(zone, zones.sample) : "",
+    popular: zones.popular.map((value) => ({ value, label: zoneLabel(value, zones.sample) })),
+    rest: zones.rest.map((value) => ({ value, label: zoneLabel(value, zones.sample) })),
+  }), [zone, zones]);
   return (
     <select
       aria-label="Timezone for session times"
       value={zone ?? ""}
       onChange={(e) => onSelect(e.target.value)}
       disabled={!zone}
-      className="font-mono"
+      className="font-mono rounded-none border border-line transition-colors hover:border-white/30"
+      title={labels.selected || "Detecting your timezone"}
       style={{
         background: F1.bg2,
         color: F1.fg2,
-        border: `1px solid ${F1.line}`,
-        fontSize: compact ? 10 : 11,
+        fontSize: compact ? 11 : 12,
+        minHeight: 44,
         // Extra right padding leaves room for the native dropdown arrow so it
-        // never overlaps the "(GMT+5:30)" text. Vertical padding sized for a
-        // finger-friendly tap target (~34-38px total).
+        // never overlaps the "(GMT+5:30)" text; minHeight preserves a 44px target.
         padding: compact ? "9px 24px 9px 8px" : "10px 28px 10px 10px",
         // min AND max width: before the timezone resolves the select shows a
         // short "Detecting…" option; without a floor it grows on mount and
@@ -156,19 +169,19 @@ function TimezoneSelect({
         <option value="">Detecting…</option>
       ) : (
         <>
-          <option value={zone}>{zoneLabel(zone, zones.sample)}</option>
+          <option value={zone}>{labels.selected.replace(/, [^(]+(?= \()/, "")}</option>
           <option value="auto">Reset to my local time</option>
           <optgroup label="Popular">
-            {zones.popular.map((z) => (
-              <option key={z} value={z}>
-                {zoneLabel(z, zones.sample)}
+            {labels.popular.map(({ value, label }) => (
+              <option key={value} value={value}>
+                {label}
               </option>
             ))}
           </optgroup>
           <optgroup label="All timezones">
-            {zones.rest.map((z) => (
-              <option key={z} value={z}>
-                {zoneLabel(z, zones.sample)}
+            {labels.rest.map(({ value, label }) => (
+              <option key={value} value={value}>
+                {label}
               </option>
             ))}
           </optgroup>
@@ -261,7 +274,7 @@ export function SessionSchedule({
     return (
       <div>
         <div
-          className="flex items-center justify-between gap-2 mb-2.5"
+          className="flex flex-wrap items-center justify-between gap-2 mb-2.5"
         >
           <Mono style={{ fontSize: 8, color: F1.fg3, letterSpacing: "0.22em", fontWeight: 700 }}>
             WEEKEND · YOUR TIME

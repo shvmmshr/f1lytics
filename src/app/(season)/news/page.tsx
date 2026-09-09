@@ -27,7 +27,7 @@ function timeAgo(iso: string): string {
 
 function SourceLine({ item }: { item: NewsItem }) {
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
       <Mono style={{ fontSize: 11, color: F1.red, letterSpacing: "0.2em" }}>
         {item.source.toUpperCase()}
       </Mono>
@@ -83,7 +83,7 @@ export default async function NewsPage() {
           className="relative"
           style={{ padding: "40px clamp(16px, 4vw, 32px) 28px", borderBottom: `1px solid ${F1.line}` }}
         >
-          <div className="flex items-center gap-3.5">
+          <div className="flex flex-wrap items-center gap-3.5">
             <Mono style={{ color: F1.red, fontSize: 11, letterSpacing: "0.24em" }}>
               PADDOCK FEED
             </Mono>
@@ -119,7 +119,7 @@ export default async function NewsPage() {
                 className="relative"
                 style={{ padding: "32px clamp(16px, 4vw, 32px) 40px", borderBottom: `1px solid ${F1.line}` }}
               >
-                <div className="flex items-center gap-3.5" style={{ marginBottom: 20 }}>
+                <div className="flex flex-wrap items-center gap-3.5" style={{ marginBottom: 20 }}>
                   <Mono
                     style={{
                       color: F1.red,
@@ -251,7 +251,7 @@ export default async function NewsPage() {
 
             {/* ALL STORIES — chronological, breathing room */}
             <div className="relative" style={{ padding: "32px clamp(16px, 4vw, 32px)" }}>
-              <div className="flex items-center gap-3.5" style={{ marginBottom: 20 }}>
+              <div className="flex flex-wrap items-center gap-3.5" style={{ marginBottom: 20 }}>
                 <Mono
                   style={{
                     color: F1.fg2,
