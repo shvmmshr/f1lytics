@@ -1,5 +1,10 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
+import { parseComparisonSelection, type ComparisonSelection } from "@/lib/analytics/comparison-selection";
+import { trackInteraction } from "@/lib/analytics/events";
+import dynamic from "next/dynamic";
+import { DeferredPanel } from "@/components/shared/deferred-panel";
 import { useState, useMemo } from "react";
 import Image from "next/image";
 import { DRIVER_LIST, TEAM_LIST, TEAMS } from "@/lib/constants";
@@ -13,18 +18,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  PieChart,
-  Pie,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from "recharts";
-import {
   F1,
   Mono,
   Brackets,
@@ -34,9 +27,17 @@ import {
 import type {
   DriverStat,
   ConstructorStat,
-  PointsPerRound,
   RecentFormEntry,
-} from "./page";
+} from "@/lib/analytics/comparison";
+
+function HeadToHeadDonut({ winsA, winsB, colorA, colorB, nameA, nameB }: { winsA: number; winsB: number; colorA: string; colorB: string; nameA: string; nameB: string }) {
+  const total = winsA + winsB;
+  return <div className="flex flex-col items-center gap-3"><div role="img" aria-label={`${nameA} ${winsA}, ${nameB} ${winsB} head-to-head finishes`} className="flex h-40 w-40 items-center justify-center rounded-full" style={{ background: total ? `conic-gradient(${colorA} ${winsA / total * 100}%, ${colorB} 0)` : F1.bg4 }}><div className="flex h-28 w-28 items-center justify-center rounded-full" style={{ background: F1.bg2 }}><StatValue size={26}>{total ? `${winsA}–${winsB}` : "—"}</StatValue></div></div><Mono style={{ color: F1.fg2, fontSize: 11 }}>H2H FINISHES</Mono></div>;
+}
+const PointsChart = dynamic(() => import("@/components/charts/comparison-charts").then((m) => m.PointsProgressionChart), { ssr: false });
+function PointsProgressionChart(props: React.ComponentProps<typeof PointsChart>) {
+  return <DeferredPanel height={224} label="Championship points progression"><PointsChart {...props} /></DeferredPanel>;
+}
 
 interface CompareToolProps {
   driverStats: Record<string, DriverStat>;
@@ -119,15 +120,15 @@ function CompareBar({
   const aWins = comparable && (lowerIsBetter ? valueA < valueB : valueA > valueB);
   const bWins = comparable && (lowerIsBetter ? valueB < valueA : valueB > valueA);
 
-  const displayA = format === "position" && valueA > 0 ? `P${valueA}` : valueA || "—";
-  const displayB = format === "position" && valueB > 0 ? `P${valueB}` : valueB || "—";
+  const displayA = format === "position" ? (valueA > 0 ? `P${valueA}` : "—") : valueA;
+  const displayB = format === "position" ? (valueB > 0 ? `P${valueB}` : "—") : valueB;
 
   return (
     <div style={{ padding: "14px 0" }}>
       <div className="flex justify-center">
         <Mono
           style={{
-            fontSize: 9,
+            fontSize: 11,
             color: F1.fg3,
             letterSpacing: "0.24em",
             marginBottom: 10,
@@ -271,178 +272,6 @@ function RecentFormChips({ form }: { form: RecentFormEntry[] }) {
 
 /* ── Head-to-Head Donut ── */
 
-function HeadToHeadDonut({
-  winsA,
-  winsB,
-  colorA,
-  colorB,
-  nameA,
-  nameB,
-}: {
-  winsA: number;
-  winsB: number;
-  colorA: string;
-  colorB: string;
-  nameA: string;
-  nameB: string;
-}) {
-  const total = winsA + winsB;
-  const data =
-    total > 0
-      ? [
-          { name: nameA, value: winsA, fill: colorA },
-          { name: nameB, value: winsB, fill: colorB },
-        ]
-      : [{ name: "No data", value: 1, fill: F1.bg4 }];
-
-  return (
-    <div className="flex flex-col items-center">
-      <div className="relative" style={{ height: 168, width: 168 }}>
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie
-              data={data}
-              cx="50%"
-              cy="50%"
-              innerRadius={50}
-              outerRadius={72}
-              dataKey="value"
-              startAngle={90}
-              endAngle={-270}
-              stroke="none"
-            />
-          </PieChart>
-        </ResponsiveContainer>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <StatValue size={26}>
-            {total > 0 ? `${winsA}–${winsB}` : "—"}
-          </StatValue>
-        </div>
-      </div>
-      <Mono
-        style={{
-          fontSize: 9,
-          color: F1.fg3,
-          letterSpacing: "0.24em",
-          marginTop: 8,
-        }}
-      >
-        H2H FINISHES
-      </Mono>
-    </div>
-  );
-}
-
-/* ── Points Progression Chart ── */
-
-function PointsProgressionChart({
-  dataA,
-  dataB,
-  colorA,
-  colorB,
-  nameA,
-  nameB,
-}: {
-  dataA: PointsPerRound[];
-  dataB: PointsPerRound[];
-  colorA: string;
-  colorB: string;
-  nameA: string;
-  nameB: string;
-}) {
-  const allRounds = new Set<number>();
-  for (const d of dataA) allRounds.add(d.round);
-  for (const d of dataB) allRounds.add(d.round);
-  const rounds = Array.from(allRounds).sort((a, b) => a - b);
-
-  const mapA = new Map(dataA.map((d) => [d.round, d.cumulativePoints]));
-  const mapB = new Map(dataB.map((d) => [d.round, d.cumulativePoints]));
-
-  const chartData = rounds.reduce<{ round: string; [key: string]: string | number }[]>(
-    (acc, round) => {
-      const prevA = acc.length > 0 ? (acc[acc.length - 1][nameA] as number) : 0;
-      const prevB = acc.length > 0 ? (acc[acc.length - 1][nameB] as number) : 0;
-      acc.push({
-        round: `R${round}`,
-        [nameA]: mapA.get(round) ?? prevA,
-        [nameB]: mapB.get(round) ?? prevB,
-      });
-      return acc;
-    },
-    []
-  );
-
-  if (chartData.length === 0) {
-    return (
-      <div
-        className="flex items-center justify-center"
-        style={{ height: 192 }}
-      >
-        <Mono style={{ fontSize: 11, color: F1.fg3, letterSpacing: "0.18em" }}>
-          NO RACE DATA
-        </Mono>
-      </div>
-    );
-  }
-
-  return (
-    <div style={{ height: 224, width: "100%" }}>
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={chartData} margin={{ top: 8, right: 12, left: 0, bottom: 4 }}>
-          <CartesianGrid strokeDasharray="2 4" stroke={F1.line} />
-          <XAxis
-            dataKey="round"
-            tick={{ fill: F1.fg3, fontSize: 10, fontFamily: "var(--font-mono)" }}
-            tickLine={false}
-            axisLine={{ stroke: F1.line }}
-          />
-          <YAxis
-            tick={{ fill: F1.fg3, fontSize: 10, fontFamily: "var(--font-mono)" }}
-            tickLine={false}
-            axisLine={{ stroke: F1.line }}
-            width={36}
-          />
-          <Tooltip
-            contentStyle={{
-              backgroundColor: F1.bg2,
-              border: `1px solid ${F1.line}`,
-              borderRadius: 0,
-              fontSize: 11,
-              fontFamily: "var(--font-mono)",
-            }}
-            labelStyle={{ color: F1.fg3 }}
-          />
-          <Legend
-            wrapperStyle={{
-              fontSize: 10,
-              fontFamily: "var(--font-mono)",
-              letterSpacing: "0.14em",
-              paddingTop: 8,
-              textTransform: "uppercase",
-            }}
-          />
-          <Line
-            type="monotone"
-            dataKey={nameA}
-            stroke={colorA}
-            strokeWidth={2}
-            dot={{ r: 3, fill: colorA }}
-            activeDot={{ r: 5 }}
-          />
-          <Line
-            type="monotone"
-            dataKey={nameB}
-            stroke={colorB}
-            strokeWidth={2}
-            dot={{ r: 3, fill: colorB }}
-            activeDot={{ r: 5 }}
-          />
-        </LineChart>
-      </ResponsiveContainer>
-    </div>
-  );
-}
-
 /* ── Selectors ── */
 
 function DriverSelector({
@@ -460,7 +289,7 @@ function DriverSelector({
     <div>
       <Mono
         style={{
-          fontSize: 9,
+          fontSize: 11,
           color: F1.fg3,
           letterSpacing: "0.24em",
           marginBottom: 6,
@@ -471,6 +300,7 @@ function DriverSelector({
       </Mono>
       <Select value={value} onValueChange={onChange}>
         <SelectTrigger
+          aria-label={`Choose driver ${side}`}
           className="w-full font-mono"
           style={{
             background: F1.bg2,
@@ -479,7 +309,7 @@ function DriverSelector({
             color: F1.fg,
             fontSize: 12,
             letterSpacing: "0.06em",
-            height: 40,
+            height: 44,
           }}
         >
           <SelectValue placeholder="Select driver" />
@@ -518,7 +348,7 @@ function TeamSelector({
     <div>
       <Mono
         style={{
-          fontSize: 9,
+          fontSize: 11,
           color: F1.fg3,
           letterSpacing: "0.24em",
           marginBottom: 6,
@@ -529,6 +359,7 @@ function TeamSelector({
       </Mono>
       <Select value={value} onValueChange={onChange}>
         <SelectTrigger
+          aria-label={`Choose team ${side}`}
           className="w-full font-mono"
           style={{
             background: F1.bg2,
@@ -537,7 +368,7 @@ function TeamSelector({
             color: F1.fg,
             fontSize: 12,
             letterSpacing: "0.06em",
-            height: 40,
+            height: 44,
           }}
         >
           <SelectValue placeholder="Select team" />
@@ -683,9 +514,10 @@ const emptyDriverStat: DriverStat = {
   avgQualifying: null,
 };
 
-function DriverComparison({ stats }: { stats: Record<string, DriverStat> }) {
-  const [driverA, setDriverA] = useState(DRIVER_LIST[0].id);
-  const [driverB, setDriverB] = useState(DRIVER_LIST[1].id);
+function DriverComparison({ stats, selection, update }: { stats: Record<string, DriverStat>; selection: ComparisonSelection; update: (key: keyof ComparisonSelection, value: string) => void }) {
+  const { driverA, driverB } = selection;
+  const setDriverA = (id: string) => update("driverA", id);
+  const setDriverB = (id: string) => update("driverB", id);
 
   const selectedA = DRIVER_LIST.find((d) => d.id === driverA)!;
   const selectedB = DRIVER_LIST.find((d) => d.id === driverB)!;
@@ -824,7 +656,7 @@ function DriverComparison({ stats }: { stats: Record<string, DriverStat> }) {
         <div className="mt-5">
           <Mono
             style={{
-              fontSize: 9,
+              fontSize: 11,
               color: F1.fg3,
               letterSpacing: "0.24em",
               display: "block",
@@ -867,7 +699,7 @@ function DriverComparison({ stats }: { stats: Record<string, DriverStat> }) {
         <div className="mt-8">
           <Mono
             style={{
-              fontSize: 9,
+              fontSize: 11,
               color: F1.fg3,
               letterSpacing: "0.24em",
               display: "block",
@@ -1075,9 +907,10 @@ function TeamVsHero({
   );
 }
 
-function TeamComparison({ stats }: { stats: Record<string, ConstructorStat> }) {
-  const [teamA, setTeamA] = useState(TEAM_LIST[0].id);
-  const [teamB, setTeamB] = useState(TEAM_LIST[1].id);
+function TeamComparison({ stats, selection, update }: { stats: Record<string, ConstructorStat>; selection: ComparisonSelection; update: (key: keyof ComparisonSelection, value: string) => void }) {
+  const { teamA, teamB } = selection;
+  const setTeamA = (id: string) => update("teamA", id);
+  const setTeamB = (id: string) => update("teamB", id);
 
   const selectedA = TEAM_LIST.find((t) => t.id === teamA)!;
   const selectedB = TEAM_LIST.find((t) => t.id === teamB)!;
@@ -1235,7 +1068,7 @@ function TeamComparison({ stats }: { stats: Record<string, ConstructorStat> }) {
             >
               <Mono
                 style={{
-                  fontSize: 9,
+                  fontSize: 11,
                   color: F1.fg3,
                   letterSpacing: "0.24em",
                   display: "block",
@@ -1286,7 +1119,7 @@ function TeamComparison({ stats }: { stats: Record<string, ConstructorStat> }) {
                       </Mono>
                       <Mono
                         style={{
-                          fontSize: 9,
+                          fontSize: 11,
                           color: F1.fg3,
                           letterSpacing: "0.14em",
                         }}
@@ -1308,10 +1141,30 @@ function TeamComparison({ stats }: { stats: Record<string, ConstructorStat> }) {
 /* ── Main ── */
 
 export function CompareTool({ driverStats, constructorStats }: CompareToolProps) {
+  const params = useSearchParams();
+  const selection = parseComparisonSelection(params);
+  const [shareMessage, setShareMessage] = useState("");
+  const update = (key: keyof ComparisonSelection, value: string) => {
+    const next = new URLSearchParams(params.toString());
+    next.set(key, value);
+    window.history.pushState(null, "", `/compare?${next}`);
+    setShareMessage("");
+    trackInteraction("comparison_changed", { mode: key === "mode" ? value : selection.mode });
+  };
+  const share = async () => {
+    const query = new URLSearchParams({ ...selection });
+    const url = `${window.location.origin}/compare?${query}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setShareMessage("Comparison link copied.");
+      trackInteraction("comparison_shared", { mode: selection.mode });
+    } catch { setShareMessage("Copy the comparison URL from your address bar."); }
+  };
   return (
-    <Tabs defaultValue="drivers" className="w-full">
+    <Tabs value={selection.mode} onValueChange={(value) => update("mode", value)} className="w-full">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
       <TabsList
-        className="mb-6"
+        className="min-h-11"
         style={{
           background: F1.bg2,
           border: `1px solid ${F1.line}`,
@@ -1344,13 +1197,16 @@ export function CompareTool({ driverStats, constructorStats }: CompareToolProps)
           TEAMS
         </TabsTrigger>
       </TabsList>
+        <button type="button" onClick={share} className="min-h-11 px-2 text-sm text-text-secondary underline underline-offset-4 hover:text-text-primary">Copy link</button>
+        <span role="status" className={shareMessage ? "w-full text-sm text-text-secondary" : "sr-only"}>{shareMessage}</span>
+      </div>
 
       <TabsContent value="drivers">
-        <DriverComparison stats={driverStats} />
+        <DriverComparison stats={driverStats} selection={selection} update={update} />
       </TabsContent>
 
       <TabsContent value="teams">
-        <TeamComparison stats={constructorStats} />
+        <TeamComparison stats={constructorStats} selection={selection} update={update} />
       </TabsContent>
     </Tabs>
   );

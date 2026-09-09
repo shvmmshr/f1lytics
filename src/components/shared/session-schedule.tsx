@@ -146,8 +146,9 @@ function TimezoneSelect({
         // min AND max width: before the timezone resolves the select shows a
         // short "Detecting…" option; without a floor it grows on mount and
         // nudges its flex siblings.
-        minWidth: compact ? 150 : 180,
-        maxWidth: compact ? 190 : 240,
+        minWidth: compact ? "min(150px, 100%)" : "min(180px, 100%)",
+        width: compact ? 190 : 240,
+        maxWidth: "100%",
         cursor: "pointer",
       }}
     >
@@ -339,7 +340,7 @@ export function SessionSchedule({
         >
           {title}
         </Mono>
-        <div className="flex items-center gap-2 min-w-0">
+        <div className="flex max-w-full min-w-0 flex-wrap items-center gap-2">
           <Mono style={{ fontSize: 9, color: F1.fg2, letterSpacing: "0.18em" }}>
             TIMEZONE
           </Mono>

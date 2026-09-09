@@ -9,7 +9,7 @@ import {
   getSprintResults,
 } from "@/lib/api/jolpica";
 import { getStartingGrid, getRecentRace, type RecentRace } from "@/lib/api/weekend";
-import { DRIVER_LIST, TEAM_LIST, getNextEvent, getApiRound } from "@/lib/constants";
+import { getNextEvent, getApiRound } from "@/lib/constants";
 import { mapConstructorToTeamId } from "@/lib/constructor-map";
 import type { WeekendInfo } from "@/components/home/hero";
 import { createPageMetadata, ROOT_TITLE } from "@/lib/seo/metadata";
@@ -35,26 +35,13 @@ export async function generateMetadata(): Promise<import("next").Metadata> {
 export const revalidate = 300;
 
 export default async function Home() {
-  // Honest fallback (shown only if the API is unavailable): real names, 0 points
-  // — never invented numbers. teamId is already an internal id here.
-  let driverStandings = DRIVER_LIST.slice(0, 5).map((d, i) => ({
-    position: i + 1,
-    name: `${d.firstName} ${d.lastName}`,
-    teamId: d.teamId,
-    points: 0,
-  }));
-
-  let constructorStandings = TEAM_LIST.slice(0, 5).map((t, i) => ({
-    position: i + 1,
-    name: t.name,
-    teamId: t.id,
-    points: 0,
-  }));
+  let driverStandings: { position: number; name: string; teamId: string; points: number }[] = [];
+  let constructorStandings: typeof driverStandings = [];
 
   try {
     const [drivers, constructors] = await Promise.all([
-      getDriverStandings("2026"),
-      getConstructorStandings("2026"),
+      getDriverStandings("2026").catch((error) => { console.warn("[f1lytics] home drivers unavailable:", error); return []; }),
+      getConstructorStandings("2026").catch((error) => { console.warn("[f1lytics] home constructors unavailable:", error); return []; }),
     ]);
 
     if (drivers.length > 0) {
@@ -85,7 +72,7 @@ export default async function Home() {
     }
   } catch (err) {
     console.error("[f1lytics] home standings fetch failed:", err);
-    // Use honest static fallback defined above
+    // Keep unavailable classifications empty.
   }
 
   // Weekend mode: once the next event's race weekend is underway (race day
@@ -109,7 +96,7 @@ export default async function Home() {
     const [grid, sprint, recent] = await Promise.all([
       circuit ? getStartingGrid(circuit) : Promise.resolve([]),
       circuit?.isSprint
-        ? getSprintResults("2026", String(getApiRound(circuit)))
+        ? getSprintResults("2026", String(getApiRound(circuit))).catch((error) => { console.warn("[f1lytics] home sprint unavailable:", error); return null; })
         : Promise.resolve(null),
       getRecentRace(),
     ]);
@@ -134,6 +121,7 @@ export default async function Home() {
   return (
     <>
       <Hero
+        initialEvent={event}
         driverStandings={driverStandings}
         constructorStandings={constructorStandings}
         weekend={weekend}
@@ -141,7 +129,7 @@ export default async function Home() {
         lockInOpen={env.lockInEnabled && getOpenRound(Date.now()) !== undefined}
       />
       <div className="space-y-0">
-        <NextRaceCountdown />
+        <NextRaceCountdown initialEvent={event} />
         <SeasonCalendarStrip />
         <NewsStrip />
         <StatsRow />

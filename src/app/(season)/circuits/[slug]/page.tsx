@@ -149,7 +149,7 @@ export default async function CircuitPage({ params }: CircuitPageProps) {
               {circuit.isSprint && !circuit.cancelled && (
                 <Mono
                   style={{
-                    fontSize: 9,
+                    fontSize: 11,
                     background: F1.amber,
                     color: F1.ink,
                     padding: "3px 8px",
@@ -272,7 +272,7 @@ export default async function CircuitPage({ params }: CircuitPageProps) {
                         <Mono
                           className="block"
                           style={{
-                            fontSize: 9,
+                            fontSize: 11,
                             color: tile.subColor ?? F1.fg3,
                             letterSpacing: "0.14em",
                             marginTop: 4,

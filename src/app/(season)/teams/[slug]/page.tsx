@@ -45,12 +45,8 @@ function getTeamDrivers(ids: [string, string]): Driver[] {
   return ids.map((id) => DRIVERS[id]).filter(Boolean);
 }
 
-function normalize(value: string): string {
-  return value.toLowerCase().replace(/[^a-z0-9]/g, "");
-}
-
 // Fetch historical constructor standings
-async function getHistoricalStandings(teamName: string) {
+async function getHistoricalStandings(teamId: string) {
   const years = ["2022", "2023", "2024", "2025"];
   const results: { year: string; position: number | null; points: number; wins: number }[] = [];
 
@@ -62,11 +58,7 @@ async function getHistoricalStandings(teamName: string) {
       years.map((y) => getConstructorStandings(y, 86_400).catch(() => []))
     );
     for (let i = 0; i < years.length; i++) {
-      const n = normalize(teamName);
-      const entry = all[i].find((s) => {
-        const cn = normalize(s.Constructor.name);
-        return cn.includes(n) || n.includes(cn);
-      });
+      const entry = all[i].find((s) => mapConstructorToTeamId(s.Constructor.constructorId, s.Constructor.name) === teamId);
       if (entry) {
         const pos = Number.parseInt(entry.position, 10);
         results.push({
@@ -117,7 +109,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
         console.warn("[f1lytics] team race results fetch failed:", err);
         return [];
       }),
-      getHistoricalStandings(team.name),
+      getHistoricalStandings(team.id),
     ]);
 
   const constructorStanding = constructorStandings.find(
@@ -456,7 +448,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
                       </StatValue>
                       <Mono
                         className="block"
-                        style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.18em" }}
+                        style={{ fontSize: 11, color: F1.fg3, letterSpacing: "0.18em" }}
                       >
                         PTS
                       </Mono>
@@ -747,7 +739,8 @@ export default async function TeamPage({ params }: TeamPageProps) {
         {raceData.length > 0 && (
           <section className="relative" style={{ padding: "40px clamp(16px, 4vw, 32px) 60px" }}>
             <div className="mx-auto" style={{ maxWidth: 1400 }}>
-              <SectionHeader label="POINTS PROGRESSION" accent={team.color} />
+              <SectionHeader label="GRAND PRIX POINTS PROGRESSION" accent={team.color} />
+              <p className="mb-5 text-sm" style={{ color: F1.fg2 }}>Race points only; sprint points are included in the championship total above. <Link href="/compare" className="underline">Compare full championship progression</Link>.</p>
               <div
                 style={{
                   background: F1.bg2,

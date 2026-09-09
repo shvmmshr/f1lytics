@@ -8,7 +8,8 @@ import { gsap } from "@/lib/gsap";
 import { cn } from "@/lib/utils";
 import { F1, LiveDot, Mono } from "@/components/shared/broadcast";
 import { Logo } from "@/components/shared/logo";
-import { getNextEvent, CIRCUIT_LIST } from "@/lib/constants";
+import { CIRCUIT_LIST } from "@/lib/constants";
+import { useNextEvent } from "@/hooks/use-next-event";
 import { getActiveHeadlineSession } from "@/lib/constants/sessions";
 
 const NAV_ITEMS = [
@@ -20,6 +21,7 @@ const NAV_ITEMS = [
   { label: "CIRCUITS", href: "/circuits" },
   { label: "NEWS", href: "/news" },
   { label: "COMPARE", href: "/compare" },
+  { label: "GARAGE", href: "/garage" },
   // Inlined at build time from next.config.ts; hidden until the game is configured.
   ...(process.env.NEXT_PUBLIC_LOCKIN_ENABLED === "true" ? [{ label: "LOCK IN", href: "/lockin" }] : []),
   { label: "LIVE", href: "/live", live: true },
@@ -35,10 +37,11 @@ export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
-  const mobileOverlayRef = useRef<HTMLDivElement>(null);
+  const mobileOverlayRef = useRef<HTMLDialogElement>(null);
+  const mobileToggleRef = useRef<HTMLButtonElement>(null);
   const mobileNavItemsRef = useRef<HTMLLIElement[]>([]);
 
-  const event = getNextEvent();
+  const event = useNextEvent();
   const nextRace = event?.circuit;
 
   // The LIVE dot must blink ONLY when a competitive session (quali / sprint
@@ -86,9 +89,17 @@ export function Navbar() {
   );
 
   useEffect(() => {
-    if (mobileMenuOpen) document.body.classList.add("overflow-hidden");
-    else document.body.classList.remove("overflow-hidden");
-    return () => document.body.classList.remove("overflow-hidden");
+    if (!mobileMenuOpen) return;
+    const dialog = mobileOverlayRef.current;
+    const toggle = mobileToggleRef.current;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    dialog?.showModal();
+    return () => {
+      dialog?.close();
+      document.body.style.overflow = previousOverflow;
+      toggle?.focus();
+    };
   }, [mobileMenuOpen]);
 
   const closeMobileMenu = useCallback(() => {
@@ -117,16 +128,13 @@ export function Navbar() {
     else setMobileMenuOpen(true);
   }, [mobileMenuOpen, closeMobileMenu]);
 
-  // Escape closes the mobile menu — without this, keyboard users are stuck
-  // until they find the hamburger again.
+  // Close a mobile modal when switching to desktop, including tablet rotation.
   useEffect(() => {
-    if (!mobileMenuOpen) return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") closeMobileMenu();
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [mobileMenuOpen, closeMobileMenu]);
+    const mq = window.matchMedia("(min-width: 1280px)");
+    const close = () => { if (mq.matches) closeMobileMenu(); };
+    mq.addEventListener("change", close);
+    return () => mq.removeEventListener("change", close);
+  }, [closeMobileMenu]);
 
   return (
     <>
@@ -140,6 +148,7 @@ export function Navbar() {
       >
         {/* Main nav row */}
         <nav
+          aria-label="Main navigation"
           className="flex items-stretch"
           style={{ height: 56 }}
         >
@@ -156,7 +165,7 @@ export function Navbar() {
           </div>
 
           {/* Desktop nav items */}
-          <ul className="hidden md:flex items-stretch flex-1 list-none m-0 p-0">
+          <ul className="hidden xl:flex items-stretch flex-1 list-none m-0 p-0">
             {NAV_ITEMS.map((item) => {
               const isActive =
                 pathname === item.href || pathname.startsWith(item.href + "/");
@@ -167,11 +176,12 @@ export function Navbar() {
                 <li key={item.href} className="flex">
                   <Link
                     href={item.href}
+                  aria-current={isActive ? "page" : undefined}
                     className={cn(
                       "nav-underline relative flex items-center font-mono transition-colors gap-2",
                     )}
                     style={{
-                      padding: "0 18px",
+                      padding: "0 12px",
                       fontSize: 11,
                       letterSpacing: "0.14em",
                       color: liveNow ? F1.ink : isActive ? F1.fg : F1.fg2,
@@ -209,7 +219,7 @@ export function Navbar() {
           <div className="hidden md:flex items-center">
             {nextRace && (
               <span
-                className="hidden xl:flex flex-col justify-center whitespace-nowrap"
+                className="hidden 2xl:flex flex-col justify-center whitespace-nowrap"
                 style={{
                   padding: "0 16px",
                   height: "100%",
@@ -257,10 +267,12 @@ export function Navbar() {
           {/* Mobile hamburger */}
           <button
             type="button"
+            ref={mobileToggleRef}
             onClick={handleMobileToggle}
+            aria-controls="mobile-navigation"
             aria-expanded={mobileMenuOpen}
             aria-label="Toggle navigation menu"
-            className="md:hidden inline-flex items-center justify-center transition-colors ml-auto"
+            className="xl:hidden inline-flex items-center justify-center transition-colors ml-auto"
             style={{
               padding: "0 18px",
               borderLeft: `1px solid ${F1.line}`,
@@ -294,13 +306,19 @@ export function Navbar() {
 
       {/* Mobile full-screen overlay */}
       {mobileMenuOpen && (
-        <div
+        <dialog
+          id="mobile-navigation"
           ref={mobileOverlayRef}
-          className="fixed inset-0 z-40 flex flex-col backdrop-blur-2xl md:hidden"
-          style={{ background: "rgba(8,8,10,0.96)" }}
+          aria-label="Navigation"
+          onCancel={(event) => { event.preventDefault(); closeMobileMenu(); }}
+          className="fixed inset-0 z-[60] m-0 h-dvh max-h-none w-full max-w-none overflow-x-hidden overflow-y-auto border-0 p-0 backdrop:bg-black/70"
+          style={{ background: F1.ink, color: F1.fg }}
         >
-          <div className="h-14 shrink-0" />
-          <ul className="flex flex-1 flex-col justify-center gap-1 px-6 list-none m-0 p-0">
+          <div className="sticky top-0 z-10 flex h-16 items-center justify-between border-b px-6" style={{ background: F1.ink, borderColor: F1.line }}>
+            <Mono style={{ fontSize: 12, letterSpacing: "0.18em" }}>EXPLORE F1LYTICS</Mono>
+            <button type="button" onClick={closeMobileMenu} aria-label="Close navigation menu" className="flex h-11 w-11 items-center justify-center text-2xl">×</button>
+          </div>
+          <ul className="m-0 flex list-none flex-col gap-1 px-6 py-6">
             {NAV_ITEMS.map((item, index) => {
               const isActive =
                 pathname === item.href || pathname.startsWith(item.href + "/");
@@ -314,6 +332,7 @@ export function Navbar() {
                   <Link
                     href={item.href}
                     onClick={closeMobileMenu}
+                    aria-current={isActive ? "page" : undefined}
                     className="font-display flex items-center gap-3 px-4 py-4 transition-colors uppercase"
                     style={{
                       fontSize: 24,
@@ -332,7 +351,7 @@ export function Navbar() {
               );
             })}
           </ul>
-        </div>
+        </dialog>
       )}
     </>
   );

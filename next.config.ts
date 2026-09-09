@@ -7,6 +7,12 @@ const lockInEnabled = Boolean(
 );
 
 const nextConfig: NextConfig = {
+  // Public timing feeds are rate-limited. Avoid a cold build issuing dozens
+  // of page fetches together; this affects prerendering, not request serving.
+  experimental: {
+    staticGenerationMaxConcurrency: 2,
+    staticGenerationMinPagesPerWorker: 1000,
+  },
   env: { NEXT_PUBLIC_LOCKIN_ENABLED: lockInEnabled ? "true" : "false" },
   images: {
     // Serve modern formats; the optimizer resizes to device-appropriate widths

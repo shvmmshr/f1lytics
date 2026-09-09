@@ -11,10 +11,11 @@ export default function SeasonLayout({
   return (
     <div className="flex min-h-screen flex-col" style={{ background: F1.ink }}>
       <ScrollProgress />
+      <a href="#main-content" className="skip-link">Skip to content</a>
       <Navbar />
       {/* Content sits in a centered, bordered frame so wide monitors don't get
           edge-to-edge sprawl; the darker page background fills the margins. */}
-      <main className="w-full flex-1">
+      <main id="main-content" tabIndex={-1} className="w-full flex-1">
         <div
           className="mx-auto w-full min-h-full"
           style={{

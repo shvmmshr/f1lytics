@@ -33,7 +33,7 @@ export default function AboutPage() {
           isPartOf: { "@type": "WebSite", name: SITE_NAME, url: SITE_URL },
         }}
       />
-      <main className="relative" style={{ background: F1.bg, color: F1.fg }}>
+      <div className="relative" style={{ background: F1.bg, color: F1.fg }}>
         <BroadcastGrid color={F1.line} size={64} opacity={0.18} />
         <header
           className="relative"
@@ -69,12 +69,24 @@ export default function AboutPage() {
           </section>
 
           <section>
-            <SectionHeader label="METHODOLOGY & LIMITATIONS" />
+            <div id="methodology" className="scroll-mt-24"><SectionHeader label="METHODOLOGY & LIMITATIONS" /></div>
             <div className="space-y-3" style={{ color: F1.fg2 }}>
               <p>Race dates, rather than renumbered API rounds, are the stable join key across sources. Cancelled events keep their original local calendar slot.</p>
               <p>Qualifying classifications are the best available grid preview; post-qualifying penalties can still change the official starting order. Jolpica can lag after a session, and OpenF1 or detailed live timing may be locked during live running.</p>
               <p>When trustworthy sporting data is unavailable, F1lytics shows an honest empty state or explicit zero fallback. It does not invent results.</p>
             </div>
+          </section>
+
+          <section>
+            <SectionHeader label="HOW TO READ THE NUMBERS" />
+            <dl className="grid gap-6 sm:grid-cols-2">
+              {[
+                ["Championship points", "Official standings include both Grands Prix and sprints. Comparison progression combines published results from both. A newly published race can appear before the standings catch up."],
+                ["Race form and head-to-heads", "These use Grands Prix only. Retirements are shown separately from completed finishes. Average qualifying describes grid-session classification, not a driver's starting position after penalties."],
+                ["Lap times", "Recorded lap durations include pit laps and traffic. A single fastest lap does not establish race pace. Compare longer runs on similar tyres and watch for safety-car periods."],
+                ["Gaps and intervals", "Gap is the distance in time to the leader; interval is to the car immediately ahead. Missing timing is unavailable data, not a zero-second gap. Session review shows recorded data and is not a live broadcast."],
+              ].map(([term, detail]) => <div key={term}><dt className="font-display text-2xl">{term}</dt><dd className="mt-2" style={{ color: F1.fg2 }}>{detail}</dd></div>)}
+            </dl>
           </section>
 
           <section>
@@ -97,7 +109,7 @@ export default function AboutPage() {
             </Link>
           </div>
         </div>
-      </main>
+      </div>
     </>
   );
 }

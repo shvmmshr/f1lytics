@@ -106,7 +106,7 @@ export async function getLatestCompletedRaceKey(
     const sessions = await getSessions({ year, session_type: "Race" }, true);
     const now = Date.now();
     const past = sessions
-      .filter((s) => new Date(s.date_start).getTime() < now)
+      .filter((s) => s.date_end && new Date(s.date_end).getTime() <= now)
       .sort(
         (a, b) =>
           new Date(b.date_start).getTime() - new Date(a.date_start).getTime()
@@ -248,6 +248,8 @@ export async function getCarData(params: {
   session_key: number;
   driver_number: number;
   date?: string;
+  "date>"?: string;
+  "date<"?: string;
 }): Promise<OpenF1CarData[]> {
   return fetchOpenF1<OpenF1CarData>("/car_data", params);
 }

@@ -186,7 +186,7 @@ export default async function TeamsPage() {
                     </StatValue>
                     <Mono
                       style={{
-                        fontSize: 9,
+                        fontSize: 11,
                         color: F1.fg3,
                         letterSpacing: "0.18em",
                         display: "block",
@@ -213,7 +213,7 @@ export default async function TeamsPage() {
                   </h2>
                   <Mono
                     style={{
-                      fontSize: 9,
+                      fontSize: 11,
                       color: F1.fg3,
                       letterSpacing: "0.18em",
                       marginTop: 5,
@@ -279,7 +279,7 @@ export default async function TeamsPage() {
                         </Mono>
                         <Mono
                           style={{
-                            fontSize: 9,
+                            fontSize: 11,
                             color: F1.fg3,
                             letterSpacing: "0.14em",
                           }}

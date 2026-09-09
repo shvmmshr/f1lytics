@@ -29,7 +29,7 @@ const WAYS = [
 
 export default function SupportPage() {
   return (
-    <main className="relative" style={{ background: F1.bg, color: F1.fg }}>
+    <div className="relative" style={{ background: F1.bg, color: F1.fg }}>
       <BroadcastGrid color={F1.line} size={64} opacity={0.18} />
       <header className="relative" style={{ padding: "56px clamp(20px, 6vw, 80px) 44px", borderBottom: `1px solid ${F1.line}` }}>
         <Mono style={{ color: F1.red, fontSize: 11, letterSpacing: "0.24em" }}>SUPPORT</Mono>
@@ -79,6 +79,6 @@ export default function SupportPage() {
           </ul>
         </section>
       </div>
-    </main>
+    </div>
   );
 }

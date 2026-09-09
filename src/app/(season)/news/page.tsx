@@ -28,14 +28,14 @@ function timeAgo(iso: string): string {
 function SourceLine({ item }: { item: NewsItem }) {
   return (
     <div className="flex items-center gap-2">
-      <Mono style={{ fontSize: 9, color: F1.red, letterSpacing: "0.2em" }}>
+      <Mono style={{ fontSize: 11, color: F1.red, letterSpacing: "0.2em" }}>
         {item.source.toUpperCase()}
       </Mono>
-      <Mono style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.14em" }}>
+      <Mono style={{ fontSize: 11, color: F1.fg3, letterSpacing: "0.14em" }}>
         · {timeAgo(item.publishedAt)}
       </Mono>
       {(item.corroboration ?? 0) > 0 && (
-        <Mono style={{ fontSize: 9, color: F1.amber, letterSpacing: "0.14em" }}>
+        <Mono style={{ fontSize: 11, color: F1.amber, letterSpacing: "0.14em" }}>
           · {(item.corroboration ?? 0) + 1} SOURCES
         </Mono>
       )}

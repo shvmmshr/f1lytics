@@ -10,3 +10,10 @@ ignoredBuiltDependencies:
   - msw
   - sharp
   - unrs-resolver
+
+# Patch vulnerable transitive releases without widening their minor versions.
+overrides:
+  'browserslist@<4.28.7': 4.28.7
+  '@babel/core@>=7.0.0 <7.29.6': 7.29.6
+  'fflate@>=0.8.0 <0.8.3': 0.8.3
+  'fflate@>=0.6.0 <0.6.11': 0.6.11

@@ -17,6 +17,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/races",
     "/live",
     "/compare",
+    "/garage",
     "/news",
     "/about",
     "/privacy",

@@ -93,6 +93,11 @@ export async function GET(req: NextRequest) {
     return offlineStream();
   }
   if (!negotiated) return offlineStream();
+  // Negotiation awaits I/O; another request may have claimed the final slot.
+  if (activeStreams >= MAX_STREAMS_PER_INSTANCE) {
+    return new Response("Busy — retry shortly", { status: 503, headers: { "Retry-After": "15" } });
+  }
+  if (req.signal.aborted) return offlineStream();
   const { token, cookieHeader } = negotiated;
 
   const wsUrl = `${CONNECT_URL}?id=${encodeURIComponent(token)}`;
@@ -129,6 +134,7 @@ export async function GET(req: NextRequest) {
         if (closed) return;
         closed = true;
         activeStreams = Math.max(0, activeStreams - 1);
+        req.signal.removeEventListener("abort", cleanup);
         clearInterval(heartbeat);
         clearInterval(wsPing);
         clearTimeout(maxTimer);
@@ -231,7 +237,8 @@ export async function GET(req: NextRequest) {
         cleanup();
       }, RECONNECT_MARGIN_MS);
 
-      req.signal.addEventListener("abort", cleanup);
+      req.signal.addEventListener("abort", cleanup, { once: true });
+      if (req.signal.aborted) cleanup();
     },
   });
 

@@ -39,6 +39,7 @@ export function isPlainObject(v: unknown): v is Record<string, unknown> {
 /** Recursively merge F1 delta `source` into `target` (mutates target). */
 export function deepMerge(target: Record<string, unknown>, source: Record<string, unknown>): Record<string, unknown> {
   for (const key of Object.keys(source)) {
+    if (key === "__proto__" || key === "constructor" || key === "prototype") continue;
     const sv = source[key];
     const tv = target[key];
     if (isPlainObject(sv) && isPlainObject(tv)) {

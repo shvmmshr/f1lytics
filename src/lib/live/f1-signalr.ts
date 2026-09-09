@@ -29,7 +29,7 @@ export const TOPICS = [
 /** Read F1's streaming status. Returns "Offline" on any failure (fail closed). */
 export async function getStreamingStatus(): Promise<string> {
   try {
-    const res = await fetch(STATUS_URL, { cache: "no-store" });
+    const res = await fetch(STATUS_URL, { cache: "no-store", signal: AbortSignal.timeout(8000) });
     if (!res.ok) return "Offline";
     const text = await res.text();
     // The file is served with a UTF-8 BOM, which breaks JSON.parse.
@@ -50,6 +50,7 @@ export interface Negotiated {
 export async function negotiate(): Promise<Negotiated | null> {
   const negRes = await fetch(NEGOTIATE_URL, {
     method: "POST",
+    signal: AbortSignal.timeout(8000),
     headers: {
       "Content-Type": "application/json",
       "User-Agent": "Mozilla/5.0",

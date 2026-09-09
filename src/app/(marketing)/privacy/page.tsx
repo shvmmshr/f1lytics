@@ -13,7 +13,7 @@ export const metadata = createPageMetadata({
 
 export default function PrivacyPage() {
   return (
-    <main className="relative" style={{ background: F1.bg, color: F1.fg }}>
+    <div className="relative" style={{ background: F1.bg, color: F1.fg }}>
       <BroadcastGrid color={F1.line} size={64} opacity={0.18} />
       <header className="relative" style={{ padding: "56px clamp(20px, 6vw, 80px) 44px", borderBottom: `1px solid ${F1.line}` }}>
         <Mono style={{ color: F1.red, fontSize: 11, letterSpacing: "0.24em" }}>PRIVACY</Mono>
@@ -21,10 +21,14 @@ export default function PrivacyPage() {
           Your data<span style={{ color: F1.red }}>.</span>
         </h1>
         <p className="mt-5 max-w-3xl text-lg" style={{ color: F1.fg2 }}>
-          Browsing F1lytics needs no account and stores nothing about you beyond standard server logs and anonymous page analytics. Lock In, the predictions game, needs an account. This page says exactly what that means.
+          Browsing F1lytics needs no account. The site uses standard server logs and page analytics. Interactive exhibits and optional account features involve the services described below.
         </p>
       </header>
       <div className="relative mx-auto grid max-w-4xl gap-12 px-5 py-12 md:px-10">
+        <section>
+          <SectionHeader label="INTERACTIVE 3D EXHIBITS" />
+          <p style={{ color: F1.fg2 }}>Garage previews are served by F1lytics. Choosing “Explore in 3D” loads an embedded Sketchfab viewer, connecting your browser to Sketchfab. Its handling of your connection and browser information is governed by its <a href="https://sketchfab.com/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-white">privacy policy</a>. Closing the viewer or choosing another car removes the embed.</p>
+        </section>
         <section>
           <SectionHeader label="WHAT IS STORED" />
           <ul className="grid gap-2" style={{ color: F1.fg2, paddingLeft: 18 }}>
@@ -59,6 +63,6 @@ export default function PrivacyPage() {
           </Link>
         </div>
       </div>
-    </main>
+    </div>
   );
 }

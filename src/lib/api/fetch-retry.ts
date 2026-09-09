@@ -20,18 +20,21 @@ export async function fetchWithRetry(
   const maxWaitMs = isBuild ? 30_000 : 8000;
 
   for (let attempt = 0; ; attempt++) {
+    init.signal?.throwIfAborted();
     let res: Response | null = null;
     try {
       // Per-attempt timeout: a HUNG upstream (as opposed to an erroring one)
       // would otherwise stall the render until the platform kills the function.
       res = await fetch(url, {
         ...init,
-        signal: init.signal ?? AbortSignal.timeout(10_000),
+        signal: init.signal
+          ? AbortSignal.any([init.signal, AbortSignal.timeout(10_000)])
+          : AbortSignal.timeout(10_000),
       });
     } catch (err) {
       // Timeouts and connection resets are as transient as a 429 — retry
       // them the same way; rethrow once attempts are exhausted.
-      if (attempt >= maxAttempts - 1) throw err;
+      if (init.signal?.aborted || attempt >= maxAttempts - 1) throw err;
     }
 
     if (res) {
@@ -40,6 +43,8 @@ export async function fetchWithRetry(
     }
 
     const retryAfter = Number(res?.headers.get("retry-after"));
+    // Release response bodies before waiting or opening another connection.
+    await res?.body?.cancel().catch(() => {});
     // Exponential backoff (1s, 2s, 4s, ...) with jitter so parallel build
     // workers hitting the same limit don't retry in lockstep and collide again.
     const backoffMs = 1000 * 2 ** attempt + Math.floor(Math.random() * 400);
@@ -47,6 +52,12 @@ export async function fetchWithRetry(
       Number.isFinite(retryAfter) && retryAfter > 0
         ? retryAfter * 1000
         : backoffMs;
-    await new Promise((resolve) => setTimeout(resolve, Math.min(waitMs, maxWaitMs)));
+    await new Promise<void>((resolve, reject) => {
+      const signal = init.signal;
+      const abort = () => { clearTimeout(timer); reject(signal?.reason); };
+      const timer = setTimeout(() => { signal?.removeEventListener("abort", abort); resolve(); }, Math.min(waitMs, maxWaitMs));
+      signal?.addEventListener("abort", abort, { once: true });
+      if (signal?.aborted) { signal.removeEventListener("abort", abort); abort(); }
+    });
   }
 }

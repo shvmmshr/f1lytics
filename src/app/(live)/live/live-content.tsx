@@ -545,6 +545,8 @@ function TelemetryBlock({
   const rpm = carData?.rpm ?? 0;
   const throttle = carData?.throttle ?? 0;
   const brake = carData?.brake ?? 0;
+  const hasThrottle = hasData && Number.isFinite(throttle) && throttle >= 0 && throttle <= 100;
+  const hasBrake = hasData && Number.isFinite(brake) && brake >= 0 && brake <= 100;
   const drs = carData?.drs ?? 0;
   const drsActive = hasData && drs >= 10 && drs !== 0 && drs !== 8;
 
@@ -628,16 +630,18 @@ function TelemetryBlock({
               fontVariantNumeric: "tabular-nums",
             }}
           >
-            {hasData ? `${throttle}%` : "—"}
+            {hasThrottle ? `${throttle}%` : "—"}
           </Mono>
         </div>
         <div style={{ height: 8, background: F1.bg3 }}>
           <div
             style={{
               height: "100%",
-              width: `${throttle}%`,
+              width: "100%",
+              transform: `scaleX(${hasThrottle ? throttle / 100 : 0})`,
+              transformOrigin: "left",
               background: F1.green,
-              transition: "width 200ms",
+              transition: "transform 200ms",
             }}
           />
         </div>
@@ -655,16 +659,18 @@ function TelemetryBlock({
               fontVariantNumeric: "tabular-nums",
             }}
           >
-            {hasData ? `${brake}%` : "—"}
+            {hasBrake ? `${brake}%` : "—"}
           </Mono>
         </div>
         <div style={{ height: 8, background: F1.bg3 }}>
           <div
             style={{
               height: "100%",
-              width: `${brake}%`,
+              width: "100%",
+              transform: `scaleX(${hasBrake ? brake / 100 : 0})`,
+              transformOrigin: "left",
               background: F1.red,
-              transition: "width 200ms",
+              transition: "transform 200ms",
             }}
           />
         </div>
@@ -1148,24 +1154,12 @@ export function LiveContent({
 }: LiveContentProps) {
   const isReplayRoute = replaySessionKey !== null;
 
-  // OpenF1-based session: drives replay, recently-finished, and the idle countdown.
-  const live = useLiveSession(replaySessionKey);
-  // F1 SignalR SSE for TRUE live data — disabled in replay mode (uses OpenF1 history).
   const stream = useLiveStream(!isReplayRoute);
-
-  // Focus state lives in the OpenF1 hook (it also drives the telemetry fetch); we
-  // reuse it for row highlighting in both modes.
+  const usingStream = stream.state === "live" && stream.data !== null &&
+    isStreamCurrent(stream.data.session, stream.checkedAt);
+  // An active SSE stream supplies the tower; avoid duplicate full-session polls.
+  const live = useLiveSession(replaySessionKey, !usingStream);
   const { focusedDriverNumber, setFocusedDriverNumber } = live;
-
-  // Prefer the real-time SSE feed whenever it is actively delivering data.
-  // A snapshot alone is not a live session: F1 serves the last session all
-  // weekend. Only trust the stream while its own status says it is running,
-  // or for 45 minutes after it ended. lastUpdated is set on every message, so
-  // this re-evaluates as data arrives without calling Date.now() in render.
-  const usingStream =
-    stream.state === "live" &&
-    stream.data !== null &&
-    isStreamCurrent(stream.data.session, stream.lastUpdated?.getTime() ?? 0);
 
   // Unified view model from whichever source is active.
   const view = useMemo(() => {
@@ -1263,6 +1257,7 @@ export function LiveContent({
   return (
     <div style={{ background: F1.bg, color: F1.fg, position: "relative" }}>
       <BroadcastGrid color={F1.line} size={64} opacity={0.14} />
+      {!usingStream && live.error && <p role="status" className="relative m-0 border-b border-line px-4 py-3 text-sm" style={{ color: F1.amber }}>Timing refresh interrupted. {view.positions.length ? "Showing the last received data while reconnecting." : "Retrying automatically; session details may be temporarily unavailable."}</p>}
 
       {showLiveData && (view.hasSession || view.positions.length > 0) ? (
         <>

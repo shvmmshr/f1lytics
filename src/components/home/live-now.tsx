@@ -87,7 +87,7 @@ export function LiveNow() {
         </span>
         <span className="inline-flex items-center gap-2">
           {track && track.label !== "GREEN" && (
-            <Mono style={{ fontSize: 9, color: F1.ink, background: track.color, letterSpacing: "0.16em", fontWeight: 700, padding: "2px 6px" }}>
+            <Mono style={{ fontSize: 11, color: F1.ink, background: track.color, letterSpacing: "0.16em", fontWeight: 700, padding: "2px 6px" }}>
               {track.label}
             </Mono>
           )}
@@ -113,7 +113,7 @@ export function LiveNow() {
               <span className="font-display" style={{ fontSize: 15, fontWeight: 700, color: F1.fg }}>
                 {r.code}
               </span>
-              <Mono className="truncate hidden sm:inline" style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.12em" }}>
+              <Mono className="truncate hidden sm:inline" style={{ fontSize: 11, color: F1.fg3, letterSpacing: "0.12em" }}>
                 {r.lastName.toUpperCase()}
               </Mono>
             </span>
@@ -131,7 +131,7 @@ export function LiveNow() {
       </ol>
 
       <div className="mt-3 flex items-center justify-between gap-3">
-        <Mono style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.18em" }}>
+        <Mono style={{ fontSize: 11, color: F1.fg3, letterSpacing: "0.18em" }}>
           {snap.session?.circuit ? snap.session.circuit.toUpperCase() : ""}
           {snap.weather ? ` · TRACK ${Math.round(snap.weather.track)}°` : ""}
         </Mono>

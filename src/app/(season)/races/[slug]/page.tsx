@@ -1,3 +1,6 @@
+import { RaceInsights } from "@/components/shared/race-insights";
+import { DataNotice } from "@/components/shared/data-notice";
+import { buildLapChart } from "@/lib/analytics/lap-chart";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getRaceResults, getSprintResults } from "@/lib/api/jolpica";
@@ -448,7 +451,7 @@ export default async function RacePage({ params }: RacePageProps) {
                         </Link> : <span className="font-display truncate">{row.driverName.toUpperCase()}</span>}
                         <Mono
                           className="truncate"
-                          style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.14em", marginTop: 2 }}
+                          style={{ fontSize: 11, color: F1.fg3, letterSpacing: "0.14em", marginTop: 2 }}
                         >
                           {teamHref({ name: row.teamName }) ? (
                             <Link href={teamHref({ name: row.teamName })!} className="hover:text-white">
@@ -475,6 +478,18 @@ export default async function RacePage({ params }: RacePageProps) {
             </div>
           </section>
         )}
+
+        {!circuit.cancelled && (results.length > 0 || stints.length > 0 || laps.length > 0 || raceState === "completed") && (
+          <div className="relative px-4 pt-5 sm:px-8">
+            {raceState === "completed" && !results.length && <DataNotice unavailable>Race results are not available yet. Try again shortly.</DataNotice>}
+            <nav aria-label="Race page sections" className="mb-5 flex flex-wrap gap-x-5 text-sm text-text-secondary">
+              {results.length > 0 && <a className="py-3 underline underline-offset-4 hover:text-text-primary" href="#race-results">Results</a>}
+              {stints.length > 0 && <a className="py-3 underline underline-offset-4 hover:text-text-primary" href="#tyre-strategy">Tyre strategy</a>}
+              {laps.length > 0 && <a className="py-3 underline underline-offset-4 hover:text-text-primary" href="#lap-times">Lap times</a>}
+            </nav>
+          </div>
+        )}
+        <RaceInsights results={results} />
 
         {/* PODIUM */}
         <section
@@ -706,7 +721,7 @@ export default async function RacePage({ params }: RacePageProps) {
         )}
 
         {/* FULL RESULTS */}
-        <section
+        <section id="race-results"
           className="relative"
           style={{ padding: "40px clamp(16px, 4vw, 32px)", borderBottom: `1px solid ${F1.line}` }}
         >
@@ -966,7 +981,7 @@ export default async function RacePage({ params }: RacePageProps) {
               className="p-5 transition-colors hover:bg-white/[0.04]"
               style={{ background: F1.bg }}
             >
-              <Mono style={{ color: F1.fg3, fontSize: 9, letterSpacing: "0.16em" }}>PREVIOUS RACE</Mono>
+              <Mono style={{ color: F1.fg3, fontSize: 11, letterSpacing: "0.16em" }}>PREVIOUS RACE</Mono>
               <div className="mt-1">{previousRace.fullName}</div>
             </Link>
           ) : <span style={{ background: F1.bg }} />}
@@ -975,7 +990,7 @@ export default async function RacePage({ params }: RacePageProps) {
             className="p-5 text-center transition-colors hover:bg-white/[0.04]"
             style={{ background: F1.bg }}
           >
-            <Mono style={{ color: F1.red, fontSize: 9, letterSpacing: "0.16em" }}>CIRCUIT GUIDE</Mono>
+            <Mono style={{ color: F1.red, fontSize: 11, letterSpacing: "0.16em" }}>CIRCUIT GUIDE</Mono>
             <div className="mt-1">{circuit.name}</div>
           </Link>
           {nextRace ? (
@@ -984,7 +999,7 @@ export default async function RacePage({ params }: RacePageProps) {
               className="p-5 text-right transition-colors hover:bg-white/[0.04]"
               style={{ background: F1.bg }}
             >
-              <Mono style={{ color: F1.fg3, fontSize: 9, letterSpacing: "0.16em" }}>NEXT RACE</Mono>
+              <Mono style={{ color: F1.fg3, fontSize: 11, letterSpacing: "0.16em" }}>NEXT RACE</Mono>
               <div className="mt-1">{nextRace.fullName}</div>
             </Link>
           ) : <span style={{ background: F1.bg }} />}
@@ -994,7 +1009,7 @@ export default async function RacePage({ params }: RacePageProps) {
         <section className="relative" style={{ padding: "40px clamp(16px, 4vw, 32px) 60px" }}>
           <div className="mx-auto" style={{ maxWidth: 1400 }}>
             <div className="space-y-10">
-              <div>
+              <div id="tyre-strategy" className="scroll-mt-20">
                 <SectionHeader label="TIRE STRATEGY" />
                 {stints.length === 0 ? (
                   <ChartEmptyState label="TIRE STRATEGY" />
@@ -1002,17 +1017,18 @@ export default async function RacePage({ params }: RacePageProps) {
                   <TireStrategyViz stints={stints} drivers={chartDrivers} />
                 )}
               </div>
-              <div>
+              <div id="lap-times" className="scroll-mt-20">
                 <SectionHeader label="LAP TIMES" />
                 {laps.length === 0 ? (
                   <ChartEmptyState label="LAP TIME ANALYSIS" />
                 ) : (
-                  <LapTimeChart laps={laps} drivers={chartDrivers} raceControl={raceControl} />
+                  <LapTimeChart model={buildLapChart(laps, chartDrivers, raceControl)} />
                 )}
               </div>
             </div>
           </div>
         </section>
+        {!circuit.cancelled && <div className="relative border-t border-line px-4 py-2 sm:px-8"><DataNotice>Race classifications come from Jolpica; lap times and tyre data come from OpenF1. The sources can update at different times.</DataNotice></div>}
       </div>
     </PageTransition>
   );

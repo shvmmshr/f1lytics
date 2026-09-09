@@ -1,3 +1,7 @@
+import { unstable_cache } from "next/cache";
+import { positiveInteger } from "@/lib/live/request";
+import { latestByDriver, latestRows } from "@/lib/live/latest";
+import { getStreamingStatus } from "@/lib/live/f1-signalr";
 import { NextResponse } from "next/server";
 import {
   getSessions,
@@ -26,24 +30,6 @@ const SESSION_LABELS: Record<keyof WeekendSchedule, { name: string; type: string
   qualifying: { name: "QUALIFYING", type: "Qualifying" },
   race: { name: "RACE", type: "Race" },
 };
-
-/** F1's streaming status — the real-time authority for "is a session live now".
- *  Free, no auth. Returns "Offline" on any failure (fail closed). */
-async function getStreamingStatus(): Promise<string> {
-  try {
-    const res = await fetch(
-      "https://livetiming.formula1.com/static/StreamingStatus.json",
-      { cache: "no-store" },
-    );
-    if (!res.ok) return "Offline";
-    const text = await res.text();
-    // Served with a UTF-8 BOM, which breaks JSON.parse.
-    const parsed = JSON.parse(text.replace(/^﻿/, "")) as { Status?: string };
-    return parsed.Status ?? "Offline";
-  } catch {
-    return "Offline";
-  }
-}
 
 /**
  * Fallback for the live window. Both free real-time feeds are gated DURING a
@@ -85,14 +71,12 @@ export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
     const focusedDriverParam = url.searchParams.get("focusedDriver");
-    const focusedDriverNumber = focusedDriverParam
-      ? Number.parseInt(focusedDriverParam, 10)
-      : null;
-    // Replay mode: load a specific past session by key (demo / review anytime).
-    const sessionOverrideParam = url.searchParams.get("session");
-    const sessionOverride = sessionOverrideParam
-      ? Number.parseInt(sessionOverrideParam, 10)
-      : null;
+    const sessionParam = url.searchParams.get("session");
+    const focusedDriverNumber = positiveInteger(focusedDriverParam, 99);
+    const sessionOverride = positiveInteger(sessionParam);
+    if ((focusedDriverParam !== null && focusedDriverNumber === null) || (sessionParam !== null && sessionOverride === null)) {
+      return NextResponse.json({ error: "Invalid session or driver identifier" }, { status: 400 });
+    }
 
     const now = new Date();
     const year = now.getFullYear();
@@ -104,6 +88,10 @@ export async function GET(req: Request) {
       // Fetch the exact session for replay.
       const overrideSessions = await getSessions({ session_key: sessionOverride }, true);
       session = overrideSessions[0];
+      if (!session) return NextResponse.json({ error: "Session not found" }, { status: 404 });
+      if (!session.date_end || Date.parse(session.date_end) > now.getTime()) {
+        return NextResponse.json({ error: "This session has not finished. Open live timing instead." }, { status: 409 });
+      }
     } else {
       // no-store: the session list must be fresh so a newly-started session is
       // detected immediately rather than up to an hour later (ISR cache).
@@ -142,6 +130,12 @@ export async function GET(req: Request) {
     }
 
     const sessionKey = session.session_key;
+    const historical = Boolean(session.date_end && Date.parse(session.date_end) < now.getTime() - 30 * 60_000);
+    // Keep the route dynamic. Only completed-session datasets enter the shared
+    // Data Cache, with errors caught outside so a failed panel is never cached.
+    const read = <T,>(panel: string, fetcher: () => Promise<T>): Promise<T> => historical
+      ? unstable_cache(fetcher, ["openf1-review-v2", String(sessionKey), panel], { revalidate: 3600 })()
+      : fetcher();
 
     const [
       positions,
@@ -155,14 +149,14 @@ export async function GET(req: Request) {
     ] = await Promise.all([
       // Every call tolerates failure (e.g. an OpenF1 429) so one bad endpoint
       // degrades that panel rather than blanking the whole timing screen.
-      getPositions({ session_key: sessionKey }, true).catch(() => []),
-      getIntervals({ session_key: sessionKey }).catch(() => []),
-      getDrivers({ session_key: sessionKey }, true).catch(() => []),
-      getLaps({ session_key: sessionKey }, true).catch(() => []),
-      getStints({ session_key: sessionKey }, true).catch(() => []),
-      getRaceControl({ session_key: sessionKey }, true).catch(() => []),
-      getTeamRadio({ session_key: sessionKey }).catch(() => []),
-      getWeather({ session_key: sessionKey }).catch(() => []),
+      read("positions", async () => latestByDriver(await getPositions({ session_key: sessionKey }, true))).catch(() => []),
+      read("intervals", async () => latestByDriver(await getIntervals({ session_key: sessionKey }))).catch(() => []),
+      read("drivers", () => getDrivers({ session_key: sessionKey }, true)).catch(() => []),
+      read("laps", () => getLaps({ session_key: sessionKey }, true)).catch(() => []),
+      read("stints", () => getStints({ session_key: sessionKey }, true)).catch(() => []),
+      read("race-control", async () => latestRows(await getRaceControl({ session_key: sessionKey }, true), 10)).catch(() => []),
+      read("radio", async () => latestRows(await getTeamRadio({ session_key: sessionKey }), 8)).catch(() => []),
+      read("weather", async () => latestRows(await getWeather({ session_key: sessionKey }), 1)).catch(() => []),
     ]);
 
     // Latest weather reading (rows are chronological; take the last one)
@@ -220,10 +214,13 @@ export async function GET(req: Request) {
     let focusedCarData: Awaited<ReturnType<typeof getCarData>>[number] | null = null;
     if (focusedDriverNumber) {
       try {
-        const sample = await getCarData({
+        const until = historical ? Date.parse(session.date_end) : now.getTime();
+        const sample = await read(`car-${focusedDriverNumber}`, async () => latestRows(await getCarData({
           session_key: sessionKey,
           driver_number: focusedDriverNumber,
-        });
+          "date>": new Date(until - 5 * 60_000).toISOString(),
+          "date<": new Date(until).toISOString(),
+        }), 1));
         if (sample.length > 0) {
           focusedCarData = sample[sample.length - 1];
         }
@@ -282,7 +279,7 @@ export async function GET(req: Request) {
     // Expected during a live session: OpenF1 401s ("Live F1 session in progress")
     // until the session ends. Don't spam stack traces for it — fall back to the
     // schedule so the page shows the locked-live state, not a generic error.
-    const locked = await scheduledLiveResponse();
+    const locked = new URL(req.url).searchParams.has("session") ? null : await scheduledLiveResponse();
     if (locked) return locked;
     console.error("Live API error:", error);
     return NextResponse.json({

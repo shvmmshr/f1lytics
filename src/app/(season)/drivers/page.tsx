@@ -232,7 +232,7 @@ export default async function DriversPage() {
                     </div>
                     <Mono
                       style={{
-                        fontSize: 9,
+                        fontSize: 11,
                         color: F1.fg3,
                         letterSpacing: "0.18em",
                         marginTop: 6,
@@ -255,7 +255,7 @@ export default async function DriversPage() {
                   }}
                 >
                   <div>
-                    <Mono style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.18em" }}>
+                    <Mono style={{ fontSize: 11, color: F1.fg3, letterSpacing: "0.18em" }}>
                       POINTS
                     </Mono>
                     <StatValue size={22} style={{ display: "block", marginTop: 2 }}>
@@ -263,7 +263,7 @@ export default async function DriversPage() {
                     </StatValue>
                   </div>
                   <div style={{ textAlign: "right" }}>
-                    <Mono style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.18em" }}>
+                    <Mono style={{ fontSize: 11, color: F1.fg3, letterSpacing: "0.18em" }}>
                       WINS
                     </Mono>
                     <StatValue

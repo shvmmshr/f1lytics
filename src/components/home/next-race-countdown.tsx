@@ -4,7 +4,8 @@ import { useRef, useState } from "react";
 import { useGSAP } from "@gsap/react";
 import { staggerEntrance } from "@/lib/gsap";
 import { useCountdownTick } from "@/hooks/use-countdown-tick";
-import { getNextEvent } from "@/lib/constants";
+import type { NextEvent } from "@/lib/constants/circuits";
+import { useNextEvent } from "@/hooks/use-next-event";
 import { getWeekendSchedule } from "@/lib/constants/sessions";
 import { format } from "date-fns";
 import { F1, Mono, LiveDot, Brackets } from "@/components/shared/broadcast";
@@ -21,9 +22,9 @@ function pad(n: number) {
   return String(n).padStart(2, "0");
 }
 
-export function NextRaceCountdown() {
+export function NextRaceCountdown({ initialEvent }: { initialEvent?: NextEvent }) {
   const sectionRef = useRef<HTMLElement>(null);
-  const event = getNextEvent();
+  const event = useNextEvent(initialEvent);
   const nextRace = event?.circuit;
 
   const targetTime = event
@@ -85,7 +86,7 @@ export function NextRaceCountdown() {
     >
       <div className="mx-auto max-w-6xl">
         {/* Broadcast caption */}
-        <div className="flex items-center gap-3.5 mb-6">
+        <div className="flex flex-wrap items-center gap-3.5 mb-6">
           <LiveDot size={8} />
           <Mono style={{ color: F1.red, fontSize: 11, letterSpacing: "0.24em", fontWeight: 700 }}>
             UP NEXT
@@ -142,7 +143,7 @@ export function NextRaceCountdown() {
 
         {/* Countdown + full weekend schedule, side by side so they fill the
             width instead of stranding the right half of the section. */}
-        <div className="grid lg:grid-cols-2 gap-6 lg:gap-8 mt-10 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 mt-10 items-start">
           {/* Countdown — sharp-edged broadcast frames */}
           {inProgress ? (
             <div className="flex items-center gap-3">

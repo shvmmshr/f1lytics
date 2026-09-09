@@ -187,7 +187,7 @@ export default async function CalendarPage() {
                   >
                     <Mono
                       style={{
-                        fontSize: 9,
+                        fontSize: 11,
                         color: F1.fg3,
                         letterSpacing: "0.18em",
                       }}
@@ -420,7 +420,7 @@ export default async function CalendarPage() {
                     >
                       <Mono
                         style={{
-                          fontSize: 9,
+                          fontSize: 11,
                           color: F1.fg3,
                           letterSpacing: "0.16em",
                         }}
@@ -446,7 +446,7 @@ export default async function CalendarPage() {
                     >
                       <Mono
                         style={{
-                          fontSize: 9,
+                          fontSize: 11,
                           color: F1.fg3,
                           letterSpacing: "0.16em",
                         }}
@@ -458,7 +458,7 @@ export default async function CalendarPage() {
                       </Mono>
                       <Mono
                         style={{
-                          fontSize: 9,
+                          fontSize: 11,
                           color: F1.fg4,
                           letterSpacing: "0.14em",
                         }}

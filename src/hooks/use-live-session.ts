@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect } from "react";
 import type {
   OpenF1Position,
   OpenF1Interval,
@@ -83,94 +83,68 @@ export interface UseLiveSessionReturn {
 
 const POLL_LIVE_MS = 10_000;
 const POLL_IDLE_MS = 60_000;
-const POLL_REPLAY_MS = 30_000;
-const MAX_BACKOFF_MS = 60_000;
-const BASE_BACKOFF_MS = 10_000;
+const POLL_REPLAY_MS = 300_000;
 
-export function useLiveSession(replaySessionKey: number | null = null): UseLiveSessionReturn {
-  const [data, setData] = useState<LiveApiResponse>({
-    isLive: false,
-    status: "NO SESSION",
-  });
+export function useLiveSession(replaySessionKey: number | null = null, enabled = true): UseLiveSessionReturn {
+  const [data, setData] = useState<LiveApiResponse>({ isLive: false, status: "NO SESSION" });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [focusedDriverNumber, setFocusedDriverNumber] = useState<number | null>(null);
 
-  const errorCountRef = useRef(0);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const mountedRef = useRef(true);
-  const focusedRef = useRef<number | null>(null);
-  // Bumped whenever the mode changes (e.g. entering replay). The component is
-  // re-rendered, not remounted, on a replay nav, so mountedRef stays true and a
-  // stale in-flight idle poll could otherwise overwrite the replay data with
-  // "NO SESSION". Each fetch captures the current gen and bails if superseded.
-  const reqGenRef = useRef(0);
-
   useEffect(() => {
-    focusedRef.current = focusedDriverNumber;
-  }, [focusedDriverNumber]);
-
-  const fetchLiveData = useCallback(async () => {
-    const myGen = reqGenRef.current;
-    try {
-      const focused = focusedRef.current;
-      const params = new URLSearchParams();
-      if (replaySessionKey) params.set("session", String(replaySessionKey));
-      if (focused) params.set("focusedDriver", String(focused));
-      const qs = params.toString();
-      const res = await fetch(qs ? `/api/live?${qs}` : "/api/live");
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}`);
-      }
-
-      const json: LiveApiResponse = await res.json();
-      // Drop the response if unmounted or a newer mode (replay) superseded us.
-      if (!mountedRef.current || myGen !== reqGenRef.current) return;
-
-      setData(json);
-      setError(json.error ?? null);
-      setLastUpdated(new Date());
-      setLoading(false);
-
-      errorCountRef.current = 0;
-
-      const interval = replaySessionKey
-        ? POLL_REPLAY_MS
-        : json.isLive
-          ? POLL_LIVE_MS
-          : POLL_IDLE_MS;
-      timerRef.current = setTimeout(fetchLiveData, interval);
-    } catch (err) {
-      if (!mountedRef.current || myGen !== reqGenRef.current) return;
-
-      errorCountRef.current += 1;
-      const message =
-        err instanceof Error ? err.message : "Failed to fetch live data";
-      setError(message);
-      setLoading(false);
-
-      const backoff = Math.min(
-        BASE_BACKOFF_MS * Math.pow(2, errorCountRef.current - 1),
-        MAX_BACKOFF_MS
-      );
-      timerRef.current = setTimeout(fetchLiveData, backoff);
-    }
-  }, [replaySessionKey]);
-
-  useEffect(() => {
-    mountedRef.current = true;
-    // New mode → invalidate any fetch still in flight from the previous one.
-    reqGenRef.current += 1;
-    fetchLiveData();
-
-    return () => {
-      mountedRef.current = false;
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-      }
+    let disposed = false;
+    let generation = 0;
+    let failures = 0;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let request: AbortController | undefined;
+    const load = async () => {
+      if (disposed || !enabled || document.hidden) return;
+      const current = ++generation;
+      request?.abort();
+      request = new AbortController();
+      const controller = request;
+      const timeout = setTimeout(() => controller.abort(), 30_000);
+      try {
+        const params = new URLSearchParams();
+        if (replaySessionKey !== null) params.set("session", String(replaySessionKey));
+        if (focusedDriverNumber !== null) params.set("focusedDriver", String(focusedDriverNumber));
+        const res = await fetch(`/api/live?${params}`, { signal: request.signal });
+        if (!res.ok) throw new Error(`Timing data temporarily unavailable (${res.status})`);
+        const json: LiveApiResponse = await res.json();
+        if (disposed || current !== generation) return;
+        if (json.error) throw new Error(json.error);
+        setData(json);
+        setError(null);
+        setLoading(false);
+        setLastUpdated(new Date());
+        failures = 0;
+        timer = setTimeout(load, replaySessionKey !== null ? POLL_REPLAY_MS : json.isLive ? POLL_LIVE_MS : POLL_IDLE_MS);
+      } catch (err) {
+        if (disposed || current !== generation) return;
+        setError(err instanceof Error ? err.message : "Timing data temporarily unavailable");
+        setLoading(false);
+        // Retain the last useful rows, but never claim a failed refresh is live.
+        setData((previous) => ({ ...previous, isLive: false }));
+        timer = setTimeout(load, Math.min(10_000 * 2 ** failures++, 60_000));
+      } finally { clearTimeout(timeout); }
     };
-  }, [fetchLiveData]);
+    const resume = () => {
+      clearTimeout(timer);
+      ++generation;
+      request?.abort();
+      if (!document.hidden) void load();
+    };
+    timer = setTimeout(load, 0);
+    document.addEventListener("visibilitychange", resume);
+    return () => {
+      disposed = true;
+      ++generation;
+      clearTimeout(timer);
+      request?.abort();
+      document.removeEventListener("visibilitychange", resume);
+    };
+  }, [replaySessionKey, focusedDriverNumber, enabled]);
 
   return {
     isLive: data.isLive,

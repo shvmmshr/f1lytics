@@ -2,6 +2,8 @@
 // so there are no client CORS issues and no API keys. Feeds verified working
 // June 2026 (BBC, Motorsport.com, Autosport, The Race, PlanetF1).
 
+import { decodeCodePoint, feedUrl, readBoundedFeed } from "./feed-safety";
+
 export interface NewsItem {
   title: string;
   url: string;
@@ -78,9 +80,9 @@ function decodeEntities(value: string): string {
       // Numeric entities (decimal &#8217; and hex &#x2019;) — covers curly
       // quotes, dashes, ellipses, accented letters, etc. without a huge table.
       .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) =>
-        String.fromCodePoint(parseInt(hex, 16))
+        decodeCodePoint(hex, 16)
       )
-      .replace(/&#(\d+);/g, (_, dec) => String.fromCodePoint(parseInt(dec, 10)))
+      .replace(/&#(\d+);/g, (_, dec) => decodeCodePoint(dec, 10))
       .replace(/&lt;/g, "<")
       .replace(/&gt;/g, ">")
       .replace(/&quot;/g, '"')
@@ -121,6 +123,8 @@ function parseFeed(xml: string, feed: Feed): NewsItem[] {
     const title = extractTag(content, "title");
     const link = extractTag(content, "link");
     if (!title || !link) continue;
+    const url = feedUrl(decodeEntities(link));
+    if (!url) continue;
 
     const pubDate = extractTag(content, "pubDate");
     const rawDescription = extractTag(content, "description") ?? "";
@@ -141,12 +145,12 @@ function parseFeed(xml: string, feed: Feed): NewsItem[] {
 
     items.push({
       title: decodeEntities(title.replace(/<[^>]+>/g, "")),
-      url: link.replace(/^<!\[CDATA\[|\]\]>$/g, "").trim(),
+      url,
       description,
       publishedAt: Number.isNaN(publishedAt.getTime())
         ? new Date(0).toISOString()
         : publishedAt.toISOString(),
-      imageUrl,
+      imageUrl: imageUrl ? feedUrl(decodeEntities(imageUrl)) : null,
       source: feed.name,
       sourceUrl: feed.siteUrl,
     });
@@ -229,13 +233,7 @@ export async function fetchAllNews(
       if (!res.ok) throw new Error(`${feed.name}: HTTP ${res.status}`);
       // Size guard: a compromised/misbehaving feed could serve an enormous
       // body that the regex parser would then buffer and scan in full.
-      const MAX_FEED_BYTES = 3_000_000;
-      const declared = Number(res.headers.get("content-length"));
-      if (Number.isFinite(declared) && declared > MAX_FEED_BYTES) {
-        throw new Error(`${feed.name}: feed too large (${declared}b)`);
-      }
-      let text = await res.text();
-      if (text.length > MAX_FEED_BYTES) text = text.slice(0, MAX_FEED_BYTES);
+      const text = await readBoundedFeed(res);
       // A 200 that isn't a feed (e.g. a Cloudflare/bot challenge served to
       // datacenter IPs) parses to zero items silently — flag it instead.
       if (!/<(?:rss|feed|item|rdf)\b/i.test(text)) {
@@ -252,7 +250,7 @@ export async function fetchAllNews(
   const all: NewsItem[] = [];
   for (const result of settled) {
     if (result.status === "fulfilled") all.push(...result.value);
-    else console.error("[f1lytics/news] feed failed:", result.reason);
+    else console.warn("[f1lytics/news] feed failed:", result.reason);
   }
 
   const seen = new Set<string>();

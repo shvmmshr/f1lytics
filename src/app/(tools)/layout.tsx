@@ -9,9 +9,10 @@ export default function ToolsLayout({
 }) {
   return (
     <div className="flex min-h-screen flex-col" style={{ background: F1.ink }}>
+      <a href="#main-content" className="skip-link">Skip to content</a>
       <Navbar />
       {/* Same centered frame as the season layout — see note there. */}
-      <main className="w-full flex-1">
+      <main id="main-content" tabIndex={-1} className="w-full flex-1">
         <div
           className="mx-auto w-full min-h-full"
           style={{

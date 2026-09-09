@@ -420,3 +420,18 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* Keyboard access bypasses the complete navigation on every analytics route. */
+.skip-link {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 100;
+  padding: 12px 20px;
+  background: #F4F4F5;
+  color: #08080A;
+  transform: translateY(-180%);
+}
+.skip-link:focus { transform: translateY(0); }
+#main-content { scroll-margin-top: 72px; }
+#main-content:focus { outline: none; }

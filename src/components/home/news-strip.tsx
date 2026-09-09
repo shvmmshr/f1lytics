@@ -69,7 +69,7 @@ export async function NewsStrip() {
                 </div>
               )}
               <div style={{ padding: "16px 20px" }}>
-                <Mono style={{ fontSize: 9, color: F1.red, letterSpacing: "0.2em" }}>
+                <Mono style={{ fontSize: 11, color: F1.red, letterSpacing: "0.2em" }}>
                   {item.source.toUpperCase()}
                 </Mono>
                 <div

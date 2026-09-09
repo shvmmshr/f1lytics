@@ -1,3 +1,4 @@
+import { isRaceFinisher } from "@/lib/analytics/results";
 import type { Metadata } from "next";
 import { countryCodeToFlag } from "@/lib/utils";
 import Image from "next/image";
@@ -45,9 +46,9 @@ export async function generateMetadata({ params }: DriverProfilePageProps): Prom
 function calculateAge(dob: string): number {
   const birth = new Date(dob);
   const now = new Date();
-  let age = now.getFullYear() - birth.getFullYear();
-  const monthDiff = now.getMonth() - birth.getMonth();
-  if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < birth.getDate())) {
+  let age = now.getUTCFullYear() - birth.getUTCFullYear();
+  const monthDiff = now.getUTCMonth() - birth.getUTCMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && now.getUTCDate() < birth.getUTCDate())) {
     age--;
   }
   return age;
@@ -58,6 +59,7 @@ function formatDOB(dob: string): string {
     month: "short",
     day: "numeric",
     year: "numeric",
+    timeZone: "UTC",
   }).format(new Date(`${dob}T00:00:00Z`));
 }
 
@@ -144,6 +146,7 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
         raceName: race.raceName,
         position: Number.isNaN(pos) ? null : pos,
         points: Number.parseFloat(result.points) || 0,
+        finished: isRaceFinisher(result.status),
         grid: (() => { const g = Number.parseInt(result.grid, 10); return Number.isNaN(g) ? null : g; })(),
       };
     })
@@ -153,7 +156,7 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
   const podiums = driverRaceResults.filter((r) => r.position !== null && r.position <= 3).length;
   const totalPoints = driverStanding ? Number.parseFloat(driverStanding.points) || 0 : 0;
   const champPos = driverStanding ? Number.parseInt(driverStanding.position, 10) : null;
-  const finishedRaces = driverRaceResults.filter((r) => r.position !== null);
+  const finishedRaces = driverRaceResults.filter((r) => r.position !== null && r.finished);
   // Guard on finished races, not raced entries — a driver who DNF'd every
   // round has results but no classified position, and Math.min of an empty
   // list is Infinity ("PInfinity" in the UI).
@@ -338,7 +341,7 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
                   <div key={row.label} className="flex items-baseline gap-2">
                     <Mono
                       style={{
-                        fontSize: 9,
+                        fontSize: 11,
                         color: F1.fg3,
                         letterSpacing: "0.18em",
                       }}
@@ -381,7 +384,7 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
               <Brackets color={F1.fg4} size={8} />
               <Mono
                 style={{
-                  fontSize: 9,
+                  fontSize: 11,
                   color: F1.fg3,
                   letterSpacing: "0.18em",
                   display: "block",
@@ -437,7 +440,7 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
                     <Mono
                       key={h}
                       style={{
-                        fontSize: 9,
+                        fontSize: 11,
                         color: F1.fg3,
                         letterSpacing: "0.18em",
                         textAlign: i >= 2 ? "right" : "left",
@@ -644,7 +647,7 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
                             >
                               {d.lastName.toUpperCase()}
                             </div>
-                            <Mono style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.14em" }}>
+                            <Mono style={{ fontSize: 11, color: F1.fg3, letterSpacing: "0.14em" }}>
                               #{d.number} · {d.abbreviation}
                             </Mono>
                           </div>
@@ -723,7 +726,7 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
                     >
                       {team.name.toUpperCase()}
                     </div>
-                    <Mono style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.14em" }}>
+                    <Mono style={{ fontSize: 11, color: F1.fg3, letterSpacing: "0.14em" }}>
                       {team.fullName.toUpperCase()}
                     </Mono>
                   </div>
@@ -740,7 +743,7 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
                     { label: "LINEUP", value: team.drivers.join(" · ") },
                   ].map((row) => (
                     <div key={row.label}>
-                      <Mono style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.18em" }}>
+                      <Mono style={{ fontSize: 11, color: F1.fg3, letterSpacing: "0.18em" }}>
                         {row.label}
                       </Mono>
                       <div

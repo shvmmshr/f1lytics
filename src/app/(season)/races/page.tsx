@@ -191,7 +191,7 @@ export default async function RacesPage() {
                     <Mono
                       className="shrink-0"
                       style={{
-                        fontSize: 9,
+                        fontSize: 11,
                         background: F1.red,
                         color: F1.fg,
                         padding: "3px 8px",
@@ -205,7 +205,7 @@ export default async function RacesPage() {
                     <Mono
                       className="shrink-0"
                       style={{
-                        fontSize: 9,
+                        fontSize: 11,
                         background: F1.amber,
                         color: F1.ink,
                         padding: "3px 8px",
@@ -236,7 +236,7 @@ export default async function RacesPage() {
                     <div className="flex items-center gap-2.5 min-w-0">
                       <Mono
                         style={{
-                          fontSize: 9,
+                          fontSize: 11,
                           color: F1.amber,
                           letterSpacing: "0.16em",
                           fontWeight: 700,

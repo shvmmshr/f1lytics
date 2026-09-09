@@ -88,7 +88,8 @@ export async function getRaceResults(
 
   while (offset < total) {
     const data = await fetchJolpica<RaceTable>(
-      `/${season}/results.json?limit=${LIMIT}&offset=${offset}`
+      `/${season}/results.json?limit=${LIMIT}&offset=${offset}`,
+      season === "2026" || season === "current" ? 300 : 86400
     );
     total = Number.parseInt(data.MRData.total, 10) || 0;
     const races = data.MRData.RaceTable.Races;
@@ -182,7 +183,8 @@ export async function getAllQualifyingResults(
 
   while (offset < total) {
     const data = await fetchJolpica<QualifyingTable>(
-      `/${season}/qualifying.json?limit=${LIMIT}&offset=${offset}`
+      `/${season}/qualifying.json?limit=${LIMIT}&offset=${offset}`,
+      season === "2026" || season === "current" ? 300 : 86400
     );
     total = Number.parseInt(data.MRData.total, 10) || 0;
     const races = data.MRData.RaceTable.Races;
@@ -237,4 +239,30 @@ export async function getLastRaceResult(): Promise<RaceResult | null> {
   );
   const races = data.MRData.RaceTable.Races;
   return races.length > 0 ? races[0] : null;
+}
+
+/** Full-season sprint classifications, paginated by driver row just like races. */
+export async function getAllSprintResults(season: string): Promise<SprintRace[]> {
+  const limit = 100;
+  const byRound = new Map<string, SprintRace>();
+  let offset = 0;
+  let total = Infinity;
+  while (offset < total) {
+    const data = await fetchJolpica<SprintTable>(
+      `/${season}/sprint.json?limit=${limit}&offset=${offset}`,
+      season === "2026" || season === "current" ? 300 : 86400,
+    );
+    total = Number.parseInt(data.MRData.total, 10) || 0;
+    const races = data.MRData.RaceTable.Races;
+    if (!races.length) break;
+    for (const race of races) {
+      const previous = byRound.get(race.round);
+      byRound.set(race.round, {
+        ...race,
+        SprintResults: [...(previous?.SprintResults ?? []), ...(race.SprintResults ?? [])],
+      });
+    }
+    offset += limit;
+  }
+  return [...byRound.values()].sort((a, b) => Number(a.round) - Number(b.round));
 }

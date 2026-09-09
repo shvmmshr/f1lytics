@@ -11,6 +11,7 @@ import {
   SectionHeader,
   Grid as BroadcastGrid,
 } from "@/components/shared/broadcast";
+import { DataNotice } from "@/components/shared/data-notice";
 import { AnimatedBar } from "@/components/shared/animated-bar";
 import { createPageMetadata } from "@/lib/seo/metadata";
 import { JsonLd } from "@/components/shared/json-ld";
@@ -34,8 +35,8 @@ export default async function StandingsPage() {
 
   try {
     [driverStandings, constructorStandings] = await Promise.all([
-      getDriverStandings("2026"),
-      getConstructorStandings("2026"),
+      getDriverStandings("2026").catch((error) => { console.warn("[f1lytics] driver standings unavailable:", error); return []; }),
+      getConstructorStandings("2026").catch((error) => { console.warn("[f1lytics] constructor standings unavailable:", error); return []; }),
     ]);
   } catch (err) {
     console.error("[f1lytics] standings fetch failed:", err);
@@ -82,8 +83,8 @@ export default async function StandingsPage() {
     })
     .sort((a, b) => a.position - b.position);
 
-  const maxDriverPts = drivers[0]?.points ?? 1;
-  const maxConstructorPts = constructors[0]?.points ?? 1;
+  const maxDriverPts = Math.max(drivers[0]?.points ?? 0, 1);
+  const maxConstructorPts = Math.max(constructors[0]?.points ?? 0, 1);
 
   return (
     <PageTransition>
@@ -134,10 +135,14 @@ export default async function StandingsPage() {
           </div>
         </div>
 
+        <div className={`relative px-4 pt-5 sm:px-6 ${drivers.length && constructors.length ? "lg:hidden" : ""}`}>
+          {(!drivers.length || !constructors.length) && <DataNotice unavailable>Some standings are unavailable. Try again shortly; results can take time to appear after a session.</DataNotice>}
+          <nav aria-label="Standings sections" className="mb-5 grid grid-cols-2 gap-3 text-sm lg:hidden"><a className="border border-line-hi px-3 py-3 text-center hover:bg-bg-hover" href="#driver-standings">Drivers</a><a className="border border-line-hi px-3 py-3 text-center hover:bg-bg-hover" href="#constructor-standings">Constructors</a></nav>
+        </div>
         {/* MAIN — drivers table + constructors sidebar */}
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,380px)] hairline-cells">
           {/* DRIVERS table */}
-          <div style={{ background: F1.bg, padding: 0 }}>
+          <div id="driver-standings" className="scroll-mt-20" style={{ background: F1.bg, padding: 0 }}>
             <div
               className="standings-grid grid items-center"
               style={{
@@ -154,7 +159,7 @@ export default async function StandingsPage() {
                   // name column gets real room; show from md up.
                   className={i === 1 || i === 2 || i === 5 ? "hidden md:block" : ""}
                   style={{
-                    fontSize: 9,
+                    fontSize: 11,
                     color: F1.fg3,
                     letterSpacing: "0.18em",
                     textAlign: i >= 4 ? "right" : "left",
@@ -251,7 +256,7 @@ export default async function StandingsPage() {
                     </span>}
                     <Mono
                       style={{
-                        fontSize: 10,
+                        fontSize: 11,
                         color: F1.fg3,
                         letterSpacing: "0.14em",
                         marginTop: 4,
@@ -284,11 +289,11 @@ export default async function StandingsPage() {
           </div>
 
           {/* CONSTRUCTORS sidebar */}
-          <div style={{ background: F1.bg, padding: 24 }}>
+          <div id="constructor-standings" className="scroll-mt-20" style={{ background: F1.bg, padding: 24 }}>
             <SectionHeader
               label="CONSTRUCTORS"
               right={
-                <Mono style={{ fontSize: 10, color: F1.fg3 }}>
+                <Mono style={{ fontSize: 11, color: F1.fg3 }}>
                   {constructors.length} TEAMS · 2026
                 </Mono>
               }
@@ -348,7 +353,7 @@ export default async function StandingsPage() {
                     <div style={{ width: 50, textAlign: "right" }}>
                       <Mono
                         style={{
-                          fontSize: 10,
+                          fontSize: 11,
                           color: i === 0 ? F1.amber : F1.fg3,
                           letterSpacing: i === 0 ? "0.08em" : undefined,
                           fontWeight: i === 0 ? 700 : 400,
@@ -365,6 +370,9 @@ export default async function StandingsPage() {
               );
             })}
           </div>
+        </div>
+        <div className="relative border-t border-line px-4 py-2 sm:px-6">
+          <DataNotice>Points include sprint results. Standings are provided by Jolpica and may take time to update after a session.</DataNotice>
         </div>
       </div>
     </PageTransition>

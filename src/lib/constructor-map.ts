@@ -43,6 +43,8 @@ export function mapConstructorToTeamId(
 
   const normalizedName = normalize(constructorName);
 
+  if (!normalizedName) return undefined;
+
   // Name-based fallbacks for new/renamed 2026 teams whose IDs may vary by source.
   if (normalizedName.includes("racingbulls") || normalizedName === "rb") return "racing_bulls";
   if (normalizedName.includes("sauber")) return "audi";

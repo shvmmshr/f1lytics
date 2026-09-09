@@ -140,7 +140,7 @@ export default function CircuitsPage() {
                   <div className="absolute" style={{ top: 12, right: 12 }}>
                     <Mono
                       style={{
-                        fontSize: 9,
+                        fontSize: 11,
                         background: F1.amber,
                         color: F1.ink,
                         padding: "3px 8px",
@@ -156,7 +156,7 @@ export default function CircuitsPage() {
                   <div className="absolute" style={{ top: 12, right: 12 }}>
                     <Mono
                       style={{
-                        fontSize: 9,
+                        fontSize: 11,
                         background: F1.red,
                         color: F1.fg,
                         padding: "3px 8px",

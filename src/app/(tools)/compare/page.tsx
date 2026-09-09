@@ -1,16 +1,11 @@
-import { getDriverStandings, getConstructorStandings, getRaceResults, getAllQualifyingResults } from "@/lib/api/jolpica";
-import { mapConstructorToTeamId } from "@/lib/constructor-map";
+import { Suspense } from "react";
+import { getDriverStandings, getConstructorStandings, getRaceResults, getAllQualifyingResults, getAllSprintResults } from "@/lib/api/jolpica";
+import { buildComparisonStats } from "@/lib/analytics/comparison";
+import { DataNotice } from "@/components/shared/data-notice";
 import { PageTransition } from "@/components/layout/page-transition";
 import { F1, Mono, Grid as BroadcastGrid } from "@/components/shared/broadcast";
 import { CompareTool } from "./compare-tool";
 import { createPageMetadata } from "@/lib/seo/metadata";
-
-/** Driver 3-letter code, falling back to the first 3 letters of the surname when
- *  Jolpica omits `code` (can happen for rookies). Keeps the same key across the
- *  standings, race-result and qualifying loops so a driver's stats don't split. */
-function driverCode(driver: { code?: string; familyName: string }): string {
-  return (driver.code ?? driver.familyName.slice(0, 3)).toUpperCase();
-}
 
 export const metadata = createPageMetadata({
   title: "F1 Driver & Team Comparison Tool",
@@ -20,221 +15,24 @@ export const metadata = createPageMetadata({
   imageEyebrow: "HEAD TO HEAD",
 });
 
-export interface RecentFormEntry {
-  round: number;
-  position: number | null; // null = DNF
-  raceName: string;
-}
-
-export interface PointsPerRound {
-  round: number;
-  cumulativePoints: number;
-}
-
-export interface RaceHistoryEntry {
-  round: number;
-  position: number | null;
-  points: number;
-  raceName: string;
-}
-
-export interface QualifyingHistoryEntry {
-  round: number;
-  position: number;
-  raceName: string;
-}
-
-export interface DriverStat {
-  position: number | null;
-  points: number;
-  wins: number;
-  podiums: number;
-  races: number;
-  bestFinish: number | null;
-  recentForm: RecentFormEntry[];
-  pointsPerRace: PointsPerRound[];
-  raceHistory: RaceHistoryEntry[];
-  qualifyingHistory: QualifyingHistoryEntry[];
-  avgQualifying: number | null;
-}
-
-export interface ConstructorStat {
-  position: number | null;
-  points: number;
-  wins: number;
-  pointsPerRound: PointsPerRound[];
-}
-
 // Post-session-sensitive data (results/standings/grid); see AGENTS.md caching rules.
 export const revalidate = 300;
 
 export default async function ComparePage() {
-  let driverStandings: Awaited<ReturnType<typeof getDriverStandings>> = [];
-  let constructorStandings: Awaited<ReturnType<typeof getConstructorStandings>> = [];
-  let raceResults: Awaited<ReturnType<typeof getRaceResults>> = [];
-  let qualifyingResults: Awaited<ReturnType<typeof getAllQualifyingResults>> = [];
-
-  try {
-    [driverStandings, constructorStandings, raceResults, qualifyingResults] = await Promise.all([
-      getDriverStandings("2026"),
-      getConstructorStandings("2026"),
-      getRaceResults("2026"),
-      getAllQualifyingResults("2026"),
-    ]);
-  } catch (err) {
-    console.error("[f1lytics] compare data fetch failed:", err);
-    // API unavailable
-  }
-
-  // Build driver stats map
-  const driverStats: Record<string, DriverStat> = {};
-
-  for (const s of driverStandings) {
-    const code = driverCode(s.Driver);
-    const pos = Number.parseInt(s.position, 10);
-    driverStats[code] = {
-      position: Number.isNaN(pos) ? null : pos,
-      points: Number.parseFloat(s.points) || 0,
-      wins: Number.parseInt(s.wins, 10) || 0,
-      podiums: 0,
-      races: 0,
-      bestFinish: null,
-      recentForm: [],
-      pointsPerRace: [],
-      raceHistory: [],
-      qualifyingHistory: [],
-      avgQualifying: null,
-    };
-  }
-
-  // Per-driver cumulative points tracker
-  const cumulativePoints: Record<string, number> = {};
-
-  // Sort race results by round
-  const sortedRaces = [...raceResults].sort(
-    (a, b) => Number.parseInt(a.round, 10) - Number.parseInt(b.round, 10)
-  );
-
-  // Enrich with race results
-  for (const race of sortedRaces) {
-    const round = Number.parseInt(race.round, 10);
-    for (const result of race.Results ?? []) {
-      const code = driverCode(result.Driver);
-      if (!driverStats[code]) continue;
-      const pos = Number.parseInt(result.position, 10);
-      const pts = Number.parseFloat(result.points) || 0;
-      const isFinished = result.status === "Finished" || result.status?.startsWith("+");
-
-      driverStats[code].races++;
-      if (!Number.isNaN(pos)) {
-        // Podiums/best finish only count classified finishes (a retirement
-        // can still carry a numeric classification position).
-        if (isFinished && pos <= 3) driverStats[code].podiums++;
-        if (
-          isFinished &&
-          (driverStats[code].bestFinish === null || pos < driverStats[code].bestFinish!)
-        ) {
-          driverStats[code].bestFinish = pos;
-        }
-      }
-
-      // Race history for h2h computation on client
-      const finishPos = !Number.isNaN(pos) && isFinished ? pos : null;
-      driverStats[code].raceHistory.push({
-        round,
-        position: finishPos,
-        points: pts,
-        raceName: race.raceName,
-      });
-
-      // Cumulative points
-      cumulativePoints[code] = (cumulativePoints[code] ?? 0) + pts;
-      driverStats[code].pointsPerRace.push({
-        round,
-        cumulativePoints: cumulativePoints[code],
-      });
-    }
-  }
-
-  // Compute recent form (last 5 races)
-  for (const code of Object.keys(driverStats)) {
-    const history = driverStats[code].raceHistory;
-    const last5 = history.slice(-5);
-    driverStats[code].recentForm = last5.map((h) => ({
-      round: h.round,
-      position: h.position,
-      raceName: h.raceName,
-    }));
-  }
-
-  // Qualifying data
-  for (const quali of qualifyingResults) {
-    const round = Number.parseInt(quali.round, 10);
-    for (const result of quali.QualifyingResults ?? []) {
-      const code = driverCode(result.Driver);
-      if (!driverStats[code]) continue;
-      const pos = Number.parseInt(result.position, 10);
-      if (!Number.isNaN(pos)) {
-        driverStats[code].qualifyingHistory.push({
-          round,
-          position: pos,
-          raceName: quali.raceName,
-        });
-      }
-    }
-  }
-
-  // Compute average qualifying position
-  for (const code of Object.keys(driverStats)) {
-    const qHistory = driverStats[code].qualifyingHistory;
-    if (qHistory.length > 0) {
-      const sum = qHistory.reduce((acc, q) => acc + q.position, 0);
-      driverStats[code].avgQualifying = Math.round((sum / qHistory.length) * 10) / 10;
-    }
-  }
-
-  // Build constructor stats map
-  const constructorStats: Record<string, ConstructorStat> = {};
-
-  for (const s of constructorStandings) {
-    // Key by our internal team id (handles Cadillac/Haas/Audi which the old
-    // name-substring match missed). Falls back to a normalized name key.
-    const teamId =
-      mapConstructorToTeamId(s.Constructor.constructorId, s.Constructor.name) ??
-      s.Constructor.name?.toLowerCase().replace(/[^a-z]/g, "");
-    if (!teamId) continue;
-    const pos = Number.parseInt(s.position, 10);
-    constructorStats[teamId] = {
-      position: Number.isNaN(pos) ? null : pos,
-      points: Number.parseFloat(s.points) || 0,
-      wins: Number.parseInt(s.wins, 10) || 0,
-      pointsPerRound: [],
-    };
-  }
-
-  // Compute constructor cumulative points per round
-  const constructorCumulative: Record<string, number> = {};
-  for (const race of sortedRaces) {
-    // Aggregate points by constructor for this round
-    const roundConstructorPoints: Record<string, number> = {};
-    const round = Number.parseInt(race.round, 10);
-    for (const result of race.Results ?? []) {
-      const teamId =
-        mapConstructorToTeamId(result.Constructor.constructorId, result.Constructor.name) ??
-        result.Constructor.name?.toLowerCase().replace(/[^a-z]/g, "");
-      if (!teamId) continue;
-      roundConstructorPoints[teamId] = (roundConstructorPoints[teamId] ?? 0) + (Number.parseFloat(result.points) || 0);
-    }
-    for (const [teamId, pts] of Object.entries(roundConstructorPoints)) {
-      constructorCumulative[teamId] = (constructorCumulative[teamId] ?? 0) + pts;
-      if (constructorStats[teamId]) {
-        constructorStats[teamId].pointsPerRound.push({
-          round,
-          cumulativePoints: constructorCumulative[teamId],
-        });
-      }
-    }
-  }
+  const failed: string[] = [];
+  const fallback = (label: string) => (error: unknown) => {
+    console.warn(`[f1lytics] compare ${label} unavailable:`, error);
+    failed.push(label);
+    return [];
+  };
+  const [drivers, teams, races, qualifying, sprints] = await Promise.all([
+    getDriverStandings("2026").catch(fallback("driver standings")),
+    getConstructorStandings("2026").catch(fallback("constructor standings")),
+    getRaceResults("2026").catch(fallback("race results")),
+    getAllQualifyingResults("2026").catch(fallback("qualifying")),
+    getAllSprintResults("2026").catch(fallback("sprint results")),
+  ]);
+  const { driverStats, constructorStats } = buildComparisonStats(drivers, teams, races, qualifying, sprints);
 
   return (
     <PageTransition>
@@ -265,11 +63,22 @@ export default async function ComparePage() {
             COMPARE<span style={{ color: F1.red }}>.</span>
           </h1>
           <div className="mt-3" style={{ fontSize: "clamp(14px, 4vw, 16px)", color: F1.fg2, maxWidth: 540 }}>
-            Two drivers. Two teams. Side‑by‑side telemetry across every metric of the season.
+            Compare drivers and teams across points, qualifying and race results.
           </div>
         </div>
         <div style={{ padding: "32px clamp(16px, 4vw, 32px)" }}>
-          <CompareTool driverStats={driverStats} constructorStats={constructorStats} />
+          {(failed.length > 0 || !drivers.length || !teams.length) && <DataNotice unavailable>Some statistics are unavailable{failed.length ? ` (${failed.join(", ")})` : ""}. Try again shortly.</DataNotice>}
+          <Suspense fallback={<p className="min-h-96 text-text-secondary">Loading driver and team comparisons…</p>}><CompareTool driverStats={driverStats} constructorStats={constructorStats} /></Suspense>
+          <details className="mt-8 border-t border-line pt-2">
+            <summary className="w-fit cursor-pointer py-3 text-sm text-text-secondary underline underline-offset-4">How to read this comparison</summary>
+            <p className="mt-2 text-sm text-text-secondary">Points include sprints; race form and head-to-heads use Grands Prix only.</p>
+            <div className="mt-4 grid gap-6 text-sm leading-relaxed sm:grid-cols-3" style={{ color: F1.fg2 }}>
+              <p><strong style={{ color: F1.fg }}>Start with the same opportunities.</strong> Race head-to-heads compare shared Grands Prix. Different cars, reliability and missed sessions affect the result; a points lead alone is not a measure of driver skill.</p>
+              <p><strong style={{ color: F1.fg }}>Separate qualifying from race execution.</strong> Qualifying averages use session classifications. Race form considers completed finishes, while championship points also reward sprint results.</p>
+              <p><strong style={{ color: F1.fg }}>Look for a trend.</strong> Recent form shows the last five Grands Prix. The full progression helps distinguish a consistent advantage from one unusually strong weekend.</p>
+            </div>
+            <a href="/about#methodology" className="mt-4 inline-block py-3 text-sm text-text-secondary underline underline-offset-4">Sources & methodology</a>
+          </details>
         </div>
       </div>
     </PageTransition>

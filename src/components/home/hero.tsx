@@ -7,7 +7,9 @@ import { isHistoryNavigation } from "@/lib/navigation-state";
 import { useCountdownTick } from "@/hooks/use-countdown-tick";
 import Image from "next/image";
 import Link from "next/link";
-import { getNextEvent, TEAMS, CIRCUIT_LIST, DRIVER_LIST, TEAM_LIST } from "@/lib/constants";
+import { TEAMS, CIRCUIT_LIST, DRIVER_LIST, TEAM_LIST } from "@/lib/constants";
+import type { NextEvent } from "@/lib/constants/circuits";
+import { useNextEvent } from "@/hooks/use-next-event";
 import {
   getWeekendSchedule,
   getActiveHeadlineSession,
@@ -68,6 +70,7 @@ export function Hero({
   weekend = null,
   recentRace = null,
   lockInOpen = false,
+  initialEvent,
 }: {
   driverStandings?: Standing[];
   constructorStandings?: Standing[];
@@ -75,6 +78,7 @@ export function Hero({
   recentRace?: RecentRace | null;
   /** Server-computed: the Lock In game is configured and the next round accepts calls. */
   lockInOpen?: boolean;
+  initialEvent?: NextEvent;
 }) {
   const [view, setView] = useState<"drivers" | "constructors">("drivers");
   const heroRef = useRef<HTMLElement>(null);
@@ -83,7 +87,7 @@ export function Hero({
   const tickerRef = useRef<HTMLDivElement>(null);
   const statsRef = useRef<HTMLDivElement>(null);
 
-  const event = getNextEvent();
+  const event = useNextEvent(initialEvent);
   const nextRace = event?.circuit;
   const weekendSchedule = nextRace ? getWeekendSchedule(nextRace.raceDate) : undefined;
 
@@ -150,11 +154,11 @@ export function Hero({
       // effect), never inline in JSX — if GSAP fails to run, the content
       // renders visible instead of being stuck invisible-but-interactive.
       gsap.set([subRef.current, ctaRef.current, statsRef.current, tickerRef.current], { y: 24, opacity: 0 });
-      const tl = gsap.timeline({ defaults: { ease: "power3.out" }, delay: 0.1 });
-      tl.to(subRef.current, { y: 0, opacity: 1, duration: 0.5 }, 0.15)
-        .to(ctaRef.current, { y: 0, opacity: 1, duration: 0.5 }, 0.65)
-        .to(tickerRef.current, { y: 0, opacity: 1, duration: 0.5 }, 0.6)
-        .to(statsRef.current, { y: 0, opacity: 1, duration: 0.5 }, 0.8)
+      const tl = gsap.timeline({ defaults: { ease: "power3.out" }, delay: 0 });
+      tl.to(subRef.current, { y: 0, opacity: 1, duration: 0.3 }, 0)
+        .to(ctaRef.current, { y: 0, opacity: 1, duration: 0.3 }, 0.08)
+        .to(tickerRef.current, { y: 0, opacity: 1, duration: 0.3 }, 0.12)
+        .to(statsRef.current, { y: 0, opacity: 1, duration: 0.3 }, 0.16)
         // Refresh ScrollTrigger once, after the entrance settles and layout is
         // stable, instead of on every staggerEntrance() call across the page.
         .call(() => ScrollTrigger.refresh(), undefined, ">");
@@ -691,7 +695,7 @@ export function Hero({
                     </div>
                     <Mono
                       style={{
-                        fontSize: 8,
+                        fontSize: 10,
                         color: F1.fg3,
                         letterSpacing: "0.2em",
                         marginTop: 4,
@@ -716,8 +720,10 @@ export function Hero({
             </div>
           )}
 
+          {driverStandings.length === 0 && constructorStandings.length === 0 && <p className="border border-line bg-bg-secondary p-4 text-sm text-text-secondary">Championship standings are temporarily unavailable. The schedule remains available below.</p>}
+
           {/* Top 5 standings preview */}
-          {top5.length > 0 && (
+          {(driverStandings.length > 0 || constructorStandings.length > 0) && (
             <div
               className="relative"
               style={{
@@ -728,7 +734,7 @@ export function Hero({
             >
               <div className="flex items-center justify-between mb-4 gap-3">
                 <div
-                  role="tablist"
+                  role="group"
                   aria-label="Standings view"
                   className="inline-flex"
                   style={{
@@ -748,8 +754,7 @@ export function Hero({
                       <button
                         key={key}
                         type="button"
-                        role="tab"
-                        aria-selected={active}
+                        aria-pressed={active}
                         onClick={() => setView(key)}
                         className="font-mono cursor-pointer transition-colors"
                         style={{
@@ -773,6 +778,7 @@ export function Hero({
                 </Mono>
               </div>
               <div className="flex flex-col gap-1.5">
+                {top5.length === 0 && <p className="text-sm text-text-secondary">This classification is not available yet.</p>}
                 {top5.map((s) => {
                   const team = TEAMS[s.teamId];
                   const code = s.name.split(" ").pop()?.slice(0, 3).toUpperCase() ?? "";
@@ -857,7 +863,7 @@ export function Hero({
       >
         <Mono
           className="shrink-0"
-          style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.22em" }}
+          style={{ fontSize: 11, color: F1.fg3, letterSpacing: "0.22em" }}
         >
           2026
         </Mono>
@@ -889,7 +895,7 @@ export function Hero({
         </div>
         <Mono
           className="shrink-0"
-          style={{ fontSize: 9, color: F1.fg2, letterSpacing: "0.18em" }}
+          style={{ fontSize: 11, color: F1.fg2, letterSpacing: "0.18em" }}
         >
           RD {nextRace ? String(nextRace.round).padStart(2, "0") : "—"}/
           {CIRCUIT_LIST.length}
