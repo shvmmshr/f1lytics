@@ -68,10 +68,10 @@ export function Garage({ initialCarId }: { initialCarId: string }) {
   };
   return (
     <div className="relative">
-      <div className="grid grid-cols-3 gap-2 px-3 py-4 sm:gap-3 sm:px-6 lg:px-8" role="group" aria-label="Choose a legendary car">
+      <div className="flex gap-3 overflow-x-auto px-3 py-4 sm:px-6 lg:grid lg:grid-cols-5 lg:px-8" role="group" aria-label="Choose a legendary car">
         {GARAGE_LEGENDS.map((entry, index) => (
-          <button key={entry.id} type="button" aria-pressed={entry.id === car.id} onClick={() => select(entry.id)} className="group min-w-0 border bg-bg-secondary p-2 text-left transition-colors hover:bg-bg-hover sm:flex sm:items-center sm:gap-4 sm:p-3" style={{ borderColor: entry.id === car.id ? entry.accent : "#27272A" }}>
-            <div className="relative mb-2 aspect-video overflow-hidden sm:mb-0 sm:w-16 lg:w-28 sm:shrink-0"><Image src={entry.poster} alt="" fill sizes="112px" className="object-cover" /></div>
+          <button key={entry.id} type="button" aria-pressed={entry.id === car.id} onClick={() => select(entry.id)} className="group w-36 shrink-0 border bg-bg-secondary p-2 text-left transition-colors hover:bg-bg-hover lg:w-auto lg:min-w-0 sm:p-3" style={{ borderColor: entry.id === car.id ? entry.accent : "#27272A" }}>
+            <div className="relative mb-2 aspect-video overflow-hidden"><Image src={entry.poster} alt="" fill sizes="112px" className="object-cover" /></div>
             <div className="min-w-0"><span className="font-mono text-[10px] tracking-widest text-text-muted">0{index + 1} / {entry.year}</span><span className="block font-display text-2xl uppercase leading-tight text-text-primary sm:text-3xl">{entry.name}</span><span className="mt-1 block truncate text-[10px] text-text-secondary sm:text-xs">{entry.driver}</span></div>
           </button>
         ))}

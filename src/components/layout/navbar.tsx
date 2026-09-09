@@ -150,7 +150,7 @@ export function Navbar() {
         <nav
           aria-label="Main navigation"
           className="flex items-stretch"
-          style={{ height: 56 }}
+          style={{ height: 64 }}
         >
           {/* Logo lockup — red F1 plate + sector ticks + LYTICS wordmark */}
           <div
@@ -181,8 +181,8 @@ export function Navbar() {
                       "nav-underline relative flex items-center font-mono transition-colors gap-2",
                     )}
                     style={{
-                      padding: "0 12px",
-                      fontSize: 11,
+                      padding: "0 clamp(12px, 1vw, 18px)",
+                      fontSize: "clamp(11px, 0.8vw, 13px)",
                       letterSpacing: "0.14em",
                       color: liveNow ? F1.ink : isActive ? F1.fg : F1.fg2,
                       fontWeight: liveNow ? 700 : undefined,

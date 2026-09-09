@@ -5,7 +5,7 @@ import { parseComparisonSelection, type ComparisonSelection } from "@/lib/analyt
 import { trackInteraction } from "@/lib/analytics/events";
 import dynamic from "next/dynamic";
 import { DeferredPanel } from "@/components/shared/deferred-panel";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Image from "next/image";
 import { DRIVER_LIST, TEAM_LIST, TEAMS } from "@/lib/constants";
 import type { Team } from "@/lib/constants";
@@ -1143,6 +1143,12 @@ function TeamComparison({ stats, selection, update }: { stats: Record<string, Co
 export function CompareTool({ driverStats, constructorStats }: CompareToolProps) {
   const params = useSearchParams();
   const selection = parseComparisonSelection(params);
+  const selectionQuery = new URLSearchParams({ ...selection }).toString();
+  useEffect(() => {
+    const next = new URLSearchParams(params.toString());
+    new URLSearchParams(selectionQuery).forEach((value, key) => next.set(key, value));
+    if (next.toString() !== params.toString()) window.history.replaceState(null, "", `/compare?${next}${window.location.hash}`);
+  }, [params, selectionQuery]);
   const [shareMessage, setShareMessage] = useState("");
   const update = (key: keyof ComparisonSelection, value: string) => {
     const next = new URLSearchParams(params.toString());

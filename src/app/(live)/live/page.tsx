@@ -31,7 +31,7 @@ export default async function LivePage({ searchParams }: LivePageProps) {
   return (
     <PageTransition>
       <header className="border-b border-line bg-bg-secondary px-4 py-4 sm:px-6">
-        <h1 className="font-display text-2xl uppercase text-text-primary">F1 live timing</h1>
+        <h1 className="font-display text-3xl sm:text-4xl uppercase text-text-primary">F1 live timing</h1>
         <p className="mt-1 max-w-3xl text-sm leading-relaxed text-text-secondary">Positions, gaps, lap times and race control.</p>
       </header>
       <LiveContent
@@ -44,6 +44,8 @@ export default async function LivePage({ searchParams }: LivePageProps) {
         <div className="grid max-w-5xl gap-4 sm:grid-cols-3">
           <p><strong className="text-text-primary">Gap and interval.</strong> Gap measures the distance in time to the leader. Interval measures the distance to the car ahead. A lapped car may have a lap gap instead of a time.</p>
           <p><strong className="text-text-primary">Live and review.</strong> Live timing follows incoming session updates. Race review shows the recorded session data, rather than a second-by-second playback or video broadcast.</p>
+          <p><strong className="text-text-primary">Classification.</strong> RET means a reported retirement; DNF, DNS and DSQ come from session results. Missing laps alone never mark a car retired.</p>
+          <p><strong className="text-text-primary">2026 systems.</strong> Active Aero and Overtake Mode replace DRS. Their states are unavailable in this feed.</p>
           <p><strong className="text-text-primary">Missing data.</strong> Telemetry may be unavailable even when timing positions are present. A locked feed means details are unavailable; it does not mean the session was cancelled.</p>
         </div>
         <a href="/about#methodology" className="mt-4 inline-block underline underline-offset-4">Read the data methodology</a>

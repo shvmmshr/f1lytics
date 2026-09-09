@@ -5,7 +5,7 @@ Replaced the Garage route’s procedural car with a curated collection of detail
 ## What changed
 
 - Garage appears in desktop and mobile header navigation, not the footer.
-- Three-car selector, large interactive stage, concise driver stories and historical statistics, expandable creator credits, and shareable `?car=` links.
+- Five-car selector, large interactive stage, concise driver stories and historical statistics, expandable creator credits, and shareable `?car=` links.
 - Local optimized WebP previews load first. No Sketchfab frame or request is made until Explore in 3D is selected.
 - At most one viewer is mounted; switching cars or closing the exhibit removes it. Closing restores focus. Automatic rotation is disabled.
 - Model IDs are selected only from the local catalog. Unknown car parameters fall back to RB19; all variants canonicalize to `/garage`.
@@ -36,3 +36,7 @@ The local posters occupy about 288 KiB combined before Next image optimization. 
 - Keyboard Tab/Enter car selection and focus return on close passed. Back restored W11 after selecting F2004 without opening a frame. Invalid car URL rendered RB19 with the correct canonical.
 
 All changes are local. Nothing was pushed or deployed, and the predictions game was not changed in this Garage pass.
+
+## Collection expansion
+
+Added Ayrton Senna’s 1988 MP4/4 by Kenkento3D and Nigel Mansell’s 1992 FW14B by Flamestroke. Both use creator-hosted embeds only; an empty license record is not interpreted as a download or commercial reuse license. The MP4/4 creator notes incomplete cockpit/engine interiors. See the central model-sources.json registry for model and preview provenance.

@@ -1,3 +1,4 @@
+import { classifiedPositions } from "@/lib/live/classification";
 import { unstable_cache } from "next/cache";
 import { positiveInteger } from "@/lib/live/request";
 import { latestByDriver, latestRows } from "@/lib/live/latest";
@@ -5,6 +6,7 @@ import { getStreamingStatus } from "@/lib/live/f1-signalr";
 import { NextResponse } from "next/server";
 import {
   getSessions,
+  getSessionResult,
   getPositions,
   getIntervals,
   getDrivers,
@@ -134,7 +136,7 @@ export async function GET(req: Request) {
     // Keep the route dynamic. Only completed-session datasets enter the shared
     // Data Cache, with errors caught outside so a failed panel is never cached.
     const read = <T,>(panel: string, fetcher: () => Promise<T>): Promise<T> => historical
-      ? unstable_cache(fetcher, ["openf1-review-v2", String(sessionKey), panel], { revalidate: 3600 })()
+      ? unstable_cache(fetcher, ["openf1-review-v2", String(sessionKey), panel], { revalidate: panel === "classification" ? 300 : 3600 })()
       : fetcher();
 
     const [
@@ -146,6 +148,7 @@ export async function GET(req: Request) {
       raceControl,
       teamRadio,
       weather,
+      classification,
     ] = await Promise.all([
       // Every call tolerates failure (e.g. an OpenF1 429) so one bad endpoint
       // degrades that panel rather than blanking the whole timing screen.
@@ -157,6 +160,7 @@ export async function GET(req: Request) {
       read("race-control", async () => latestRows(await getRaceControl({ session_key: sessionKey }, true), 10)).catch(() => []),
       read("radio", async () => latestRows(await getTeamRadio({ session_key: sessionKey }), 8)).catch(() => []),
       read("weather", async () => latestRows(await getWeather({ session_key: sessionKey }), 1)).catch(() => []),
+      !activeSession || sessionOverride ? read("classification", () => getSessionResult({ session_key: sessionKey })).catch(() => []) : Promise.resolve([]),
     ]);
 
     // Latest weather reading (rows are chronological; take the last one)
@@ -212,7 +216,7 @@ export async function GET(req: Request) {
 
     // Telemetry for the focused driver only — avoid pulling all 20
     let focusedCarData: Awaited<ReturnType<typeof getCarData>>[number] | null = null;
-    if (focusedDriverNumber) {
+    if (focusedDriverNumber && activeSession && !sessionOverride) {
       try {
         const until = historical ? Date.parse(session.date_end) : now.getTime();
         const sample = await read(`car-${focusedDriverNumber}`, async () => latestRows(await getCarData({
@@ -257,7 +261,7 @@ export async function GET(req: Request) {
         dateStart: session.date_start,
         dateEnd: session.date_end,
       },
-      positions: Array.from(latestPositions.values()),
+      positions: classifiedPositions(Array.from(latestPositions.values()), classification),
       intervals: Array.from(latestIntervals.values()),
       drivers,
       stints: Array.from(latestStints.values()),

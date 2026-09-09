@@ -103,14 +103,15 @@ function deriveTimingDataLines(state: FeedState): [string, Record<string, unknow
 
 function derivePositions(state: FeedState): OpenF1Position[] {
   return deriveTimingDataLines(state)
-    .map(([num, line]) => ({
+    .map(([num, line]): OpenF1Position => ({
+      status: line.Retired === true || line.Retired === "true" ? "RET" : undefined,
       session_key: 0,
       meeting_key: 0,
       driver_number: Number(num),
       date: "",
       position: Number.parseInt(String(line.Position ?? "0"), 10) || 0,
     }))
-    .filter((p) => p.position > 0);
+    .filter((p) => p.position > 0 || p.status !== undefined);
 }
 
 function deriveIntervals(state: FeedState): OpenF1Interval[] {

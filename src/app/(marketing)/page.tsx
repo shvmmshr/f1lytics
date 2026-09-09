@@ -1,3 +1,4 @@
+import { nowMs } from "@/lib/clock";
 import { Hero } from "@/components/home/hero";
 import { NextRaceCountdown } from "@/components/home/next-race-countdown";
 import { SeasonCalendarStrip } from "@/components/home/season-calendar-strip";
@@ -121,6 +122,7 @@ export default async function Home() {
   return (
     <>
       <Hero
+        initialNow={nowMs()}
         initialEvent={event}
         driverStandings={driverStandings}
         constructorStandings={constructorStandings}

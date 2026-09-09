@@ -279,7 +279,7 @@ function TimingTower({
   }, [lapStats]);
 
   const sortedPositions = useMemo(
-    () => [...positions].sort((a, b) => a.position - b.position),
+    () => [...positions].sort((a, b) => (a.position || Infinity) - (b.position || Infinity)),
     [positions]
   );
 
@@ -309,7 +309,8 @@ function TimingTower({
   // columns (pos/colour/code/driver/last/best/gap), tyre joins at md, interval
   // and sectors at xl (where the tower shares the row with the side panel).
   const towerCols =
-    "grid-cols-[30px_4px_42px_minmax(0,1fr)_64px_64px_52px] " +
+    "grid-cols-[26px_3px_34px_minmax(0,1fr)_58px_54px] " +
+    "sm:grid-cols-[30px_4px_42px_minmax(0,1fr)_64px_64px_52px] " +
     "md:grid-cols-[40px_5px_50px_minmax(0,1fr)_80px_80px_68px_58px] " +
     "xl:grid-cols-[44px_6px_56px_minmax(0,1fr)_90px_90px_76px_76px_56px_96px]";
 
@@ -318,7 +319,7 @@ function TimingTower({
     { label: "" },
     { label: "CODE" },
     { label: "DRIVER · TEAM" },
-    { label: "LAST", right: true },
+    { label: "LAST", right: true, className: "hidden sm:block" },
     { label: "BEST", right: true },
     { label: "GAP", right: true },
     { label: "INT", right: true, className: "hidden xl:block" },
@@ -369,6 +370,8 @@ function TimingTower({
             key={pos.driver_number}
             type="button"
             onClick={() => onSelect(pos.driver_number)}
+            aria-pressed={focused}
+            aria-label={`${d?.full_name ?? code}, ${pos.status ?? `position ${pos.position || "unavailable"}`}`}
             // Hover via inset shadow — the row background is inline (zebra /
             // focus tint), which would override a background-based hover class.
             className={`grid items-center w-full text-left gap-1.5 sm:gap-2 px-2.5 sm:px-4 transition-shadow hover:shadow-[inset_0_0_0_999px_rgba(255,255,255,0.04)] ${towerCols}`}
@@ -385,7 +388,7 @@ function TimingTower({
               cursor: "pointer",
             }}
           >
-            <PosPill pos={pos.position} size={pos.position <= 3 ? "md" : "sm"} />
+            {pos.position > 0 ? <PosPill pos={pos.position} size={pos.position <= 3 ? "md" : "sm"} /> : <span className="text-center text-text-muted">—</span>}
             <span
               style={{
                 width: 4,
@@ -440,6 +443,7 @@ function TimingTower({
               </Mono>
             </div>
             <Mono
+              className="hidden sm:block"
               style={{
                 fontSize: 12,
                 color: F1.fg,
@@ -467,7 +471,7 @@ function TimingTower({
                 fontVariantNumeric: "tabular-nums",
               }}
             >
-              {pos.position === 1 ? "LEADER" : formatGap(interval?.gap_to_leader)}
+              {pos.status ?? (pos.position === 1 ? "LEADER" : formatGap(interval?.gap_to_leader))}
             </Mono>
             <Mono
               className="hidden xl:block"
@@ -478,7 +482,7 @@ function TimingTower({
                 fontVariantNumeric: "tabular-nums",
               }}
             >
-              {pos.position === 1 ? "—" : formatGap(interval?.interval)}
+              {pos.status || pos.position === 1 ? "—" : formatGap(interval?.interval)}
             </Mono>
             {stint ? (
               <div className="hidden md:flex items-center gap-1.5">
@@ -522,10 +526,14 @@ function TelemetryBlock({
   carData,
   driver,
   teamColor,
+  sessionYear,
+  review,
 }: {
   carData: OpenF1CarData | null;
   driver: OpenF1Driver | null;
   teamColor: string;
+  sessionYear: number;
+  review: boolean;
 }) {
   if (!driver) {
     return (
@@ -676,8 +684,8 @@ function TelemetryBlock({
         </div>
       </div>
 
-      {/* DRS */}
-      <div
+      {review && <p className="mt-4 text-xs leading-relaxed text-text-muted">Final classification view. On-track car telemetry is not shown.</p>}
+      {sessionYear >= 2026 ? <div className="mt-4 border border-line px-3 py-3 text-xs text-text-secondary"><p>Active Aero · Overtake Mode</p><p className="mt-1 text-text-muted">State unavailable in this feed.</p></div> : <div
         className="flex items-center justify-between"
         style={{
           marginTop: 16,
@@ -699,7 +707,7 @@ function TelemetryBlock({
         >
           {hasData ? (drsActive ? "ACTIVE" : "OFF") : "—"}
         </Mono>
-      </div>
+      </div>}
     </div>
   );
 }
@@ -1247,7 +1255,7 @@ export function LiveContent({
     if (!showLiveData) return;
     if (autoFocusedRef.current) return;
     if (focusedDriverNumber !== null) return;
-    const leader = [...view.positions].sort((a, b) => a.position - b.position)[0];
+    const leader = [...view.positions].sort((a, b) => (a.position || Infinity) - (b.position || Infinity))[0];
     if (leader) {
       autoFocusedRef.current = true;
       setFocusedDriverNumber(leader.driver_number);
@@ -1309,7 +1317,9 @@ export function LiveContent({
 
             <div style={{ background: F1.bg }}>
               <TelemetryBlock
-                carData={view.focusedCarData}
+                carData={view.isLive ? view.focusedCarData : null}
+                review={!view.isLive}
+                sessionYear={usingStream ? 2026 : Number(live.session?.dateStart.slice(0, 4) ?? 2026)}
                 driver={focusedDriver}
                 teamColor={focusedTeamColor}
               />
@@ -1340,7 +1350,7 @@ export function LiveContent({
               className="hidden md:inline"
               style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.24em" }}
             >
-              CLICK A DRIVER ROW TO FOCUS TELEMETRY
+              SELECT A DRIVER TO INSPECT
             </Mono>
             <Mono
               className="md:hidden shrink-0"

@@ -1,5 +1,5 @@
 import { CIRCUIT_LIST, type Circuit } from "@/lib/constants";
-import { SESSION_LABELS, type ActiveSession } from "@/lib/constants/sessions";
+import { SESSION_LABELS, SESSION_DURATIONS_MS, getActiveSession, getWeekendSchedule, type ActiveSession } from "@/lib/constants/sessions";
 import type { GridRow, RecentRace } from "@/lib/api/weekend";
 
 /**
@@ -26,6 +26,8 @@ export interface HeroStanding {
 }
 
 export interface HeroCopyInput {
+  /** Injected clock, shared by SSR and hydration; refreshed without a data request. */
+  now?: number;
   /** Competitive session on track right now (client clock; null until mounted). */
   liveSession: ActiveSession | null;
   /** The next event's circuit, or null once the season is over. */
@@ -39,6 +41,7 @@ export interface HeroCopyInput {
 }
 
 export type HeroPhase =
+  | "awaiting-results"
   | "live"
   | "grid-set"
   | "sprint-done"
@@ -180,13 +183,13 @@ function liveCopy(session: ActiveSession): HeroCopy {
   const where = circuit ? ` at ${circuit.city}` : "";
   return {
     phase: "live",
-    eyebrow: `ON AIR · ${label}`,
-    line1: "IT'S LIVE.",
+    eyebrow: `SESSION WINDOW · ${label}`,
+    line1: "ON TRACK",
     // "SPRINT QUALIFYING." is the one label that overflows the column.
     line2: fit([`${label}.`, session.session === "sprintQualifying" ? "SPRINT QUALI." : "ON TRACK."]),
     srSuffix: circuit ? ` · ${circuit.fullName}` : null,
     clock: null,
-    description: `${SESSION_SENTENCE[session.session]} is under way${where}. Positions, gaps and race control, streaming now on the live timing screen.`,
+    description: `${SESSION_SENTENCE[session.session]} is scheduled now${where}. Open timing for the current session status and available coverage.`,
     primary: { label: "WATCH LIVE TIMING", href: "/live" },
     secondary: circuit
       ? { label: "RACE CENTRE →", href: `/races/${circuit.slug}` }
@@ -221,7 +224,7 @@ function sprintDoneCopy(circuit: Circuit, weekend: HeroWeekend, winner: string, 
     line2: fit(["WINS SPRINT.", "SPRINT WIN."]),
     srSuffix: ` · ${circuit.fullName}`,
     clock: clockFor(eventType),
-    description: `${properName(winner)} wins the sprint at ${circuit.city}. Qualifying sets Sunday's grid next, and it lands here minutes after the session.`,
+    description: `${properName(winner)} wins the sprint at ${circuit.city}. Visit the race centre for qualifying, the Grand Prix schedule and published results.`,
     primary: { label: "RACE CENTRE", href: `/races/${weekend.raceSlug}` },
     secondary: STANDINGS_SECONDARY,
   };
@@ -230,8 +233,8 @@ function sprintDoneCopy(circuit: Circuit, weekend: HeroWeekend, winner: string, 
 function weekendCopy(circuit: Circuit, weekend: HeroWeekend, eventType: HeroCopyInput["eventType"]): HeroCopy {
   const description =
     eventType === "sprint"
-      ? `A sprint weekend from ${circuit.city}. The sprint comes first, then qualifying sets Sunday's grid. Results land here minutes after each session.`
-      : `The ${circuit.fullName} from ${circuit.city}. Qualifying sets the grid, and it lands here minutes after the session, with the schedule and live timing alongside.`;
+      ? `A sprint weekend from ${circuit.city}. Follow sprint qualifying, the sprint and Grand Prix qualifying in the race centre. Results appear as they become available.`
+      : `The ${circuit.fullName} from ${circuit.city}. Qualifying sets the grid. Find the weekend schedule, published results and timing in the race centre.`;
   return {
     phase: "weekend",
     eyebrow: `RACE WEEKEND · ${rd(circuit)} · ${circuit.fullName.toUpperCase()}`,
@@ -245,7 +248,7 @@ function weekendCopy(circuit: Circuit, weekend: HeroWeekend, eventType: HeroCopy
   };
 }
 
-function postRaceCopy(recent: RecentRace): HeroCopy {
+function postRaceCopy(recent: RecentRace, recap = false): HeroCopy {
   const circuit = circuitBySlug(recent.slug);
   const gpName = circuit?.fullName ?? recent.name;
   const winner = recent.podium[0];
@@ -259,13 +262,13 @@ function postRaceCopy(recent: RecentRace): HeroCopy {
   ]);
   return {
     phase: "post-race",
-    eyebrow: `${provisional ? "PROVISIONAL RESULT" : "CHEQUERED FLAG"} · RD ${String(recent.round).padStart(2, "0")} · ${gpName.toUpperCase()}`,
+    eyebrow: `${provisional ? "PROVISIONAL RESULT" : recap ? "RACE RECAP" : "CHEQUERED FLAG"} · RD ${String(recent.round).padStart(2, "0")} · ${gpName.toUpperCase()}`,
     line1: winner.familyName.toUpperCase(),
     line2,
     srSuffix: ` · ${gpName}`,
     clock: null,
     description: `${properName(winner.driverName)} wins the ${gpName} for ${winner.teamName}${aheadOf(recent.podium)}. ${
-      provisional ? "Provisional until the official classification is published." : "Full results, lap times and strategy are in."
+      provisional ? "Provisional until the official classification is published." : "View the classification and explore the race analysis."
     }`,
     primary: { label: "FULL RESULTS", href: `/races/${recent.slug}` },
     secondary: STANDINGS_SECONDARY,
@@ -319,18 +322,61 @@ function seasonCopy(nextRace: Circuit | null, leader?: HeroStanding, runnerUp?: 
  * the weekend countdown, then the race that just finished, then the season.
  */
 export function heroCopy(input: HeroCopyInput): HeroCopy {
-  const { liveSession, nextRace, eventType, recentRace, leader, runnerUp } = input;
-  // The weekend object is computed on the server when the page is rendered;
-  // the next race comes from the client clock. Around the two-hour post-race
-  // rollover they can disagree, so weekend data only counts for its own race.
-  const weekend = input.weekend && nextRace && input.weekend.raceSlug === nextRace.slug ? input.weekend : null;
+  const { eventType, leader, runnerUp, now } = input;
+  const nextRace = input.nextRace?.cancelled ? null : input.nextRace;
+  let recentRace = input.recentRace;
+  let recap = false;
+  let weekend = input.weekend && nextRace && input.weekend.raceSlug === nextRace.slug ? input.weekend : null;
+  const active = now === undefined ? input.liveSession : getActiveSession(now);
+  if (active && !circuitByRaceDate(active.raceDate)?.cancelled) return liveCopy(active);
 
-  if (liveSession) return liveCopy(liveSession);
+  if (now !== undefined) {
+    const day = 86_400_000;
+    const raceEnd = (c: Circuit) => {
+      const race = getWeekendSchedule(c.raceDate)?.race;
+      return race ? Date.parse(race) + SESSION_DURATIONS_MS.race : Infinity;
+    };
+    if (recentRace) {
+      const circuit = circuitBySlug(recentRace.slug);
+      const age = circuit ? now - raceEnd(circuit) : Infinity;
+      if (!circuit || circuit.cancelled || age < 0 || age >= 3 * day) recentRace = null;
+      recap = age >= day;
+    }
+    // The calendar advances even when a tab stays open across weekend boundaries.
+    const schedule = nextRace ? getWeekendSchedule(nextRace.raceDate) : undefined;
+    const inWeekend = nextRace && now >= Date.parse(nextRace.raceDate + "T00:00:00Z") - 3 * day && now < raceEnd(nextRace);
+    if (!inWeekend) weekend = null;
+    else if (nextRace && schedule) {
+      weekend ??= { raceSlug: nextRace.slug, isSprint: nextRace.isSprint };
+      if (schedule.qualifying && now > Date.parse(schedule.qualifying) + SESSION_DURATIONS_MS.qualifying && !weekend.grid?.length) {
+        return awaitingCopy(nextRace, "Qualifying");
+      }
+    }
+    if (!weekend && !recentRace?.podium.length) {
+      const finished = CIRCUIT_LIST.filter(c => !c.cancelled && now >= raceEnd(c) && now - raceEnd(c) < 3 * day)
+        .sort((a, b) => raceEnd(b) - raceEnd(a))[0];
+      if (finished) return awaitingCopy(finished, "Race");
+    }
+  }
   if (weekend && nextRace) {
-    if (weekend.grid && weekend.grid.length > 0) return gridSetCopy(nextRace, weekend, weekend.grid, eventType);
+    if (weekend.grid?.length) return gridSetCopy(nextRace, weekend, weekend.grid, eventType);
     if (weekend.sprintWinner) return sprintDoneCopy(nextRace, weekend, weekend.sprintWinner.name, eventType);
     return weekendCopy(nextRace, weekend, eventType);
   }
-  if (recentRace && recentRace.podium.length > 0) return postRaceCopy(recentRace);
+  if (recentRace?.podium.length) return postRaceCopy(recentRace, recap);
   return seasonCopy(nextRace, leader, runnerUp);
+}
+
+function awaitingCopy(circuit: Circuit, session: "Qualifying" | "Race"): HeroCopy {
+  return {
+    phase: "awaiting-results",
+    eyebrow: `AWAITING RESULTS · ${rd(circuit)} · ${circuit.fullName.toUpperCase()}`,
+    line1: session.toUpperCase(),
+    line2: "RESULTS DUE.",
+    srSuffix: ` · ${circuit.fullName}`,
+    clock: null,
+    description: `The scheduled ${session.toLowerCase()} window at ${circuit.city} has ended. Results are not available here yet; session delays and publication times can vary. Check the race centre or timing for updates.`,
+    primary: { label: "RACE CENTRE", href: `/races/${circuit.slug}` },
+    secondary: { label: "CHECK TIMING →", href: "/live" },
+  };
 }

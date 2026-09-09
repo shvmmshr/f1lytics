@@ -71,6 +71,7 @@ export function Hero({
   recentRace = null,
   lockInOpen = false,
   initialEvent,
+  initialNow,
 }: {
   driverStandings?: Standing[];
   constructorStandings?: Standing[];
@@ -79,6 +80,7 @@ export function Hero({
   /** Server-computed: the Lock In game is configured and the next round accepts calls. */
   lockInOpen?: boolean;
   initialEvent?: NextEvent;
+  initialNow: number;
 }) {
   const [view, setView] = useState<"drivers" | "constructors">("drivers");
   const heroRef = useRef<HTMLElement>(null);
@@ -94,9 +96,14 @@ export function Hero({
   // Live-session awareness (quali / sprint quali / sprint / race only) — same
   // client-side schedule check the navbar dot uses; null until mounted so the
   // SSR and first client render agree.
+  const [copyTime, setCopyTime] = useState(initialNow);
   const [liveSession, setLiveSession] = useState<ActiveSession | null>(null);
   useEffect(() => {
-    const check = () => setLiveSession(getActiveHeadlineSession(Date.now()));
+    const check = () => {
+      const now = Date.now();
+      setCopyTime(now);
+      setLiveSession(getActiveHeadlineSession(now));
+    };
     check();
     const id = setInterval(check, 30_000);
     return () => clearInterval(id);
@@ -135,6 +142,7 @@ export function Hero({
   // Session on track, grid set, sprint won, weekend countdown, race just
   // finished, or the championship story: see src/lib/home/hero-copy.ts.
   const copy = heroCopy({
+    now: copyTime,
     liveSession,
     nextRace: nextRace ?? null,
     eventType: event?.eventType ?? null,
@@ -494,7 +502,7 @@ export function Hero({
                       className="truncate"
                       style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.2em" }}
                     >
-                      LIVE NOW · {SESSION_LABELS[liveSession.session]}
+                      SESSION WINDOW · {SESSION_LABELS[liveSession.session]}
                     </Mono>
                   </span>
                   <Mono

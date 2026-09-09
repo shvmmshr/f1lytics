@@ -238,6 +238,8 @@ export interface OpenF1Session {
 
 /** Position data from OpenF1 */
 export interface OpenF1Position {
+  /** Explicit retirement/classification state; never inferred from missing laps. */
+  status?: "RET" | "DNF" | "DNS" | "DSQ";
   session_key: number;
   meeting_key: number;
   driver_number: number;

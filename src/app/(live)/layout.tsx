@@ -9,7 +9,7 @@ export default function LiveLayout({
     <div className="flex min-h-screen flex-col">
       <a href="#main-content" className="skip-link">Skip to content</a>
       <Navbar />
-      <main id="main-content" tabIndex={-1} className="flex-1">{children}</main>
+      <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-[1800px] flex-1 border-x border-line">{children}</main>
     </div>
   );
 }

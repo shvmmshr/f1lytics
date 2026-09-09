@@ -1,3 +1,4 @@
+import { getWeekendSchedule, SESSION_DURATIONS_MS } from "@/lib/constants/sessions";
 import { describe, expect, it } from "vitest";
 import { CIRCUIT_LIST, DRIVER_LIST } from "@/lib/constants";
 import type { GridRow, RecentRace } from "@/lib/api/weekend";
@@ -66,12 +67,12 @@ describe("heroCopy phases", () => {
   it("live: names the session, links the timing screen and that race's page", () => {
     const copy = heroCopy({ ...base, liveSession: { raceDate: monza.raceDate, session: "qualifying" } });
     expect(copy.phase).toBe("live");
-    expect(copy.eyebrow).toBe("ON AIR · QUALIFYING");
-    expect(copy.line1).toBe("IT'S LIVE.");
+    expect(copy.eyebrow).toBe("SESSION WINDOW · QUALIFYING");
+    expect(copy.line1).toBe("ON TRACK");
     expect(copy.line2).toBe("QUALIFYING.");
     expect(copy.srSuffix).toContain("Italian Grand Prix");
     expect(copy.clock).toBeNull();
-    expect(copy.description).toContain("Qualifying is under way at Monza");
+    expect(copy.description).toContain("Qualifying is scheduled now at Monza");
     expect(copy.primary).toEqual({ label: "WATCH LIVE TIMING", href: "/live" });
     expect(copy.secondary.href).toBe("/races/italian-gp");
   });
@@ -85,7 +86,7 @@ describe("heroCopy phases", () => {
   it("live wins over a set grid", () => {
     const copy = heroCopy({ ...base, weekend: { ...base.weekend!, grid: monzaGrid }, liveSession: { raceDate: monza.raceDate, session: "race" } });
     expect(copy.phase).toBe("live");
-    expect(copy.description).toContain("The race is under way at Monza");
+    expect(copy.description).toContain("The race is scheduled now at Monza");
   });
 
   it("grid set: pole sitter in the headline, labelled clock, grid button", () => {
@@ -170,7 +171,7 @@ describe("heroCopy phases", () => {
     expect(copy.line2).toBe("WINS MONZA.");
     expect(copy.srSuffix).toBe(" · Italian Grand Prix");
     expect(copy.description).toBe(
-      "George Russell wins the Italian Grand Prix for Mercedes, ahead of Antonelli and Piastri. Full results, lap times and strategy are in."
+      "George Russell wins the Italian Grand Prix for Mercedes, ahead of Antonelli and Piastri. View the classification and explore the race analysis."
     );
     expect(copy.primary).toEqual({ label: "FULL RESULTS", href: "/races/italian-gp" });
   });
@@ -221,5 +222,60 @@ describe("heroCopy phases", () => {
     const seasonOver = heroCopy({ ...base, nextRace: null, weekend: null, leader: undefined, runnerUp: undefined });
     expect(seasonOver.eyebrow).toBe("2026 SEASON · TELEMETRY & ANALYSIS");
     expect(seasonOver.secondary).toEqual({ label: "EXPLORE RACES →", href: "/races" });
+  });
+});
+
+
+describe("clock-driven weekend transitions", () => {
+  const schedule = getWeekendSchedule(monza.raceDate)!;
+  const end = Date.parse(schedule.race!) + SESSION_DURATIONS_MS.race;
+  const day = 86_400_000;
+  const afterRace = { ...base, nextRace: madrid, weekend: null, recentRace: monzaResult };
+
+  it("features the result for two days, then expires at exactly 72 hours even in an open tab", () => {
+    expect(heroCopy({ ...afterRace, now: end + 1000 }).eyebrow).toContain("CHEQUERED FLAG");
+    expect(heroCopy({ ...afterRace, now: end + 2 * day }).eyebrow).toContain("RACE RECAP");
+    expect(heroCopy({ ...afterRace, now: end + 3 * day - 1 }).phase).toBe("post-race");
+    expect(heroCopy({ ...afterRace, now: end + 3 * day }).phase).not.toBe("post-race");
+  });
+
+  it.each(["fp1", "fp2", "fp3", "qualifying", "race"] as const)("names %s without promising a working live feed", session => {
+    const copy = heroCopy({ ...base, now: Date.parse(schedule[session]!) + 1000 });
+    expect(copy.phase).toBe("live");
+    expect(copy.description).toContain("is scheduled now");
+    expect(copy.description).not.toContain("streaming now");
+    expect(fitsHeadline(copy.line1)).toBe(true);
+    expect(fitsHeadline(copy.line2!)).toBe(true);
+  });
+
+  it("waits for qualifying publication, then uses the available classification", () => {
+    const now = Date.parse(schedule.qualifying!) + SESSION_DURATIONS_MS.qualifying + 1;
+    expect(heroCopy({ ...base, now }).phase).toBe("awaiting-results");
+    expect(heroCopy({ ...base, now, weekend: { ...base.weekend!, grid: monzaGrid } }).phase).toBe("grid-set");
+  });
+
+  it("does not fall back to a championship story when race results are delayed", () => {
+    const copy = heroCopy({ ...afterRace, recentRace: null, now: end + 1 });
+    expect(copy.phase).toBe("awaiting-results");
+    expect(copy.description).toContain("delays");
+    expect(fitsHeadline(copy.line2!)).toBe(true);
+  });
+
+  it("enters the next weekend without requiring a fresh server prop", () => {
+    const now = Date.parse(madrid.raceDate + "T00:00:00Z") - 2 * day;
+    expect(heroCopy({ ...afterRace, now }).phase).toBe("weekend");
+  });
+
+  it.each(["sprintQualifying", "sprint"] as const)("names a sprint weekend's %s", session => {
+    const sprintSchedule = getWeekendSchedule(sprintRound.raceDate)!;
+    const copy = heroCopy({ ...base, nextRace: sprintRound, now: Date.parse(sprintSchedule[session]!) + 1000 });
+    expect(copy.phase).toBe("live");
+    expect(copy.line2).toContain("SPRINT");
+  });
+
+  it("never presents fallback results as confirmed or expired results as fresh", () => {
+    const provisional = { ...monzaResult, podium: [row(1, "George Russell", "Mercedes", null)] };
+    expect(heroCopy({ ...afterRace, recentRace: provisional, now: end + day }).eyebrow).toContain("PROVISIONAL");
+    expect(heroCopy({ ...afterRace, recentRace: provisional, now: end + 4 * day }).phase).not.toBe("post-race");
   });
 });
