@@ -221,11 +221,11 @@ export default async function TeamPage({ params }: TeamPageProps) {
           </div>
 
           <div className="relative mx-auto" style={{ maxWidth: 1400 }}>
-            <div className="flex items-center gap-3.5 mb-5">
-              <Mono style={{ color: F1.red, fontSize: 11, letterSpacing: "0.24em", fontWeight: 700 }}>
+            <div className="flex flex-wrap items-center gap-x-3.5 gap-y-1 mb-5">
+              <Mono className="shrink-0 whitespace-nowrap" style={{ color: F1.red, fontSize: 11, letterSpacing: "0.24em", fontWeight: 700 }}>
                 CONSTRUCTOR
               </Mono>
-              <span style={{ width: 40, height: 1, background: F1.line }} />
+              <span aria-hidden className="hidden shrink-0 sm:block" style={{ width: 40, height: 1, background: F1.line }} />
               <Breadcrumbs items={breadcrumbs} />
             </div>
 

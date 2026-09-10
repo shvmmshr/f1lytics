@@ -146,7 +146,7 @@ function TimezoneSelect({
       value={zone ?? ""}
       onChange={(e) => onSelect(e.target.value)}
       disabled={!zone}
-      className="font-mono rounded-none border border-line transition-colors hover:border-white/30"
+      className="w-full @min-[480px]:w-auto font-mono rounded-none border border-line transition-colors hover:border-white/30"
       title={labels.selected || "Detecting your timezone"}
       style={{
         background: F1.bg2,
@@ -160,7 +160,7 @@ function TimezoneSelect({
         // short "Detecting…" option; without a floor it grows on mount and
         // nudges its flex siblings.
         minWidth: compact ? "min(150px, 100%)" : "min(180px, 100%)",
-        width: compact ? 190 : 240,
+        width: compact ? 190 : undefined,
         maxWidth: "100%",
         cursor: "pointer",
       }}
@@ -194,6 +194,7 @@ function TimezoneSelect({
 interface SessionScheduleProps {
   schedule: WeekendSchedule;
   title?: string;
+  showTitle?: boolean;
   /** "full" = bordered row list with header (default). "compact" = small
    *  horizontal strip for the hero, below the countdown. */
   variant?: "full" | "compact";
@@ -203,6 +204,7 @@ export function SessionSchedule({
   schedule,
   title = "WEEKEND SCHEDULE",
   variant = "full",
+  showTitle = true,
 }: SessionScheduleProps) {
   const { zone, select } = useTimezone();
   const [now, setNow] = useState<number | null>(null);
@@ -342,18 +344,18 @@ export function SessionSchedule({
   }
 
   return (
-    <div style={{ border: `1px solid ${F1.line}`, background: F1.bg }}>
+    <div className="@container min-w-0" style={{ border: `1px solid ${F1.line}`, background: F1.bg }}>
       {/* Header: title + timezone picker */}
       <div
         className="flex items-center justify-between gap-3 flex-wrap"
         style={{ padding: "12px 16px", borderBottom: `1px solid ${F1.line}` }}
       >
-        <Mono
+        {showTitle && <Mono
           style={{ fontSize: 10, color: F1.fg3, letterSpacing: "0.22em", fontWeight: 700 }}
         >
           {title}
-        </Mono>
-        <div className="flex max-w-full min-w-0 flex-wrap items-center gap-2">
+        </Mono>}
+        <div className="flex w-full min-w-0 flex-col items-start gap-2 @min-[480px]:w-auto @min-[480px]:flex-row @min-[480px]:items-center">
           <Mono style={{ fontSize: 9, color: F1.fg2, letterSpacing: "0.18em" }}>
             TIMEZONE
           </Mono>
@@ -378,7 +380,7 @@ export function SessionSchedule({
           return (
             <div
               key={s.key}
-              className="flex items-center justify-between gap-3"
+              className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3"
               style={{
                 padding: "9px 16px",
                 borderTop: i > 0 ? `1px solid ${F1.line}` : undefined,
@@ -410,7 +412,7 @@ export function SessionSchedule({
                   {s.label}
                 </Mono>
               </div>
-              <div className="flex items-baseline gap-3">
+              <div className="flex shrink-0 flex-col items-end gap-1 whitespace-nowrap @min-[420px]:flex-row @min-[420px]:items-baseline @min-[420px]:gap-3">
                 <Mono style={{ fontSize: 10, color: F1.fg3, letterSpacing: "0.1em" }}>
                   {fmtDay(s.ts)}
                 </Mono>

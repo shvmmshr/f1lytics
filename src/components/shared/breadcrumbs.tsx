@@ -11,19 +11,19 @@ export interface BreadcrumbsProps {
 
 export function Breadcrumbs({ items }: BreadcrumbsProps) {
   return (
-    <nav aria-label="Breadcrumb" style={{ color: F1.fg3 }}>
-      <ol className="flex flex-wrap items-center gap-2">
+    <nav className="min-w-0 max-w-full basis-full sm:basis-auto" aria-label="Breadcrumb" style={{ color: F1.fg3 }}>
+      <ol className="flex flex-wrap items-center gap-x-2 gap-y-0">
         {items.map((item, index) => (
-          <li key={`${item.name}-${index}`} className="flex items-center gap-2">
-            {index > 0 && <span aria-hidden>/</span>}
+          <li key={`${item.name}-${index}`} className="flex min-w-0 max-w-full items-center gap-2">
+            {index > 0 && <span className="shrink-0" aria-hidden>/</span>}
             {item.href ? (
-              <Link href={item.href} className="inline-flex min-h-9 items-center transition-colors hover:text-white">
-                <Mono style={{ fontSize: 10, letterSpacing: "0.16em" }}>
+              <Link href={item.href} className="inline-flex min-w-0 min-h-9 items-center transition-colors hover:text-white">
+                <Mono className="break-words" style={{ fontSize: 10, letterSpacing: "0.16em" }}>
                   {item.name.toUpperCase()}
                 </Mono>
               </Link>
             ) : (
-              <Mono aria-current="page" style={{ fontSize: 10, color: F1.fg2, letterSpacing: "0.16em" }}>
+              <Mono className="break-words" aria-current="page" style={{ fontSize: 10, color: F1.fg2, letterSpacing: "0.16em" }}>
                 {item.name.toUpperCase()}
               </Mono>
             )}

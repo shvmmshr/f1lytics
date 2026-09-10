@@ -208,17 +208,17 @@ export function Hero({
       {/* Hero content — flex-grows to fill the viewport so the ticker pins to the
           bottom (no dead black space below it). Single column on mobile. */}
       <div
-        className="relative grid mx-auto w-full grid-cols-1 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]"
+        className="relative grid items-stretch mx-auto w-full grid-cols-1 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]"
         style={{
           maxWidth: 1440,
           padding: "clamp(32px, 5vw, 64px) clamp(20px, 5vw, 64px) 40px",
           gap: "clamp(32px, 4vw, 56px)",
           flex: 1,
-          alignContent: "center",
+          alignContent: "start",
         }}
       >
         {/* LEFT — headline */}
-        <div className="min-w-0">
+        <div className="flex min-w-0 flex-col">
           {/* Start lights: illuminate in sequence, extinguish together, once. */}
           <div className="flex items-center gap-3 sm:gap-5 mb-7 min-w-0">
             <div className="shrink-0">
@@ -349,7 +349,7 @@ export function Hero({
           {/* Stat row */}
           <div
             ref={statsRef}
-            style={{ marginTop: "clamp(32px, 6vw, 64px)" }}
+            className="mt-auto pt-8 lg:pt-12"
           >
             <div
               className="grid grid-cols-2 sm:grid-cols-4"
@@ -382,9 +382,9 @@ export function Hero({
           </div>
         </div>
 
-        {/* RIGHT — Up next + championship ticker. Nudged up slightly at lg so
-            the standings card clears the fold. */}
-        <div ref={tickerRef} className="flex flex-col gap-4 min-w-0 lg:-mt-12">
+        {/* Both columns share their top edge. Cards retain natural height when
+            a podium, grid or live panel joins the stack. */}
+        <div ref={tickerRef} className="flex flex-col gap-4 min-w-0">
           {/* Live session panel: renders nothing outside a session window */}
           <LiveNow />
 
@@ -399,7 +399,7 @@ export function Hero({
                 padding: 20,
               }}
             >
-              <div className="flex items-center justify-between gap-3 mb-3">
+              <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 mb-3">
                 <Mono style={{ color: F1.amber, fontSize: 11, letterSpacing: "0.2em", fontWeight: 700 }}>
                   LAST RACE · ROUND {String(recentRace.round).padStart(2, "0")}
                 </Mono>
@@ -514,8 +514,8 @@ export function Hero({
                 </Link>
               )}
 
-              <div className="flex items-center justify-between mb-4">
-                <span className="inline-flex items-center gap-2.5">
+              <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 mb-4">
+                <span className="inline-flex min-w-0 flex-wrap items-center gap-2.5">
                   {liveSession ? (
                     <LiveDot />
                   ) : (

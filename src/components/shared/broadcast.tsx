@@ -278,7 +278,7 @@ export function SectionHeader({
 }) {
   return (
     <div
-      className="flex items-baseline gap-4 pb-3.5 mb-5"
+      className="flex flex-wrap items-baseline gap-x-3 gap-y-2 pb-3.5 mb-5"
       style={{ borderBottom: `1px solid ${F1.line}` }}
     >
       {index ? (
@@ -291,12 +291,12 @@ export function SectionHeader({
       ) : (
         <span
           aria-hidden
-          style={{ width: 28, height: 1, background: accent, alignSelf: "center" }}
+          style={{ width: 28, height: 1, flexShrink: 0, background: accent, alignSelf: "center" }}
         />
       )}
       {/* h2, not h3 — these are the top-level sections under each page's h1 */}
       <h2
-        className="font-display flex-1 m-0 uppercase"
+        className="font-display min-w-0 flex-1 m-0 break-words uppercase"
         style={{
           fontWeight: 500,
           fontSize: 22,
@@ -306,7 +306,7 @@ export function SectionHeader({
       >
         {label}
       </h2>
-      {right && <div>{right}</div>}
+      {right && <div className="max-w-full">{right}</div>}
     </div>
   );
 }
