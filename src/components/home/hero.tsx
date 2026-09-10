@@ -180,7 +180,7 @@ export function Hero({
     <section
       ref={heroRef}
       className="relative flex flex-col overflow-hidden"
-      style={{ background: F1.ink, color: F1.fg, minHeight: "100vh" }}
+      style={{ background: F1.ink, color: F1.fg }}
     >
       {/* Background image + treatments (decorative — never intercepts clicks/drags) */}
       <div className="absolute inset-0 pointer-events-none" style={{ opacity: 0.45 }}>
@@ -205,16 +205,14 @@ export function Hero({
       />
       <RacingStripes color={F1.red} opacity={0.04} size={20} />
 
-      {/* Hero content — flex-grows to fill the viewport so the ticker pins to the
-          bottom (no dead black space below it). Single column on mobile. */}
+      {/* Size the hero to its actual weekend/live content. A viewport-height
+          flex fill leaves a large empty band on tall displays. */}
       <div
         className="relative grid items-stretch mx-auto w-full grid-cols-1 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]"
         style={{
           maxWidth: 1440,
           padding: "clamp(32px, 5vw, 64px) clamp(20px, 5vw, 64px) 40px",
           gap: "clamp(32px, 4vw, 56px)",
-          flex: 1,
-          alignContent: "start",
         }}
       >
         {/* LEFT — headline */}
