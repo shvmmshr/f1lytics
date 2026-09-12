@@ -16,6 +16,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "seo:check": "node scripts/seo-check.mjs",
+    "data:sync": "node --experimental-strip-types scripts/sync-reference-data.mjs",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate"
   },

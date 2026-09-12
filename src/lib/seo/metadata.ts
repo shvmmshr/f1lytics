@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { socialImagePath, versionedImagePath } from "./social-url";
 
 export const SITE_NAME = "F1lytics";
 export const SITE_URL = "https://f1lytics.com";
@@ -16,6 +17,8 @@ export interface PageMetadataInput {
   imagePath?: `/${string}`;
   /** Eyebrow on the generated social card, e.g. "DRIVER PROFILE". */
   imageEyebrow?: string;
+  /** Optional query context for a share variant; the page canonical stays unchanged. */
+  imageContext?: `/${string}`;
 }
 
 export type RaceSeoState =
@@ -36,10 +39,11 @@ export function createPageMetadata({
   noIndex = false,
   imagePath,
   imageEyebrow,
+  imageContext,
 }: PageMetadataInput): Metadata {
   const url = absoluteUrl(path);
-  const generated = `/api/og?title=${encodeURIComponent(title)}${imageEyebrow ? `&sub=${encodeURIComponent(imageEyebrow)}` : ""}`;
-  const image = absoluteUrl(imagePath ?? (generated as `/${string}`));
+  const generated = socialImagePath({ title, description, path: imageContext ?? path, eyebrow: imageEyebrow });
+  const image = absoluteUrl(imagePath ? versionedImagePath(imagePath) : generated);
 
   return {
     title: absoluteTitle ? { absolute: title } : title,

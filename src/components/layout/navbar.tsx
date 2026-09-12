@@ -130,7 +130,7 @@ export function Navbar() {
 
   // Close a mobile modal when switching to desktop, including tablet rotation.
   useEffect(() => {
-    const mq = window.matchMedia("(min-width: 1280px)");
+    const mq = window.matchMedia("(min-width: 1440px)");
     const close = () => { if (mq.matches) closeMobileMenu(); };
     mq.addEventListener("change", close);
     return () => mq.removeEventListener("change", close);
@@ -165,7 +165,7 @@ export function Navbar() {
           </div>
 
           {/* Desktop nav items */}
-          <ul className="hidden xl:flex items-stretch flex-1 list-none m-0 p-0">
+          <ul className="hidden min-[1440px]:flex items-stretch flex-1 list-none m-0 p-0">
             {NAV_ITEMS.map((item) => {
               const isActive =
                 pathname === item.href || pathname.startsWith(item.href + "/");
@@ -178,10 +178,10 @@ export function Navbar() {
                     href={item.href}
                   aria-current={isActive ? "page" : undefined}
                     className={cn(
-                      "nav-underline relative flex items-center font-mono transition-colors gap-2",
+                      "nav-underline relative flex items-center whitespace-nowrap font-mono transition-colors gap-2",
                     )}
                     style={{
-                      padding: "0 clamp(12px, 1vw, 18px)",
+                      padding: "0 clamp(10px, 0.8vw, 16px)",
                       fontSize: "clamp(11px, 0.8vw, 13px)",
                       letterSpacing: "0.14em",
                       color: liveNow ? F1.ink : isActive ? F1.fg : F1.fg2,
@@ -229,7 +229,7 @@ export function Navbar() {
                 }}
               >
                 <Mono
-                  style={{ fontSize: 8, letterSpacing: "0.2em", color: F1.fg3 }}
+                  style={{ fontSize: 10, letterSpacing: "0.12em", color: F1.fg3 }}
                 >
                   NEXT · RD {String(nextRace.round).padStart(2, "0")}/{TOTAL_ROUNDS}
                 </Mono>
@@ -274,7 +274,7 @@ export function Navbar() {
             aria-controls="mobile-navigation"
             aria-expanded={mobileMenuOpen}
             aria-label="Toggle navigation menu"
-            className="xl:hidden inline-flex items-center justify-center transition-colors shrink-0"
+            className="min-[1440px]:hidden inline-flex items-center justify-center transition-colors shrink-0"
             style={{
               padding: "0 18px",
               borderLeft: `1px solid ${F1.line}`,

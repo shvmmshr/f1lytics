@@ -1,3 +1,5 @@
+import { PageHeader } from "@/components/shared/page-header";
+import { getTeamTextColor } from "@/lib/design/team-color";
 import Link from "next/link";
 import Image from "next/image";
 import { getConstructorStandings } from "@/lib/api/jolpica";
@@ -71,34 +73,7 @@ export default async function TeamsPage() {
         <BroadcastGrid color={F1.line} size={64} opacity={0.18} />
 
         {/* Page header */}
-        <div
-          className="relative"
-          style={{ padding: "40px clamp(16px, 4vw, 32px) 28px", borderBottom: `1px solid ${F1.line}` }}
-        >
-          <div className="flex items-center gap-3.5">
-            <Mono style={{ color: F1.red, fontSize: 11, letterSpacing: "0.24em" }}>
-              SECTION 04
-            </Mono>
-            <span style={{ width: 40, height: 1, background: F1.line }} />
-            <Mono style={{ color: F1.fg3, fontSize: 11, letterSpacing: "0.18em" }}>
-              CONSTRUCTORS · {sortedTeams.length} TEAMS · 2026
-            </Mono>
-          </div>
-          <h1
-            className="font-display uppercase m-0 mt-3"
-            style={{
-              fontWeight: 700,
-              fontSize: "clamp(36px, 8vw, 96px)",
-              lineHeight: 0.9,
-              letterSpacing: "-0.04em",
-            }}
-          >
-            THE TEAMS<span style={{ color: F1.red }}>.</span>
-          </h1>
-          <div className="mt-3" style={{ fontSize: 16, color: F1.fg2, maxWidth: 540 }}>
-            Eleven constructors. Twenty‑two cars. One championship.
-          </div>
-        </div>
+        <PageHeader eyebrow="SECTION 04" meta={<>CONSTRUCTORS · {sortedTeams.length} TEAMS · 2026</>} title="THE TEAMS" description="Eleven constructors. Twenty-two cars. One championship." />
 
         {/* Team tile grid */}
         <TeamsGrid>
@@ -146,7 +121,7 @@ export default async function TeamsPage() {
                         style={{
                           fontSize: 15,
                           fontWeight: 700,
-                          color: team.color,
+                          color: getTeamTextColor(team.color),
                           letterSpacing: "0.04em",
                         }}
                       >

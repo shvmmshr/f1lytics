@@ -1,6 +1,5 @@
 import { nowMs } from "@/lib/clock";
 import { Hero } from "@/components/home/hero";
-import { NextRaceCountdown } from "@/components/home/next-race-countdown";
 import { SeasonCalendarStrip } from "@/components/home/season-calendar-strip";
 import { NewsStrip } from "@/components/home/news-strip";
 import { StatsRow } from "@/components/home/stats-row";
@@ -131,7 +130,6 @@ export default async function Home() {
         lockInOpen={env.lockInEnabled && getOpenRound(Date.now()) !== undefined}
       />
       <div className="space-y-0">
-        <NextRaceCountdown initialEvent={event} />
         <SeasonCalendarStrip />
         <NewsStrip />
         <StatsRow />

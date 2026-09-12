@@ -1,3 +1,5 @@
+import { getTeamTextColor } from "@/lib/design/team-color";
+import { ScrollableRegion } from "@/components/shared/scrollable-region";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -304,7 +306,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
                   style={{
                     fontSize: "clamp(40px, 9vw, 64px)",
                     fontWeight: 700,
-                    color: team.color,
+                    color: getTeamTextColor(team.color),
                     lineHeight: 1,
                     letterSpacing: "-0.04em",
                     marginTop: 6,
@@ -436,7 +438,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
                         className="block"
                         style={{
                           fontSize: 11,
-                          color: pos ? team.color : F1.fg3,
+                          color: pos ? getTeamTextColor(team.color) : F1.fg3,
                           fontWeight: 700,
                           letterSpacing: "0.08em",
                         }}
@@ -468,7 +470,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
           >
             <div className="mx-auto" style={{ maxWidth: 1400 }}>
               <SectionHeader label="CONSTRUCTOR TIMELINE" accent={team.color} />
-              <div className="overflow-x-auto scroll-fade-x">
+              <ScrollableRegion label="Constructor championship history" className="overflow-x-auto scroll-fade-x">
               <div
                 className="grid"
                 style={{
@@ -537,7 +539,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
                     boxShadow: `inset 0 0 0 1px ${team.color}40`,
                   }}
                 >
-                  <Mono style={{ fontSize: 10, color: team.color, letterSpacing: "0.2em", fontWeight: 700 }}>
+                  <Mono style={{ fontSize: 10, color: getTeamTextColor(team.color), letterSpacing: "0.2em", fontWeight: 700 }}>
                     2026
                   </Mono>
                   <div
@@ -545,7 +547,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
                     style={{
                       fontSize: "clamp(26px, 4.5vw, 36px)",
                       fontWeight: 700,
-                      color: team.color,
+                      color: getTeamTextColor(team.color),
                       lineHeight: 1,
                       letterSpacing: "-0.03em",
                       marginTop: 8,
@@ -570,7 +572,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
                   </Mono>
                 </div>
               </div>
-              </div>
+              </ScrollableRegion>
             </div>
           </section>
         )}
@@ -583,7 +585,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
           <div className="mx-auto" style={{ maxWidth: 1400 }}>
             <SectionHeader label="2026 RACE RESULTS" accent={team.color} />
             {raceData.length > 0 ? (
-              <div
+              <ScrollableRegion label="Team race results"
                 className="overflow-x-auto scroll-fade-x"
                 style={{
                   background: F1.bg2,
@@ -726,7 +728,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
                     ))}
                   </tbody>
                 </table>
-              </div>
+              </ScrollableRegion>
             ) : (
               <Mono style={{ color: F1.fg3, fontSize: 12, letterSpacing: "0.14em" }}>
                 NO RACE DATA AVAILABLE YET FOR 2026.

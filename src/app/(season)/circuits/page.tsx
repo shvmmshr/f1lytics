@@ -1,6 +1,7 @@
+import { PageHeader } from "@/components/shared/page-header";
 import Link from "next/link";
 import { countryCodeToFlag } from "@/lib/utils";
-import Image from "next/image";
+import { CircuitMap } from "@/components/shared/circuit-map";
 import { CIRCUIT_LIST } from "@/lib/constants";
 import { PageTransition } from "@/components/layout/page-transition";
 import { F1, Mono, Grid as BroadcastGrid } from "@/components/shared/broadcast";
@@ -22,6 +23,7 @@ function formatRaceDate(date: string): string {
   return new Intl.DateTimeFormat("en-US", {
     month: "short",
     day: "numeric",
+    timeZone: "UTC",
   }).format(new Date(`${date}T00:00:00Z`));
 }
 
@@ -55,34 +57,7 @@ export default function CircuitsPage() {
       <div style={{ background: F1.bg, color: F1.fg, position: "relative" }}>
         <BroadcastGrid color={F1.line} size={64} opacity={0.18} />
 
-        <div
-          className="relative"
-          style={{ padding: "40px clamp(16px, 4vw, 32px) 28px", borderBottom: `1px solid ${F1.line}` }}
-        >
-          <div className="flex items-center gap-3.5">
-            <Mono style={{ color: F1.red, fontSize: 11, letterSpacing: "0.24em" }}>
-              SECTION 06
-            </Mono>
-            <span style={{ width: 40, height: 1, background: F1.line }} />
-            <Mono style={{ color: F1.fg3, fontSize: 11, letterSpacing: "0.18em" }}>
-              CIRCUITS · {CIRCUIT_LIST.length} TRACKS · WORLD TOUR
-            </Mono>
-          </div>
-          <h1
-            className="font-display uppercase m-0 mt-3"
-            style={{
-              fontWeight: 700,
-              fontSize: "clamp(36px, 8vw, 96px)",
-              lineHeight: 0.9,
-              letterSpacing: "-0.04em",
-            }}
-          >
-            THE CIRCUITS<span style={{ color: F1.red }}>.</span>
-          </h1>
-          <div className="mt-3" style={{ fontSize: 16, color: F1.fg2, maxWidth: 540 }}>
-            Every track on the 2026 Formula 1 world tour. Spin the globe.
-          </div>
-        </div>
+        <PageHeader eyebrow="SECTION 06" meta={<>CIRCUITS · {CIRCUIT_LIST.length} TRACKS · WORLD TOUR</>} title="THE CIRCUITS" description="Every track on the 2026 Formula 1 world tour. Spin the globe." />
 
         <CircuitGlobeWrapper circuits={globeCircuits} />
 
@@ -95,7 +70,6 @@ export default function CircuitsPage() {
               className="group relative block transition-shadow hover:shadow-[inset_0_0_0_999px_rgba(255,255,255,0.03)]"
               style={{
                 background: F1.bg,
-                opacity: circuit.cancelled ? 0.5 : 1,
                 borderTop: circuit.isSprint
                   ? `2px solid ${F1.amber}`
                   : `2px solid ${F1.line}`,
@@ -110,14 +84,7 @@ export default function CircuitsPage() {
                   borderBottom: `1px solid ${F1.line}`,
                 }}
               >
-                <Image
-                  src={circuit.trackImage}
-                  alt={`${circuit.name} track layout`}
-                  fill
-                  className="object-contain p-6 transition-opacity"
-                  style={{ filter: "brightness(0) invert(1)", opacity: 0.85 }}
-                  sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
-                />
+                <CircuitMap circuit={circuit} className="h-full" sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw" />
                 <div
                   className="absolute"
                   style={{ top: 12, left: 12, display: "flex", gap: 6 }}

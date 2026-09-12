@@ -1,4 +1,5 @@
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
+import { env } from "@/lib/env";
 import { timingSafeEqual } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -18,15 +19,19 @@ export async function POST(request: NextRequest) {
     request.nextUrl.searchParams.get("secret");
 
   // Fail closed in production: missing env, missing secret, or mismatch all 401.
-  if (process.env.NODE_ENV === "production") {
-    const expected = process.env.REVALIDATION_SECRET;
+  if (env.isProduction) {
+    const expected = env.REVALIDATION_SECRET;
     if (!expected || !secret || !safeEqual(secret, expected)) {
       return NextResponse.json({ error: "Invalid secret" }, { status: 401 });
     }
   }
 
   // Revalidate all data-dependent pages
-  const paths = ["/standings", "/compare", "/calendar", "/drivers", "/teams", "/races", "/"];
+  const paths = ["/standings", "/compare", "/calendar", "/drivers", "/teams", "/races", "/circuits", "/news", "/garage", "/opengraph-image", "/twitter-image", "/"];
+  // Invalidate shared current data as well as the pages that consume it.
+  // Historical seasons keep their longer caches.
+  revalidateTag("f1-current-season", { expire: 0 });
+  revalidateTag("f1-news", { expire: 0 });
   for (const path of paths) {
     revalidatePath(path);
   }

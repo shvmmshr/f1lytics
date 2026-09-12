@@ -30,21 +30,16 @@ export const F1 = {
 
 /* Inline mono span — used for any tabular numbers / labels */
 export function Mono({
+  as: Tag = "span",
   children,
   className,
   style,
-  id,
-}: {
-  children: React.ReactNode;
-  className?: string;
-  style?: React.CSSProperties;
-  /** For aria-labelledby targets. */
-  id?: string;
-}) {
+  ...props
+}: React.ComponentPropsWithoutRef<"span"> & { as?: "span" | "h2" | "h3" }) {
   return (
-    <span id={id} className={cn("font-mono", className)} style={style}>
+    <Tag {...props} className={cn("font-mono", className)} style={style}>
       {children}
-    </span>
+    </Tag>
   );
 }
 
@@ -317,4 +312,3 @@ export function Trend({ dir }: { dir: "up" | "down" | "flat" }) {
   if (dir === "down") return <span style={{ color: F1.red }}>▼</span>;
   return <span style={{ color: F1.fg3 }}>—</span>;
 }
-

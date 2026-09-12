@@ -1,3 +1,5 @@
+import { PageHeader } from "@/components/shared/page-header";
+import { NewsStories } from "@/components/news/news-stories";
 import { fetchAllNews, scoreImportance, type NewsItem } from "@/lib/api/news";
 import { PageTransition } from "@/components/layout/page-transition";
 import { F1, Mono, Grid as BroadcastGrid } from "@/components/shared/broadcast";
@@ -79,31 +81,7 @@ export default async function NewsPage() {
         <BroadcastGrid color={F1.line} size={48} opacity={0.18} />
 
         {/* Header */}
-        <div
-          className="relative"
-          style={{ padding: "40px clamp(16px, 4vw, 32px) 28px", borderBottom: `1px solid ${F1.line}` }}
-        >
-          <div className="flex flex-wrap items-center gap-3.5">
-            <Mono style={{ color: F1.red, fontSize: 11, letterSpacing: "0.24em" }}>
-              PADDOCK FEED
-            </Mono>
-            <span style={{ width: 40, height: 1, background: F1.line }} />
-            <Mono style={{ color: F1.fg3, fontSize: 11, letterSpacing: "0.18em" }}>
-              UPDATED EVERY 15 MIN
-            </Mono>
-          </div>
-          <h1
-            className="font-display uppercase m-0 mt-3"
-            style={{
-              fontWeight: 700,
-              fontSize: "clamp(36px, 8vw, 96px)",
-              lineHeight: 0.9,
-              letterSpacing: "-0.04em",
-            }}
-          >
-            F1 NEWS<span style={{ color: F1.red }}>.</span>
-          </h1>
-        </div>
+        <PageHeader eyebrow="PADDOCK FEED" meta="UPDATED EVERY 15 MIN" title="F1 NEWS" />
 
         {items.length === 0 ? (
           <div className="relative" style={{ padding: "32px clamp(16px, 4vw, 32px)" }}>
@@ -120,7 +98,7 @@ export default async function NewsPage() {
                 style={{ padding: "32px clamp(16px, 4vw, 32px) 40px", borderBottom: `1px solid ${F1.line}` }}
               >
                 <div className="flex flex-wrap items-center gap-3.5" style={{ marginBottom: 20 }}>
-                  <Mono
+                  <Mono as="h2"
                     style={{
                       color: F1.red,
                       fontSize: 11,
@@ -252,7 +230,7 @@ export default async function NewsPage() {
             {/* ALL STORIES — chronological, breathing room */}
             <div className="relative" style={{ padding: "32px clamp(16px, 4vw, 32px)" }}>
               <div className="flex flex-wrap items-center gap-3.5" style={{ marginBottom: 20 }}>
-                <Mono
+                <Mono as="h2"
                   style={{
                     color: F1.fg2,
                     fontSize: 11,
@@ -267,62 +245,7 @@ export default async function NewsPage() {
                   BBC SPORT · MOTORSPORT.COM · AUTOSPORT · THE RACE · PLANETF1
                 </Mono>
               </div>
-              <div
-                className="grid"
-                style={{
-                  gridTemplateColumns: "repeat(auto-fill, minmax(min(300px, 100%), 1fr))",
-                  gap: 20,
-                }}
-              >
-                {rest.map((item) => (
-                  <a
-                    key={item.url}
-                    href={item.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group flex flex-col transition-colors hover:bg-white/[0.04]"
-                    style={{
-                      background: F1.bg2,
-                      border: `1px solid ${F1.line}`,
-                      textDecoration: "none",
-                      color: F1.fg,
-                    }}
-                  >
-                    {item.imageUrl && (
-                      <div
-                        className="relative"
-                        style={{
-                          aspectRatio: "16 / 9",
-                          overflow: "hidden",
-                          background: F1.bg3,
-                          borderBottom: `1px solid ${F1.line}`,
-                        }}
-                      >
-                        <NewsImage
-                          src={item.imageUrl}
-                          sizes="(max-width: 768px) 100vw, 340px"
-                          className="transition-transform duration-300 group-hover:scale-[1.03]"
-                        />
-                      </div>
-                    )}
-                    <div className="flex flex-1 flex-col" style={{ padding: "14px 18px 18px" }}>
-                      <SourceLine item={item} />
-                      <div
-                        className="font-display"
-                        style={{
-                          marginTop: 8,
-                          fontSize: 16,
-                          fontWeight: 600,
-                          lineHeight: 1.3,
-                          letterSpacing: "-0.01em",
-                        }}
-                      >
-                        {item.title}
-                      </div>
-                    </div>
-                  </a>
-                ))}
-              </div>
+              <NewsStories items={rest.map((item) => ({ title: item.title, url: item.url, imageUrl: item.imageUrl, source: item.source, timeLabel: timeAgo(item.publishedAt), corroboration: item.corroboration ?? 0 }))} />
             </div>
           </>
         )}

@@ -33,7 +33,7 @@ export function Logo({
 
   if (!href) return mark;
   return (
-    <Link href={href} aria-label="F1lytics home" className="inline-flex" style={{ textDecoration: "none" }}>
+    <Link href={href} aria-label="F1lytics home" className="inline-flex min-h-11 items-center" style={{ textDecoration: "none" }}>
       {mark}
     </Link>
   );

@@ -1,0 +1,27 @@
+{
+  "slug": "bgp001",
+  "id": "4c02d48be0104a79b657e732890e6d54",
+  "name": "2009 Brawn GP",
+  "author": "Dave Love SketchFab",
+  "authorUrl": "https://sketchfab.com/Tyler_Dave",
+  "viewerUrl": "https://sketchfab.com/3d-models/2009-brawn-gp-4c02d48be0104a79b657e732890e6d54",
+  "license": {
+    "uri": "https://api.sketchfab.com/v3/licenses/322a749bcfa841b29dff1e8a1bb74b0b",
+    "label": "CC Attribution",
+    "fullName": "Creative Commons Attribution",
+    "requirements": "Author must be credited. Commercial use is allowed.",
+    "url": "http://creativecommons.org/licenses/by/4.0/",
+    "slug": "by"
+  },
+  "thumbnail": "https://media.sketchfab.com/models/4c02d48be0104a79b657e732890e6d54/thumbnails/c563697279a844ab8a4120da94fb0a18/1d68ee9186f4403b855f3ed07fca6f44.jpeg",
+  "thumbnailSize": [
+    1024,
+    576
+  ],
+  "description": "Brawn GP was a Formula One constructor which competed in the 2009 Formula One World Championship, with drivers Jenson Button and Rubens Barrichello. The team was formed in 2009 by a management buyout led by Ross Brawn of the Honda Racing F1 Team, after Honda announced their withdrawal from the sport in December 2008 due to the 2008 financial crisis, while other teams like Toyota and BMW Sauber raced in F1 until the end of the 2009 season, also choosing to depart from the sport. The team is famous for its symbolic £1 sale from Hiroshi Oshima to Ross Brawn. The team started development of their car in early 2008, when still owned by Honda. The car was originally named the RA109 until the team rebranded to Brawn GP, to which the car was redesigned to fit the Mercedes engine and was subsequently renamed the BGP-001. \n\n![](https://www.goodwood.com/globalassets/.road--racing/race/historic/2019/february/damien-brawn-gp/f1-brawn-gp-2009-lat-goodwood-25022019.jpg?rxy=0.5,0.5&width=1280&height=720)",
+  "faces": 35258,
+  "isPublished": null,
+  "historicalSource": "https://www.formula1.com/en/latest/article/exclusive-from-trendsetters-to-title-winners-ross-brawn-reveals-his.6FIAnV6e71kvi8PVInIuPo",
+  "verifiedAt": "2026-09-12",
+  "previewNote": "Public model thumbnail resized to WebP; model geometry and textures are not downloaded or rehosted."
+}

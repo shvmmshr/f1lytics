@@ -1,0 +1,68 @@
+{
+  "verstappen": {
+    "number": 3
+  },
+  "norris": {
+    "number": 1
+  },
+  "leclerc": {
+    "number": 16
+  },
+  "hamilton": {
+    "number": 44
+  },
+  "piastri": {
+    "number": 81
+  },
+  "russell": {
+    "number": 63
+  },
+  "antonelli": {
+    "number": 12
+  },
+  "alonso": {
+    "number": 14
+  },
+  "stroll": {
+    "number": 18
+  },
+  "gasly": {
+    "number": 10
+  },
+  "colapinto": {
+    "number": 43
+  },
+  "albon": {
+    "number": 23
+  },
+  "sainz": {
+    "number": 55
+  },
+  "lawson": {
+    "number": 30
+  },
+  "lindblad": {
+    "number": 41
+  },
+  "ocon": {
+    "number": 31
+  },
+  "bearman": {
+    "number": 87
+  },
+  "hulkenberg": {
+    "number": 27
+  },
+  "bortoleto": {
+    "number": 5
+  },
+  "hadjar": {
+    "number": 6
+  },
+  "bottas": {
+    "number": 77
+  },
+  "perez": {
+    "number": 11
+  }
+}

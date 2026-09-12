@@ -17,7 +17,7 @@ export function Breadcrumbs({ items }: BreadcrumbsProps) {
           <li key={`${item.name}-${index}`} className="flex min-w-0 max-w-full items-center gap-2">
             {index > 0 && <span className="shrink-0" aria-hidden>/</span>}
             {item.href ? (
-              <Link href={item.href} className="inline-flex min-w-0 min-h-9 items-center transition-colors hover:text-white">
+              <Link href={item.href} className="inline-flex min-w-0 min-h-11 items-center transition-colors hover:text-white">
                 <Mono className="break-words" style={{ fontSize: 10, letterSpacing: "0.16em" }}>
                   {item.name.toUpperCase()}
                 </Mono>

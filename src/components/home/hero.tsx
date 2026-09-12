@@ -210,8 +210,8 @@ export function Hero({
       <div
         className="relative grid items-stretch mx-auto w-full grid-cols-1 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]"
         style={{
-          maxWidth: 1440,
-          padding: "clamp(32px, 5vw, 64px) clamp(20px, 5vw, 64px) 40px",
+          maxWidth: "calc(var(--content-wide) + 2 * var(--page-gutter))",
+          padding: "clamp(32px, 5vw, 64px) var(--page-gutter) 40px",
           gap: "clamp(32px, 4vw, 56px)",
         }}
       >
@@ -403,7 +403,7 @@ export function Hero({
                 </Mono>
                 <Link
                   href={`/races/${recentRace.slug}`}
-                  className="font-mono shrink-0 transition-colors hover:text-white"
+                  className="control-sm font-mono shrink-0 transition-colors hover:text-white"
                   style={{
                     fontSize: 10,
                     color: F1.fg3,
@@ -486,7 +486,7 @@ export function Hero({
               {liveSession && (
                 <Link
                   href="/live"
-                  className="flex items-center justify-between gap-3 mb-4 transition-opacity hover:opacity-90"
+                  className="flex min-h-11 items-center justify-between gap-3 mb-4 transition-opacity hover:opacity-90"
                   style={{
                     background: F1.red,
                     color: F1.ink,
@@ -616,7 +616,7 @@ export function Hero({
                         </Mono>
                         <Link
                           href={`/races/${weekend.raceSlug}#starting-grid`}
-                          className="font-mono shrink-0 transition-colors hover:text-white"
+                          className="control-sm font-mono shrink-0 transition-colors hover:text-white"
                           style={{
                             fontSize: 10,
                             color: F1.fg3,
@@ -726,7 +726,7 @@ export function Hero({
             </div>
           )}
 
-          {driverStandings.length === 0 && constructorStandings.length === 0 && <p className="border border-line bg-bg-secondary p-4 text-sm text-text-secondary">Championship standings are temporarily unavailable. The schedule remains available below.</p>}
+          {driverStandings.length === 0 && constructorStandings.length === 0 && <p className="border border-line bg-bg-secondary p-4 text-sm text-text-secondary">Championship standings are temporarily unavailable. The weekend schedule remains available.</p>}
 
           {/* Top 5 standings preview */}
           {(driverStandings.length > 0 || constructorStandings.length > 0) && (
@@ -762,7 +762,7 @@ export function Hero({
                         type="button"
                         aria-pressed={active}
                         onClick={() => setView(key)}
-                        className="font-mono cursor-pointer transition-colors"
+                        className="control-md font-mono cursor-pointer transition-colors"
                         style={{
                           background: active ? F1.red : "transparent",
                           color: active ? F1.ink : F1.fg2,
@@ -858,7 +858,7 @@ export function Hero({
           The season's shape at a glance; links to the calendar. */}
       <Link
         href="/calendar"
-        className="flex items-center gap-4 transition-colors hover:bg-white/[0.03]"
+        className="flex min-h-11 items-center gap-4 transition-colors hover:bg-white/[0.03]"
         style={{
           borderTop: `1px solid ${F1.line}`,
           background: F1.ink,

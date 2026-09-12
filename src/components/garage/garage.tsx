@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { ArrowUpRight, Box, Rotate3D, X } from "lucide-react";
 import { GARAGE_LEGENDS, getGarageLegend, type GarageLegend } from "@/lib/garage/legends";
+import { ScrollRow } from "@/components/shared/scroll-row";
 
 function ModelStage({ car }: { car: GarageLegend }) {
   const [active, setActive] = useState(false);
@@ -25,8 +26,8 @@ function ModelStage({ car }: { car: GarageLegend }) {
   return (
     <div>
       <div className="flex min-h-12 items-center justify-between gap-3 border-b border-line bg-bg-secondary px-4">
-        <span className="font-mono text-[11px] uppercase tracking-widest text-text-secondary">{active ? "Interactive exhibit" : "The collection"} / {car.year}</span>
-        {active ? <button type="button" onClick={close} className="flex min-h-11 items-center gap-2 text-sm text-text-secondary hover:text-text-primary"><X size={16} aria-hidden />Close 3D</button> : <span className="flex items-center gap-2 font-mono text-[11px] text-text-muted"><Box size={14} aria-hidden />360°</span>}
+        <span className="min-w-0 truncate font-mono text-[11px] uppercase tracking-widest text-text-secondary">{active ? "Interactive exhibit" : "The collection"} / {car.year}</span>
+        {active ? <button type="button" onClick={close} className="flex min-h-11 shrink-0 items-center gap-2 whitespace-nowrap text-sm text-text-secondary hover:text-text-primary"><X size={16} aria-hidden />Close 3D</button> : <span className="flex items-center gap-2 font-mono text-[11px] text-text-muted"><Box size={14} aria-hidden />360°</span>}
       </div>
       <div className="relative aspect-[4/3] overflow-hidden bg-bg-ink sm:aspect-[16/10]" aria-label={`${car.team} ${car.name} model`}>
         {!active || failed ? (
@@ -68,23 +69,30 @@ export function Garage({ initialCarId }: { initialCarId: string }) {
   };
   return (
     <div className="relative">
-      <div className="flex gap-3 overflow-x-auto px-3 py-4 sm:px-6 lg:grid lg:grid-cols-5 lg:px-8" role="group" aria-label="Choose a legendary car">
+      <ScrollRow ariaLabel="Choose a legendary car" centerSelector={`[data-car="${car.id}"]`} className="gap-3 px-[var(--page-gutter)] py-4">
         {GARAGE_LEGENDS.map((entry, index) => (
-          <button key={entry.id} type="button" aria-pressed={entry.id === car.id} onClick={() => select(entry.id)} className="group w-36 shrink-0 border bg-bg-secondary p-2 text-left transition-colors hover:bg-bg-hover lg:w-auto lg:min-w-0 sm:p-3" style={{ borderColor: entry.id === car.id ? entry.accent : "#27272A" }}>
+          <button key={entry.id} data-car={entry.id} type="button" aria-pressed={entry.id === car.id} onClick={() => select(entry.id)} className="group w-36 shrink-0 sm:w-44 border bg-bg-secondary p-2 text-left transition-colors hover:bg-bg-hover sm:p-3" style={{ borderColor: entry.id === car.id ? entry.accent : "#27272A" }}>
             <div className="relative mb-2 aspect-video overflow-hidden"><Image src={entry.poster} alt="" fill sizes="112px" className="object-cover" /></div>
-            <div className="min-w-0"><span className="font-mono text-[10px] tracking-widest text-text-muted">0{index + 1} / {entry.year}</span><span className="block font-display text-2xl uppercase leading-tight text-text-primary sm:text-3xl">{entry.name}</span><span className="mt-1 block truncate text-[10px] text-text-secondary sm:text-xs">{entry.driver}</span></div>
+            <div className="min-w-0"><span className="font-mono text-[10px] tracking-widest text-text-muted">{String(index + 1).padStart(2, "0")} / {entry.year}</span><span className="block font-display text-2xl uppercase leading-tight text-text-primary sm:text-3xl">{entry.name}</span><span className="mt-1 block truncate text-[10px] text-text-secondary sm:text-xs">{entry.driver}</span></div>
           </button>
         ))}
-      </div>
+      </ScrollRow>
       <div className="grid border-y border-line lg:grid-cols-[minmax(0,1fr)_340px]">
         <div className="min-w-0 lg:border-r lg:border-line"><ModelStage key={car.id} car={car} /></div>
-        <article className="min-w-0 border-t border-line bg-bg-secondary p-5 sm:p-7 lg:border-t-0">
+        <article className="@container min-w-0 border-t border-line bg-bg-secondary p-5 sm:p-7 lg:border-t-0">
           <div className="flex items-center gap-3 font-mono text-[11px] uppercase tracking-widest text-text-secondary"><span className="h-1.5 w-6" style={{ background: car.accent }} aria-hidden />{car.team}</div>
           <h2 className="my-3 font-display text-6xl uppercase leading-none sm:text-7xl">{car.name}</h2>
           <p className="font-display text-2xl uppercase text-text-secondary">{car.tagline}</p>
           <div className="my-6 flex items-center gap-4 border-y border-line py-4"><span className="font-display text-4xl text-text-muted">#{car.number}</span><div><span className="block font-mono text-[10px] uppercase tracking-widest text-text-muted">The driver</span><span className="font-display text-2xl">{car.driver}</span></div></div>
           <p className="text-sm leading-relaxed text-text-secondary">{car.story}</p>
-          <dl className="mt-6 grid grid-cols-3 gap-3 lg:grid-cols-1 lg:gap-4">{car.stats.map((stat) => <div key={stat.label} className="flex flex-col lg:flex-row lg:items-baseline lg:justify-between lg:gap-3"><dt className="order-2 text-xs text-text-muted lg:text-right">{stat.label}</dt><dd className="order-1 font-display text-3xl text-text-primary">{stat.value}</dd></div>)}</dl>
+          <dl className="mt-6 grid border-t border-line @min-[600px]:grid-cols-3 @min-[600px]:gap-6">
+            {car.stats.map((stat) => (
+              <div key={stat.label} className="flex min-w-0 items-center justify-between gap-5 border-b border-line py-3 @min-[600px]:flex-col @min-[600px]:items-start @min-[600px]:justify-start @min-[600px]:gap-3 @min-[600px]:py-4">
+                <dt className="min-w-0 text-sm leading-relaxed text-text-secondary">{stat.label}</dt>
+                <dd className="shrink-0 font-display text-3xl leading-none text-text-primary tabular-nums">{stat.value}</dd>
+              </div>
+            ))}
+          </dl>
           <button type="button" onClick={share} className="mt-5 min-h-11 text-sm text-text-secondary underline underline-offset-4 hover:text-text-primary">Copy exhibit link</button>
           <p role="status" className="text-xs text-text-secondary">{copied}</p>
         </article>

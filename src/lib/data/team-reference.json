@@ -1,0 +1,68 @@
+{
+  "mclaren": {
+    "fullName": "McLaren Mastercard F1 Team",
+    "base": "Woking, United Kingdom",
+    "principal": "Andrea Stella",
+    "engine": "Mercedes"
+  },
+  "ferrari": {
+    "fullName": "Scuderia Ferrari HP",
+    "base": "Maranello, Italy",
+    "principal": "Frédéric Vasseur",
+    "engine": "Ferrari"
+  },
+  "red_bull": {
+    "fullName": "Oracle Red Bull Racing",
+    "base": "Milton Keynes, United Kingdom",
+    "principal": "Laurent Mekies",
+    "engine": "Red Bull Ford"
+  },
+  "mercedes": {
+    "fullName": "Mercedes-AMG PETRONAS Formula One Team",
+    "base": "Brackley, United Kingdom",
+    "principal": "Toto Wolff",
+    "engine": "Mercedes"
+  },
+  "aston_martin": {
+    "fullName": "Aston Martin Aramco Formula One Team",
+    "base": "Silverstone, United Kingdom",
+    "principal": "Adrian Newey",
+    "engine": "Honda"
+  },
+  "alpine": {
+    "fullName": "BWT Alpine Formula One Team",
+    "base": "Enstone, United Kingdom",
+    "principal": "Flavio Briatore (Executive Advisor), Steve Nielsen (Managing Director)",
+    "engine": "Mercedes"
+  },
+  "williams": {
+    "fullName": "Atlassian Williams F1 Team",
+    "base": "Grove, United Kingdom",
+    "principal": "James Vowles",
+    "engine": "Mercedes"
+  },
+  "racing_bulls": {
+    "fullName": "Visa Cash App Racing Bulls Formula One Team",
+    "base": "Faenza, Italy",
+    "principal": "Alan Permane",
+    "engine": "Red Bull Ford"
+  },
+  "haas": {
+    "fullName": "TGR Haas F1 Team",
+    "base": "Kannapolis, United States",
+    "principal": "Ayao Komatsu",
+    "engine": "Ferrari"
+  },
+  "audi": {
+    "fullName": "Audi Revolut F1 Team",
+    "base": "Hinwil, Switzerland",
+    "principal": "Mattia Binotto",
+    "engine": "Audi"
+  },
+  "cadillac": {
+    "fullName": "Cadillac Formula 1 Team",
+    "base": "Silverstone, United Kingdom",
+    "principal": "Marcin Budkowski",
+    "engine": "Ferrari"
+  }
+}

@@ -1,3 +1,4 @@
+import { PageHeader } from "@/components/shared/page-header";
 import Link from "next/link";
 import Image from "next/image";
 import { DRIVER_LIST, TEAMS } from "@/lib/constants";
@@ -14,6 +15,7 @@ import { DriversGrid } from "./drivers-grid";
 import { JsonLd } from "@/components/shared/json-ld";
 import { createPageMetadata } from "@/lib/seo/metadata";
 import { collectionSchema } from "@/lib/seo/schema";
+import { mapConstructorToTeamId } from "@/lib/constructor-map";
 
 const description =
   "Explore every 2026 F1 driver with championship points, wins, teams, race form, career history, and teammate comparisons.";
@@ -52,6 +54,7 @@ export default async function DriversPage() {
     if (bS) return 1;
     return 0;
   });
+  const additionalEntrants = standings.filter(entry => !DRIVER_LIST.some(driver => driver.abbreviation === entry.Driver.code?.toUpperCase()));
 
   return (
     <PageTransition>
@@ -70,34 +73,7 @@ export default async function DriversPage() {
         <BroadcastGrid color={F1.line} size={64} opacity={0.18} />
 
         {/* Page header */}
-        <div
-          className="relative"
-          style={{ padding: "40px clamp(16px, 4vw, 32px) 28px", borderBottom: `1px solid ${F1.line}` }}
-        >
-          <div className="flex items-center gap-3.5">
-            <Mono style={{ color: F1.red, fontSize: 11, letterSpacing: "0.24em" }}>
-              SECTION 03
-            </Mono>
-            <span style={{ width: 40, height: 1, background: F1.line }} />
-            <Mono style={{ color: F1.fg3, fontSize: 11, letterSpacing: "0.18em" }}>
-              2026 GRID · {DRIVER_LIST.length} DRIVERS · {Object.keys(TEAMS).length} TEAMS
-            </Mono>
-          </div>
-          <h1
-            className="font-display uppercase m-0 mt-3"
-            style={{
-              fontWeight: 700,
-              fontSize: "clamp(36px, 8vw, 96px)",
-              lineHeight: 0.9,
-              letterSpacing: "-0.04em",
-            }}
-          >
-            THE GRID<span style={{ color: F1.red }}>.</span>
-          </h1>
-          <div className="mt-3" style={{ fontSize: 16, color: F1.fg2, maxWidth: 540 }}>
-            Every driver on the 2026 grid. Sorted by championship position.
-          </div>
-        </div>
+        <PageHeader eyebrow="SECTION 03" meta={<>2026 LINEUP · {DRIVER_LIST.length} LISTED DRIVERS · {Object.keys(TEAMS).length} TEAMS</>} title="THE GRID" description="The listed season lineup, sorted by championship position. Additional race entrants appear below." />
 
         {/* Driver tile grid */}
         <DriversGrid>
@@ -279,6 +255,17 @@ export default async function DriversPage() {
             );
           })}
         </DriversGrid>
+        {additionalEntrants.length > 0 && <section className="border-t border-line px-[var(--page-gutter)] py-8">
+          <h2 className="font-display text-3xl uppercase">Additional 2026 race entrants</h2>
+          <p className="mt-3 max-w-2xl text-sm leading-7 text-text-secondary">Substitute appearances are included in the championship. Teams below reflect the standings feed’s season entries.</p>
+          <ul className="mt-5 divide-y divide-line border border-line bg-bg-secondary">
+            {additionalEntrants.map(entry => <li key={entry.Driver.driverId} className="flex flex-wrap items-center justify-between gap-4 p-4">
+              <div><p className="font-display text-2xl">{entry.Driver.givenName} {entry.Driver.familyName}</p><p className="mt-1 text-xs text-text-secondary">{entry.Constructors.map(constructor => { const id = mapConstructorToTeamId(constructor.constructorId, constructor.name); return id ? TEAMS[id].name : constructor.name; }).join(" / ")}</p></div>
+              <p className="font-mono text-sm text-text-secondary">P{entry.position} · {entry.points} pts</p>
+            </li>)}
+          </ul>
+          <Link href="/standings" className="mt-4 inline-flex min-h-11 items-center text-sm text-text-secondary underline underline-offset-4">Full driver standings →</Link>
+        </section>}
       </div>
     </PageTransition>
   );

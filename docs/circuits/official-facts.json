@@ -1,0 +1,874 @@
+{
+  "checked": "2026-09-12",
+  "circuits": [
+    {
+      "id": "albert_park",
+      "url": "https://www.formula1.com/en/racing/2026/australia",
+      "status": 200,
+      "facts": [
+        {
+          "label": "Circuit Length",
+          "value": "5.278km",
+          "extra": ""
+        },
+        {
+          "label": "First Grand Prix",
+          "value": "1996",
+          "extra": ""
+        },
+        {
+          "label": "Number of Laps",
+          "value": "58",
+          "extra": ""
+        },
+        {
+          "label": "Fastest lap time",
+          "value": "1:19.813",
+          "extra": "Charles Leclerc (2024)"
+        },
+        {
+          "label": "Race Distance",
+          "value": "306.124km",
+          "extra": ""
+        }
+      ],
+      "image": "https://media.formula1.com/image/upload/c_fit,h_704/q_auto/v1740000001/common/f1/2026/track/2026trackmelbournedetailed.webp",
+      "localImage": "/circuits/2026/albert_park.webp",
+      "bytes": 108926
+    },
+    {
+      "id": "shanghai",
+      "url": "https://www.formula1.com/en/racing/2026/china",
+      "status": 200,
+      "facts": [
+        {
+          "label": "Circuit Length",
+          "value": "5.451km",
+          "extra": ""
+        },
+        {
+          "label": "First Grand Prix",
+          "value": "2004",
+          "extra": ""
+        },
+        {
+          "label": "Number of Laps",
+          "value": "56",
+          "extra": ""
+        },
+        {
+          "label": "Fastest lap time",
+          "value": "1:32.238",
+          "extra": "Michael Schumacher (2004)"
+        },
+        {
+          "label": "Race Distance",
+          "value": "305.066km",
+          "extra": ""
+        }
+      ],
+      "image": "https://media.formula1.com/image/upload/c_fit,h_704/q_auto/v1740000001/common/f1/2026/track/2026trackshanghaidetailed.webp",
+      "localImage": "/circuits/2026/shanghai.webp",
+      "bytes": 92878
+    },
+    {
+      "id": "bahrain",
+      "url": "https://www.formula1.com/en/racing/2025/bahrain",
+      "status": 200,
+      "facts": [
+        {
+          "label": "Circuit Length",
+          "value": "5.412km",
+          "extra": ""
+        },
+        {
+          "label": "First Grand Prix",
+          "value": "2004",
+          "extra": ""
+        },
+        {
+          "label": "Number of Laps",
+          "value": "57",
+          "extra": ""
+        },
+        {
+          "label": "Fastest lap time",
+          "value": "1:31.447",
+          "extra": "Pedro de la Rosa (2005)"
+        },
+        {
+          "label": "Race Distance",
+          "value": "308.238km",
+          "extra": ""
+        }
+      ]
+    },
+    {
+      "id": "miami",
+      "url": "https://www.formula1.com/en/racing/2026/miami",
+      "status": 200,
+      "facts": [
+        {
+          "label": "Circuit Length",
+          "value": "5.412km",
+          "extra": ""
+        },
+        {
+          "label": "First Grand Prix",
+          "value": "2022",
+          "extra": ""
+        },
+        {
+          "label": "Number of Laps",
+          "value": "57",
+          "extra": ""
+        },
+        {
+          "label": "Fastest lap time",
+          "value": "1:29.708",
+          "extra": "Max Verstappen (2023)"
+        },
+        {
+          "label": "Race Distance",
+          "value": "308.326km",
+          "extra": ""
+        }
+      ],
+      "image": "https://media.formula1.com/image/upload/c_fit,h_704/q_auto/v1740000001/common/f1/2026/track/2026trackmiamidetailed.webp",
+      "localImage": "/circuits/2026/miami.webp",
+      "bytes": 148040
+    },
+    {
+      "id": "suzuka",
+      "url": "https://www.formula1.com/en/racing/2026/japan",
+      "status": 200,
+      "facts": [
+        {
+          "label": "Circuit Length",
+          "value": "5.807km",
+          "extra": ""
+        },
+        {
+          "label": "First Grand Prix",
+          "value": "1987",
+          "extra": ""
+        },
+        {
+          "label": "Number of Laps",
+          "value": "53",
+          "extra": ""
+        },
+        {
+          "label": "Fastest lap time",
+          "value": "1:30.965",
+          "extra": "Kimi Antonelli (2025)"
+        },
+        {
+          "label": "Race Distance",
+          "value": "307.471km",
+          "extra": ""
+        }
+      ],
+      "image": "https://media.formula1.com/image/upload/c_fit,h_704/q_auto/v1740000001/common/f1/2026/track/2026tracksuzukadetailed.webp",
+      "localImage": "/circuits/2026/suzuka.webp",
+      "bytes": 89610
+    },
+    {
+      "id": "montreal",
+      "url": "https://www.formula1.com/en/racing/2026/canada",
+      "status": 200,
+      "facts": [
+        {
+          "label": "Circuit Length",
+          "value": "4.361km",
+          "extra": ""
+        },
+        {
+          "label": "First Grand Prix",
+          "value": "1978",
+          "extra": ""
+        },
+        {
+          "label": "Number of Laps",
+          "value": "70",
+          "extra": ""
+        },
+        {
+          "label": "Fastest lap time",
+          "value": "1:13.078",
+          "extra": "Valtteri Bottas (2019)"
+        },
+        {
+          "label": "Race Distance",
+          "value": "305.27km",
+          "extra": ""
+        }
+      ],
+      "image": "https://media.formula1.com/image/upload/c_fit,h_704/q_auto/v1740000001/common/f1/2026/track/2026trackmontrealdetailed.webp",
+      "localImage": "/circuits/2026/montreal.webp",
+      "bytes": 93170
+    },
+    {
+      "id": "barcelona",
+      "url": "https://www.formula1.com/en/racing/2026/barcelona-catalunya",
+      "status": 200,
+      "facts": [
+        {
+          "label": "Circuit Length",
+          "value": "4.657km",
+          "extra": ""
+        },
+        {
+          "label": "First Grand Prix",
+          "value": "1991",
+          "extra": ""
+        },
+        {
+          "label": "Number of Laps",
+          "value": "66",
+          "extra": ""
+        },
+        {
+          "label": "Fastest lap time",
+          "value": "1:15.743",
+          "extra": "Oscar Piastri (2025)"
+        },
+        {
+          "label": "Race Distance",
+          "value": "307.236km",
+          "extra": ""
+        }
+      ],
+      "image": "https://media.formula1.com/image/upload/c_fit,h_704/q_auto/v1740000001/common/f1/2026/track/2026trackcatalunyadetailed.webp",
+      "localImage": "/circuits/2026/barcelona.webp",
+      "bytes": 115934
+    },
+    {
+      "id": "jeddah",
+      "url": "https://www.formula1.com/en/racing/2025/saudi-arabia",
+      "status": 200,
+      "facts": [
+        {
+          "label": "Circuit Length",
+          "value": "6.174km",
+          "extra": ""
+        },
+        {
+          "label": "First Grand Prix",
+          "value": "2021",
+          "extra": ""
+        },
+        {
+          "label": "Number of Laps",
+          "value": "50",
+          "extra": ""
+        },
+        {
+          "label": "Fastest lap time",
+          "value": "1:30.734",
+          "extra": "Lewis Hamilton (2021)"
+        },
+        {
+          "label": "Race Distance",
+          "value": "308.45km",
+          "extra": ""
+        }
+      ]
+    },
+    {
+      "id": "silverstone",
+      "url": "https://www.formula1.com/en/racing/2026/great-britain",
+      "status": 200,
+      "facts": [
+        {
+          "label": "Circuit Length",
+          "value": "5.891km",
+          "extra": ""
+        },
+        {
+          "label": "First Grand Prix",
+          "value": "1950",
+          "extra": ""
+        },
+        {
+          "label": "Number of Laps",
+          "value": "52",
+          "extra": ""
+        },
+        {
+          "label": "Fastest lap time",
+          "value": "1:27.097",
+          "extra": "Max Verstappen (2020)"
+        },
+        {
+          "label": "Race Distance",
+          "value": "306.198km",
+          "extra": ""
+        }
+      ],
+      "image": "https://media.formula1.com/image/upload/c_fit,h_704/q_auto/v1740000001/common/f1/2026/track/2026tracksilverstonedetailed.webp",
+      "localImage": "/circuits/2026/silverstone.webp",
+      "bytes": 106240
+    },
+    {
+      "id": "spielberg",
+      "url": "https://www.formula1.com/en/racing/2026/austria",
+      "status": 200,
+      "facts": [
+        {
+          "label": "Circuit Length",
+          "value": "4.326km",
+          "extra": ""
+        },
+        {
+          "label": "First Grand Prix",
+          "value": "1970",
+          "extra": ""
+        },
+        {
+          "label": "Number of Laps",
+          "value": "71",
+          "extra": ""
+        },
+        {
+          "label": "Fastest lap time",
+          "value": "1:07.924",
+          "extra": "Oscar Piastri (2025)"
+        },
+        {
+          "label": "Race Distance",
+          "value": "307.026km",
+          "extra": ""
+        }
+      ],
+      "image": "https://media.formula1.com/image/upload/c_fit,h_704/q_auto/v1740000001/common/f1/2026/track/2026trackspielbergdetailed.webp",
+      "localImage": "/circuits/2026/spielberg.webp",
+      "bytes": 106104
+    },
+    {
+      "id": "budapest",
+      "url": "https://www.formula1.com/en/racing/2026/hungary",
+      "status": 200,
+      "facts": [
+        {
+          "label": "Circuit Length",
+          "value": "4.381km",
+          "extra": ""
+        },
+        {
+          "label": "First Grand Prix",
+          "value": "1986",
+          "extra": ""
+        },
+        {
+          "label": "Number of Laps",
+          "value": "70",
+          "extra": ""
+        },
+        {
+          "label": "Fastest lap time",
+          "value": "1:16.627",
+          "extra": "Lewis Hamilton (2020)"
+        },
+        {
+          "label": "Race Distance",
+          "value": "306.63km",
+          "extra": ""
+        }
+      ],
+      "image": "https://media.formula1.com/image/upload/c_fit,h_704/q_auto/v1740000001/common/f1/2026/track/2026trackhungaroringdetailed.webp",
+      "localImage": "/circuits/2026/budapest.webp",
+      "bytes": 92362
+    },
+    {
+      "id": "spa",
+      "url": "https://www.formula1.com/en/racing/2026/belgium",
+      "status": 200,
+      "facts": [
+        {
+          "label": "Circuit Length",
+          "value": "7.004km",
+          "extra": ""
+        },
+        {
+          "label": "First Grand Prix",
+          "value": "1950",
+          "extra": ""
+        },
+        {
+          "label": "Number of Laps",
+          "value": "44",
+          "extra": ""
+        },
+        {
+          "label": "Fastest lap time",
+          "value": "1:44.701",
+          "extra": "Sergio Perez (2024)"
+        },
+        {
+          "label": "Race Distance",
+          "value": "308.054km",
+          "extra": ""
+        }
+      ],
+      "image": "https://media.formula1.com/image/upload/c_fit,h_704/q_auto/v1740000001/common/f1/2026/track/2026trackspafrancorchampsdetailed.webp",
+      "localImage": "/circuits/2026/spa.webp",
+      "bytes": 102574
+    },
+    {
+      "id": "monza",
+      "url": "https://www.formula1.com/en/racing/2026/italy",
+      "status": 200,
+      "facts": [
+        {
+          "label": "Circuit Length",
+          "value": "5.793km",
+          "extra": ""
+        },
+        {
+          "label": "First Grand Prix",
+          "value": "1950",
+          "extra": ""
+        },
+        {
+          "label": "Number of Laps",
+          "value": "53",
+          "extra": ""
+        },
+        {
+          "label": "Fastest lap time",
+          "value": "1:20.901",
+          "extra": "Lando Norris (2025)"
+        },
+        {
+          "label": "Race Distance",
+          "value": "306.72km",
+          "extra": ""
+        }
+      ],
+      "image": "https://media.formula1.com/image/upload/c_fit,h_704/q_auto/v1740000001/common/f1/2026/track/2026trackmonzadetailed.webp",
+      "localImage": "/circuits/2026/monza.webp",
+      "bytes": 93658
+    },
+    {
+      "id": "madrid",
+      "url": "https://www.formula1.com/en/racing/2026/spain",
+      "status": 200,
+      "facts": [
+        {
+          "label": "Circuit Length",
+          "value": "5.414km",
+          "extra": ""
+        },
+        {
+          "label": "First Grand Prix",
+          "value": "2026",
+          "extra": ""
+        },
+        {
+          "label": "Number of Laps",
+          "value": "57",
+          "extra": ""
+        },
+        {
+          "label": "Fastest lap time",
+          "value": "--",
+          "extra": ""
+        },
+        {
+          "label": "Race Distance",
+          "value": "308.399km",
+          "extra": ""
+        }
+      ],
+      "image": "https://media.formula1.com/image/upload/c_fit,h_704/q_auto/v1740000001/common/f1/2026/track/2026trackmadringdetailed.webp",
+      "localImage": "/circuits/2026/madrid.webp",
+      "bytes": 86344
+    },
+    {
+      "id": "zandvoort",
+      "url": "https://www.formula1.com/en/racing/2026/netherlands",
+      "status": 200,
+      "facts": [
+        {
+          "label": "Circuit Length",
+          "value": "4.259km",
+          "extra": ""
+        },
+        {
+          "label": "First Grand Prix",
+          "value": "1952",
+          "extra": ""
+        },
+        {
+          "label": "Number of Laps",
+          "value": "72",
+          "extra": ""
+        },
+        {
+          "label": "Fastest lap time",
+          "value": "1:11.097",
+          "extra": "Lewis Hamilton (2021)"
+        },
+        {
+          "label": "Race Distance",
+          "value": "306.592km",
+          "extra": ""
+        }
+      ],
+      "image": "https://media.formula1.com/image/upload/c_fit,h_704/q_auto/v1740000001/common/f1/2026/track/2026trackzandvoortdetailed.webp",
+      "localImage": "/circuits/2026/zandvoort.webp",
+      "bytes": 96328
+    },
+    {
+      "id": "monaco",
+      "url": "https://www.formula1.com/en/racing/2026/monaco",
+      "status": 200,
+      "facts": [
+        {
+          "label": "Circuit Length",
+          "value": "3.337km",
+          "extra": ""
+        },
+        {
+          "label": "First Grand Prix",
+          "value": "1950",
+          "extra": ""
+        },
+        {
+          "label": "Number of Laps",
+          "value": "78",
+          "extra": ""
+        },
+        {
+          "label": "Fastest lap time",
+          "value": "1:12.909",
+          "extra": "Lewis Hamilton (2021)"
+        },
+        {
+          "label": "Race Distance",
+          "value": "260.286km",
+          "extra": ""
+        }
+      ],
+      "image": "https://media.formula1.com/image/upload/c_fit,h_704/q_auto/v1740000001/common/f1/2026/track/2026trackmontecarlodetailed.webp",
+      "localImage": "/circuits/2026/monaco.webp",
+      "bytes": 77164
+    },
+    {
+      "id": "baku",
+      "url": "https://www.formula1.com/en/racing/2026/azerbaijan",
+      "status": 200,
+      "facts": [
+        {
+          "label": "Circuit Length",
+          "value": "6.003km",
+          "extra": ""
+        },
+        {
+          "label": "First Grand Prix",
+          "value": "2016",
+          "extra": ""
+        },
+        {
+          "label": "Number of Laps",
+          "value": "51",
+          "extra": ""
+        },
+        {
+          "label": "Fastest lap time",
+          "value": "1:43.009",
+          "extra": "Charles Leclerc (2019)"
+        },
+        {
+          "label": "Race Distance",
+          "value": "306.049km",
+          "extra": ""
+        }
+      ],
+      "image": "https://media.formula1.com/image/upload/c_fit,h_704/q_auto/v1740000001/common/f1/2026/track/2026trackbakudetailed.webp",
+      "localImage": "/circuits/2026/baku.webp",
+      "bytes": 72302
+    },
+    {
+      "id": "singapore",
+      "url": "https://www.formula1.com/en/racing/2026/singapore",
+      "status": 200,
+      "facts": [
+        {
+          "label": "Circuit Length",
+          "value": "4.927km",
+          "extra": ""
+        },
+        {
+          "label": "First Grand Prix",
+          "value": "2008",
+          "extra": ""
+        },
+        {
+          "label": "Number of Laps",
+          "value": "62",
+          "extra": ""
+        },
+        {
+          "label": "Fastest lap time",
+          "value": "1:33.808",
+          "extra": "Lewis Hamilton (2025)"
+        },
+        {
+          "label": "Race Distance",
+          "value": "305.337km",
+          "extra": ""
+        }
+      ],
+      "image": "https://media.formula1.com/image/upload/c_fit,h_704/q_auto/v1740000001/common/f1/2026/track/2026tracksingaporedetailed.webp",
+      "localImage": "/circuits/2026/singapore.webp",
+      "bytes": 75448
+    },
+    {
+      "id": "sepang",
+      "url": "https://www.formula1.com/en/racing/2026/bahrain",
+      "status": 200,
+      "facts": [
+        {
+          "label": "Circuit Length",
+          "value": "5.543km",
+          "extra": ""
+        },
+        {
+          "label": "First Grand Prix",
+          "value": "1999",
+          "extra": ""
+        },
+        {
+          "label": "Number of Laps",
+          "value": "56",
+          "extra": ""
+        },
+        {
+          "label": "Fastest lap time",
+          "value": "1:34.080",
+          "extra": "Sebastian Vettel (2017)"
+        },
+        {
+          "label": "Race Distance",
+          "value": "310.418km",
+          "extra": ""
+        }
+      ],
+      "image": "https://media.formula1.com/image/upload/c_fit,h_704/q_auto/v1740000001/common/f1/2026/track/2026trackkualalumpurdetailed.webp",
+      "localImage": "/circuits/2026/sepang.webp",
+      "bytes": 60268
+    },
+    {
+      "id": "austin",
+      "url": "https://www.formula1.com/en/racing/2026/united-states",
+      "status": 200,
+      "facts": [
+        {
+          "label": "Circuit Length",
+          "value": "5.513km",
+          "extra": ""
+        },
+        {
+          "label": "First Grand Prix",
+          "value": "2012",
+          "extra": ""
+        },
+        {
+          "label": "Number of Laps",
+          "value": "56",
+          "extra": ""
+        },
+        {
+          "label": "Fastest lap time",
+          "value": "1:36.169",
+          "extra": "Charles Leclerc (2019)"
+        },
+        {
+          "label": "Race Distance",
+          "value": "308.432km",
+          "extra": ""
+        }
+      ],
+      "image": "https://media.formula1.com/image/upload/c_fit,h_704/q_auto/v1740000001/common/f1/2026/track/2026trackaustindetailed.webp",
+      "localImage": "/circuits/2026/austin.webp",
+      "bytes": 80758
+    },
+    {
+      "id": "las_vegas",
+      "url": "https://www.formula1.com/en/racing/2026/las-vegas",
+      "status": 200,
+      "facts": [
+        {
+          "label": "Circuit Length",
+          "value": "6.201km",
+          "extra": ""
+        },
+        {
+          "label": "First Grand Prix",
+          "value": "2023",
+          "extra": ""
+        },
+        {
+          "label": "Number of Laps",
+          "value": "50",
+          "extra": ""
+        },
+        {
+          "label": "Fastest lap time",
+          "value": "1:33.365",
+          "extra": "Max Verstappen (2025)"
+        },
+        {
+          "label": "Race Distance",
+          "value": "309.958km",
+          "extra": ""
+        }
+      ],
+      "image": "https://media.formula1.com/image/upload/c_fit,h_704/q_auto/v1740000001/common/f1/2026/track/2026tracklasvegasdetailed.webp",
+      "localImage": "/circuits/2026/las_vegas.webp",
+      "bytes": 61708
+    },
+    {
+      "id": "interlagos",
+      "url": "https://www.formula1.com/en/racing/2026/brazil",
+      "status": 200,
+      "facts": [
+        {
+          "label": "Circuit Length",
+          "value": "4.309km",
+          "extra": ""
+        },
+        {
+          "label": "First Grand Prix",
+          "value": "1973",
+          "extra": ""
+        },
+        {
+          "label": "Number of Laps",
+          "value": "71",
+          "extra": ""
+        },
+        {
+          "label": "Fastest lap time",
+          "value": "1:10.540",
+          "extra": "Valtteri Bottas (2018)"
+        },
+        {
+          "label": "Race Distance",
+          "value": "305.879km",
+          "extra": ""
+        }
+      ],
+      "image": "https://media.formula1.com/image/upload/c_fit,h_704/q_auto/v1740000001/common/f1/2026/track/2026trackinterlagosdetailed.webp",
+      "localImage": "/circuits/2026/interlagos.webp",
+      "bytes": 87240
+    },
+    {
+      "id": "lusail",
+      "url": "https://www.formula1.com/en/racing/2026/qatar",
+      "status": 200,
+      "facts": [
+        {
+          "label": "Circuit Length",
+          "value": "5.419km",
+          "extra": ""
+        },
+        {
+          "label": "First Grand Prix",
+          "value": "2021",
+          "extra": ""
+        },
+        {
+          "label": "Number of Laps",
+          "value": "57",
+          "extra": ""
+        },
+        {
+          "label": "Fastest lap time",
+          "value": "1:22.384",
+          "extra": "Lando Norris (2024)"
+        },
+        {
+          "label": "Race Distance",
+          "value": "308.611km",
+          "extra": ""
+        }
+      ],
+      "image": "https://media.formula1.com/image/upload/c_fit,h_704/q_auto/v1740000001/common/f1/2026/track/2026tracklusaildetailed.webp",
+      "localImage": "/circuits/2026/lusail.webp",
+      "bytes": 67984
+    },
+    {
+      "id": "mexico_city",
+      "url": "https://www.formula1.com/en/racing/2026/mexico",
+      "status": 200,
+      "facts": [
+        {
+          "label": "Circuit Length",
+          "value": "4.304km",
+          "extra": ""
+        },
+        {
+          "label": "First Grand Prix",
+          "value": "1963",
+          "extra": ""
+        },
+        {
+          "label": "Number of Laps",
+          "value": "71",
+          "extra": ""
+        },
+        {
+          "label": "Fastest lap time",
+          "value": "1:17.774",
+          "extra": "Valtteri Bottas (2021)"
+        },
+        {
+          "label": "Race Distance",
+          "value": "305.354km",
+          "extra": ""
+        }
+      ],
+      "image": "https://media.formula1.com/image/upload/c_fit,h_704/q_auto/v1740000001/common/f1/2026/track/2026trackmexicocitydetailed.webp",
+      "localImage": "/circuits/2026/mexico_city.webp",
+      "bytes": 52448
+    },
+    {
+      "id": "yas_marina",
+      "url": "https://www.formula1.com/en/racing/2026/united-arab-emirates",
+      "status": 200,
+      "facts": [
+        {
+          "label": "Circuit Length",
+          "value": "5.281km",
+          "extra": ""
+        },
+        {
+          "label": "First Grand Prix",
+          "value": "2009",
+          "extra": ""
+        },
+        {
+          "label": "Number of Laps",
+          "value": "58",
+          "extra": ""
+        },
+        {
+          "label": "Fastest lap time",
+          "value": "1:25.637",
+          "extra": "Kevin Magnussen (2024)"
+        },
+        {
+          "label": "Race Distance",
+          "value": "306.188km",
+          "extra": ""
+        }
+      ],
+      "image": "https://media.formula1.com/image/upload/c_fit,h_704/q_auto/v1740000001/common/f1/2026/track/2026trackyasmarinacircuitdetailed.webp",
+      "localImage": "/circuits/2026/yas_marina.webp",
+      "bytes": 76544
+    }
+  ]
+}

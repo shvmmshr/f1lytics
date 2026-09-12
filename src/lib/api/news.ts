@@ -218,7 +218,7 @@ export async function fetchAllNews(
         // noCache path is for the live diagnostic (?fresh=1); normal path is ISR.
         ...(opts.noCache
           ? { cache: "no-store" as const }
-          : { next: { revalidate: REVALIDATE_SECONDS } }),
+          : { next: { revalidate: REVALIDATE_SECONDS, tags: ["f1-news"] } }),
         // Per-feed timeout: a single hung feed must not stall the whole render
         // past the serverless function limit (which would blank ALL news).
         signal: AbortSignal.timeout(8000),

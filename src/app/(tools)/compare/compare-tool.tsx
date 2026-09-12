@@ -1,5 +1,7 @@
 "use client";
 
+import { getTeamTextColor } from "@/lib/design/team-color";
+
 import { useSearchParams } from "next/navigation";
 import { parseComparisonSelection, type ComparisonSelection } from "@/lib/analytics/comparison-selection";
 import { trackInteraction } from "@/lib/analytics/events";
@@ -9,14 +11,14 @@ import { useState, useMemo, useEffect } from "react";
 import Image from "next/image";
 import { DRIVER_LIST, TEAM_LIST, TEAMS } from "@/lib/constants";
 import type { Team } from "@/lib/constants";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/shared/broadcast-controls";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/components/shared/broadcast-controls";
 import {
   F1,
   Mono,
@@ -144,7 +146,7 @@ function CompareBar({
           style={{ width: 56 }}
         >
           {aWins && (
-            <span style={{ color: colorA, fontSize: 11 }} aria-hidden>
+            <span style={{ color: getTeamTextColor(colorA), fontSize: 11 }} aria-hidden>
               ★
             </span>
           )}
@@ -152,7 +154,7 @@ function CompareBar({
             style={{
               fontSize: 18,
               fontWeight: 700,
-              color: aWins ? colorA : F1.fg3,
+              color: aWins ? getTeamTextColor(colorA) : F1.fg3,
               fontVariantNumeric: "tabular-nums",
             }}
           >
@@ -198,14 +200,14 @@ function CompareBar({
             style={{
               fontSize: 18,
               fontWeight: 700,
-              color: bWins ? colorB : F1.fg3,
+              color: bWins ? getTeamTextColor(colorB) : F1.fg3,
               fontVariantNumeric: "tabular-nums",
             }}
           >
             {displayB}
           </Mono>
           {bWins && (
-            <span style={{ color: colorB, fontSize: 11 }} aria-hidden>
+            <span style={{ color: getTeamTextColor(colorB), fontSize: 11 }} aria-hidden>
               ★
             </span>
           )}
@@ -305,8 +307,7 @@ function DriverSelector({
           style={{
             background: F1.bg2,
             border: `1px solid ${F1.line}`,
-            borderRadius: 0,
-            color: F1.fg,
+              color: F1.fg,
             fontSize: 12,
             letterSpacing: "0.06em",
             height: 44,
@@ -318,8 +319,7 @@ function DriverSelector({
           style={{
             background: F1.bg2,
             border: `1px solid ${F1.line}`,
-            borderRadius: 0,
-          }}
+            }}
         >
           {DRIVER_LIST.map((d) => (
             <SelectItem key={d.id} value={d.id} disabled={d.id === exclude}>
@@ -364,8 +364,7 @@ function TeamSelector({
           style={{
             background: F1.bg2,
             border: `1px solid ${F1.line}`,
-            borderRadius: 0,
-            color: F1.fg,
+              color: F1.fg,
             fontSize: 12,
             letterSpacing: "0.06em",
             height: 44,
@@ -377,8 +376,7 @@ function TeamSelector({
           style={{
             background: F1.bg2,
             border: `1px solid ${F1.line}`,
-            borderRadius: 0,
-          }}
+            }}
         >
           {TEAM_LIST.map((t) => (
             <SelectItem key={t.id} value={t.id} disabled={t.id === exclude}>
@@ -1174,7 +1172,6 @@ export function CompareTool({ driverStats, constructorStats }: CompareToolProps)
         style={{
           background: F1.bg2,
           border: `1px solid ${F1.line}`,
-          borderRadius: 0,
           padding: 4,
         }}
       >
@@ -1182,8 +1179,7 @@ export function CompareTool({ driverStats, constructorStats }: CompareToolProps)
           value="drivers"
           className="font-mono"
           style={{
-            borderRadius: 0,
-            fontSize: 11,
+              fontSize: 11,
             letterSpacing: "0.18em",
             padding: "8px 18px",
           }}
@@ -1194,8 +1190,7 @@ export function CompareTool({ driverStats, constructorStats }: CompareToolProps)
           value="teams"
           className="font-mono"
           style={{
-            borderRadius: 0,
-            fontSize: 11,
+              fontSize: 11,
             letterSpacing: "0.18em",
             padding: "8px 18px",
           }}

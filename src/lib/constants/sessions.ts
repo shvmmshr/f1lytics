@@ -1,3 +1,5 @@
+import sessionReference from "@/lib/data/session-reference.json";
+
 /**
  * Full 2026 race-weekend session schedules (UTC), baked from the Jolpica
  * Ergast schedule (https://api.jolpi.ca/ergast/f1/2026.json) so no runtime
@@ -18,7 +20,7 @@ export interface WeekendSchedule {
   race: string;
 }
 
-export const WEEKEND_SCHEDULES: Record<string, WeekendSchedule> = {
+const BAKED_SCHEDULES: Record<string, WeekendSchedule> = {
   // R01 Australian Grand Prix
   "2026-03-08": { fp1: "2026-03-06T01:30:00Z", fp2: "2026-03-06T05:00:00Z", fp3: "2026-03-07T01:30:00Z", qualifying: "2026-03-07T05:00:00Z", race: "2026-03-08T04:00:00Z" },
   // R02 Chinese Grand Prix
@@ -66,6 +68,8 @@ export const WEEKEND_SCHEDULES: Record<string, WeekendSchedule> = {
   // R23 Abu Dhabi Grand Prix
   "2026-12-06": { fp1: "2026-12-04T09:30:00Z", fp2: "2026-12-04T13:00:00Z", fp3: "2026-12-05T10:30:00Z", qualifying: "2026-12-05T14:00:00Z", race: "2026-12-06T13:00:00Z" },
 };
+
+export const WEEKEND_SCHEDULES: Record<string, WeekendSchedule> = { ...BAKED_SCHEDULES, ...sessionReference };
 
 /** Look up a weekend's sessions by the race's date string ("YYYY-MM-DD"). */
 export function getWeekendSchedule(raceDate: string): WeekendSchedule | undefined {

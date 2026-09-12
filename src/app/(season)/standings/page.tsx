@@ -1,3 +1,4 @@
+import { PageHeader } from "@/components/shared/page-header";
 import Link from "next/link";
 import { getConstructorStandings, getDriverStandings } from "@/lib/api/jolpica";
 import { DRIVER_LIST, TEAMS } from "@/lib/constants";
@@ -49,7 +50,10 @@ export default async function StandingsPage() {
       const localDriver = code
         ? DRIVER_LIST.find((d) => d.abbreviation === code)
         : undefined;
-      const team = localDriver ? TEAMS[localDriver.teamId] : undefined;
+      const seasonTeams = s.Constructors.map(constructor => {
+        const id = mapConstructorToTeamId(constructor.constructorId, constructor.name);
+        return { name: id ? TEAMS[id].name : constructor.name, color: id ? TEAMS[id].color : F1.fg3 };
+      });
       return {
         id: s.Driver.driverId,
         code: code ?? s.Driver.familyName.slice(0, 3).toUpperCase(),
@@ -59,8 +63,8 @@ export default async function StandingsPage() {
         position: Number.parseInt(s.position, 10),
         points: Number.parseFloat(s.points),
         wins: Number.parseInt(s.wins, 10),
-        teamName: team?.name ?? s.Constructors[0]?.name ?? "",
-        color: team?.color ?? "#6B7280",
+        teamName: [...new Set(seasonTeams.map(team => team.name))].join(" / "),
+        color: seasonTeams.length === 1 ? seasonTeams[0].color : F1.fg3,
         slug: localDriver?.slug,
       };
     })
@@ -106,34 +110,7 @@ export default async function StandingsPage() {
         <BroadcastGrid color={F1.line} size={64} opacity={0.18} />
 
         {/* Page header */}
-        <div
-          className="relative"
-          style={{ padding: "40px clamp(16px, 4vw, 32px) 28px", borderBottom: `1px solid ${F1.line}` }}
-        >
-          <div className="flex items-center gap-3.5">
-            <Mono style={{ color: F1.red, fontSize: 11, letterSpacing: "0.24em" }}>
-              SECTION 02
-            </Mono>
-            <span style={{ width: 40, height: 1, background: F1.line }} />
-            <Mono style={{ color: F1.fg3, fontSize: 11, letterSpacing: "0.18em" }}>
-              2026 CHAMPIONSHIP · {drivers.length} DRIVERS · {constructors.length} TEAMS
-            </Mono>
-          </div>
-          <h1
-            className="font-display uppercase m-0 mt-3"
-            style={{
-              fontWeight: 700,
-              fontSize: "clamp(36px, 8vw, 96px)",
-              lineHeight: 0.9,
-              letterSpacing: "-0.04em",
-            }}
-          >
-            THE STANDINGS<span style={{ color: F1.red }}>.</span>
-          </h1>
-          <div className="mt-3" style={{ fontSize: 16, color: F1.fg2, maxWidth: 540 }}>
-            Drivers and constructors after each round. Gap‑to‑leader, wins, momentum.
-          </div>
-        </div>
+        <PageHeader eyebrow="SECTION 02" meta={<>2026 CHAMPIONSHIP · {drivers.length} DRIVERS · {constructors.length} TEAMS</>} title="THE STANDINGS" description="Drivers and constructors after each round. Gap to leader, wins, momentum." />
 
         <div className={`relative px-4 pt-5 sm:px-6 ${drivers.length && constructors.length ? "lg:hidden" : ""}`}>
           {(!drivers.length || !constructors.length) && <DataNotice unavailable>Some standings are unavailable. Try again shortly; results can take time to appear after a session.</DataNotice>}
@@ -238,7 +215,7 @@ export default async function StandingsPage() {
                   <div className="relative flex flex-col min-w-0">
                     {d.slug ? <Link
                       href={`/drivers/${d.slug}`}
-                      className="font-display truncate hover:underline"
+                      className="control-md justify-start font-display truncate hover:underline"
                       style={{
                         fontSize: 22,
                         fontWeight: 600,

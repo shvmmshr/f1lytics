@@ -1,4 +1,5 @@
 import { Navbar } from "@/components/layout/navbar";
+import { DataRefresh } from "@/components/shared/data-refresh";
 import { Footer } from "@/components/layout/footer";
 import { F1 } from "@/components/shared/broadcast";
 
@@ -9,6 +10,7 @@ export default function ToolsLayout({
 }) {
   return (
     <div className="flex min-h-screen flex-col" style={{ background: F1.ink }}>
+      <DataRefresh />
       <a href="#main-content" className="skip-link">Skip to content</a>
       <Navbar />
       {/* Same centered frame as the season layout — see note there. */}

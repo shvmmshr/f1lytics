@@ -278,7 +278,7 @@ export function SessionSchedule({
         <div
           className="flex flex-wrap items-center justify-between gap-2 mb-2.5"
         >
-          <Mono style={{ fontSize: 8, color: F1.fg3, letterSpacing: "0.22em", fontWeight: 700 }}>
+          <Mono style={{ fontSize: 10, color: F1.fg3, letterSpacing: "0.22em", fontWeight: 700 }}>
             WEEKEND · YOUR TIME
           </Mono>
           <TimezoneSelect zone={zone} zones={zones} onSelect={select} compact />
@@ -298,13 +298,12 @@ export function SessionSchedule({
                   flex: 1,
                   background: isNext ? "rgba(255,255,255,0.04)" : F1.bg,
                   padding: "7px 2px",
-                  opacity: isDone ? 0.5 : 1,
                 }}
               >
                 <Mono
                   style={{
-                    fontSize: 8,
-                    color: isDone ? F1.fg4 : accent,
+                    fontSize: 10,
+                    color: isDone ? F1.fg3 : accent,
                     letterSpacing: "0.1em",
                     fontWeight: 700,
                     display: "block",
@@ -326,7 +325,7 @@ export function SessionSchedule({
                 </Mono>
                 <Mono
                   style={{
-                    fontSize: 7,
+                    fontSize: 10,
                     color: F1.fg3,
                     letterSpacing: "0.12em",
                     display: "block",
@@ -356,7 +355,7 @@ export function SessionSchedule({
           {title}
         </Mono>}
         <div className="flex w-full min-w-0 flex-col items-start gap-2 @min-[480px]:w-auto @min-[480px]:flex-row @min-[480px]:items-center">
-          <Mono style={{ fontSize: 9, color: F1.fg2, letterSpacing: "0.18em" }}>
+          <Mono style={{ fontSize: 10, color: F1.fg2, letterSpacing: "0.18em" }}>
             TIMEZONE
           </Mono>
           <TimezoneSelect zone={zone} zones={zones} onSelect={select} />
@@ -371,7 +370,7 @@ export function SessionSchedule({
           const isRace = s.key === "race";
           const isSprintFamily = s.key === "sprint" || s.key === "sprintQualifying";
           const labelColor = isDone
-            ? F1.fg4
+            ? F1.fg3
             : isRace
               ? F1.red
               : isSprintFamily
@@ -385,7 +384,6 @@ export function SessionSchedule({
                 padding: "9px 16px",
                 borderTop: i > 0 ? `1px solid ${F1.line}` : undefined,
                 background: isNext ? "rgba(255,255,255,0.025)" : undefined,
-                opacity: isDone ? 0.55 : 1,
               }}
             >
               <div className="flex items-center gap-2.5 min-w-0">

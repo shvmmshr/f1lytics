@@ -1,3 +1,4 @@
+import { ScrollableRegion } from "@/components/shared/scrollable-region";
 import { RaceInsights } from "@/components/shared/race-insights";
 import { DataNotice } from "@/components/shared/data-notice";
 import { buildLapChart } from "@/lib/analytics/lap-chart";
@@ -604,7 +605,7 @@ export default async function RacePage({ params }: RacePageProps) {
                   </Mono>
                 }
               />
-              <div
+              <ScrollableRegion label="Race results"
                 className="overflow-x-auto scroll-fade-x"
                 style={{ background: F1.bg2, border: `1px solid ${F1.line}` }}
               >
@@ -715,7 +716,7 @@ export default async function RacePage({ params }: RacePageProps) {
                     })}
                   </tbody>
                 </table>
-              </div>
+              </ScrollableRegion>
             </div>
           </section>
         )}
@@ -737,7 +738,7 @@ export default async function RacePage({ params }: RacePageProps) {
               }
             />
             {results.length > 0 ? (
-              <div className="overflow-x-auto scroll-fade-x"
+              <ScrollableRegion label="Sprint results" className="overflow-x-auto scroll-fade-x"
                 style={{
                   background: F1.bg2,
                   border: `1px solid ${F1.line}`,
@@ -891,7 +892,7 @@ export default async function RacePage({ params }: RacePageProps) {
                       })}
                     </tbody>
                   </table>
-              </div>
+              </ScrollableRegion>
             ) : (
               <Mono style={{ color: F1.fg3, fontSize: 12, letterSpacing: "0.14em" }}>
                 {circuit.cancelled

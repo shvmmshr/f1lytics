@@ -1,9 +1,10 @@
+import { PageHeader } from "@/components/shared/page-header";
 import { Suspense } from "react";
 import { getDriverStandings, getConstructorStandings, getRaceResults, getAllQualifyingResults, getAllSprintResults } from "@/lib/api/jolpica";
 import { buildComparisonStats } from "@/lib/analytics/comparison";
 import { DataNotice } from "@/components/shared/data-notice";
 import { PageTransition } from "@/components/layout/page-transition";
-import { F1, Mono, Grid as BroadcastGrid } from "@/components/shared/broadcast";
+import { F1, Grid as BroadcastGrid } from "@/components/shared/broadcast";
 import { CompareTool } from "./compare-tool";
 import { createPageMetadata } from "@/lib/seo/metadata";
 
@@ -38,34 +39,7 @@ export default async function ComparePage() {
     <PageTransition>
       <div style={{ background: F1.bg, color: F1.fg, position: "relative" }}>
         <BroadcastGrid color={F1.line} size={64} opacity={0.18} />
-        <div
-          className="relative"
-          style={{ padding: "40px clamp(16px, 4vw, 32px) 28px", borderBottom: `1px solid ${F1.line}` }}
-        >
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3.5">
-            <Mono style={{ color: F1.red, fontSize: 11, letterSpacing: "0.24em" }}>
-              SECTION 07
-            </Mono>
-            <span className="hidden sm:block" style={{ width: 40, height: 1, background: F1.line }} />
-            <Mono style={{ color: F1.fg3, fontSize: 11, letterSpacing: "0.18em" }}>
-              HEAD‑TO‑HEAD · DRIVERS · CONSTRUCTORS
-            </Mono>
-          </div>
-          <h1
-            className="font-display uppercase m-0 mt-3"
-            style={{
-              fontWeight: 700,
-              fontSize: "clamp(40px, 8vw, 96px)",
-              lineHeight: 0.95,
-              letterSpacing: "-0.04em",
-            }}
-          >
-            COMPARE<span style={{ color: F1.red }}>.</span>
-          </h1>
-          <div className="mt-3" style={{ fontSize: "clamp(14px, 4vw, 16px)", color: F1.fg2, maxWidth: 540 }}>
-            Compare drivers and teams across points, qualifying and race results.
-          </div>
-        </div>
+        <PageHeader eyebrow="SECTION 07" meta="HEAD-TO-HEAD · DRIVERS · CONSTRUCTORS" title="COMPARE" description="Compare drivers and teams across points, qualifying and race results." />
         <div style={{ padding: "32px clamp(16px, 4vw, 32px)" }}>
           {(failed.length > 0 || !drivers.length || !teams.length) && <DataNotice unavailable>Some statistics are unavailable{failed.length ? ` (${failed.join(", ")})` : ""}. Try again shortly.</DataNotice>}
           <Suspense fallback={<p className="min-h-96 text-text-secondary">Loading driver and team comparisons…</p>}><CompareTool driverStats={driverStats} constructorStats={constructorStats} /></Suspense>

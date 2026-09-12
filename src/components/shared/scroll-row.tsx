@@ -42,6 +42,7 @@ export function ScrollRow({
     el.addEventListener("scroll", update, { passive: true });
     const ro = new ResizeObserver(update);
     ro.observe(el);
+    for (const child of el.children) ro.observe(child);
     return () => {
       el.removeEventListener("scroll", update);
       ro.disconnect();
@@ -69,14 +70,14 @@ export function ScrollRow({
   const page = (dir: 1 | -1) => {
     const el = ref.current;
     if (!el) return;
-    el.scrollBy({ left: dir * el.clientWidth * 0.8, behavior: "smooth" });
+    el.scrollBy({ left: dir * el.clientWidth * 0.8, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
   };
 
   const btnStyle: React.CSSProperties = {
     position: "absolute",
     top: "50%",
     transform: "translateY(-50%)",
-    width: 36,
+    width: 44,
     height: 48,
     display: "flex",
     alignItems: "center",

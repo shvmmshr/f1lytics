@@ -1,4 +1,5 @@
-import Image from "next/image";
+import { PageHeader } from "@/components/shared/page-header";
+import { CircuitMap } from "@/components/shared/circuit-map";
 import { countryCodeToFlag } from "@/lib/utils";
 import Link from "next/link";
 import { getRaceResults } from "@/lib/api/jolpica";
@@ -28,7 +29,7 @@ export const metadata = createPageMetadata({
 });
 
 function formatDateMonthDay(date: string): string {
-  return new Intl.DateTimeFormat("en-US", { month: "short", day: "2-digit" })
+  return new Intl.DateTimeFormat("en-US", { month: "short", day: "2-digit", timeZone: "UTC" })
     .format(new Date(`${date}T00:00:00Z`))
     .toUpperCase();
 }
@@ -61,7 +62,7 @@ export default async function CalendarPage() {
 
   const todayStr = new Date().toISOString().split("T")[0];
   const nextRace = CIRCUIT_LIST.find(
-    (c) => !c.cancelled && c.raceDate >= todayStr,
+    (c) => !c.cancelled && c.raceDate >= todayStr && !winnerByDate.has(c.raceDate),
   );
 
   return (
@@ -70,31 +71,7 @@ export default async function CalendarPage() {
         <BroadcastGrid color={F1.line} size={48} opacity={0.18} />
 
         {/* Header */}
-        <div
-          className="relative"
-          style={{ padding: "40px clamp(16px, 4vw, 32px) 28px", borderBottom: `1px solid ${F1.line}` }}
-        >
-          <div className="flex items-center gap-3.5">
-            <Mono style={{ color: F1.red, fontSize: 11, letterSpacing: "0.24em" }}>
-              SECTION 05
-            </Mono>
-            <span style={{ width: 40, height: 1, background: F1.line }} />
-            <Mono style={{ color: F1.fg3, fontSize: 11, letterSpacing: "0.18em" }}>
-              2026 SEASON · {CIRCUIT_LIST.length} ROUNDS
-            </Mono>
-          </div>
-          <h1
-            className="font-display uppercase m-0 mt-3"
-            style={{
-              fontWeight: 700,
-              fontSize: "clamp(36px, 8vw, 96px)",
-              lineHeight: 0.9,
-              letterSpacing: "-0.04em",
-            }}
-          >
-            THE CALENDAR<span style={{ color: F1.red }}>.</span>
-          </h1>
-        </div>
+        <PageHeader eyebrow="SECTION 05" meta={<>2026 SEASON · {CIRCUIT_LIST.length} ROUNDS</>} title="THE CALENDAR" />
 
         {/* Featured next race */}
         {nextRace && (
@@ -221,79 +198,21 @@ export default async function CalendarPage() {
               })()}
             </div>
 
-            <div
-              className="relative overflow-hidden"
-              style={{ background: F1.ink, minHeight: 360 }}
-            >
-              <Image
-                src={nextRace.trackImage}
-                alt={nextRace.name}
-                fill
-                sizes="(max-width: 768px) 100vw, 50vw"
-                className="object-contain"
-                style={{ filter: "invert(1) opacity(0.85)" }}
-              />
-              <div
-                aria-hidden
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  background: `radial-gradient(ellipse at center, transparent 30%, ${F1.ink} 100%)`,
-                }}
-              />
-              <div
-                style={{ position: "absolute", top: 20, left: 20, right: 20 }}
-              >
-                <DataLabel>CIRCUIT MAP</DataLabel>
-                <div
-                  className="font-display"
-                  style={{ fontSize: 22, fontWeight: 600, marginTop: 4 }}
-                >
-                  {nextRace.name.toUpperCase()}
+            <figure className="flex min-w-0 flex-col border-t border-line bg-bg-ink p-5 md:border-l md:border-t-0 sm:p-6">
+              <figcaption>
+                <DataLabel>CIRCUIT MAP · 2026</DataLabel>
+                <h3 className="mt-3 font-display text-3xl uppercase leading-tight">{nextRace.name}</h3>
+              </figcaption>
+              <div className="my-auto py-5"><CircuitMap circuit={nextRace} sizes="(max-width: 768px) 100vw, 50vw" /></div>
+              <div className="grid grid-cols-1 gap-4 border-t border-line pt-5 sm:grid-cols-2">
+                <div>
+                  <DataLabel>RACE LAP RECORD</DataLabel>
+                  <p className="mt-2 font-display text-2xl">{nextRace.lapRecord === "—" ? "Not established" : nextRace.lapRecord}</p>
+                  {nextRace.lapRecordHolder !== "—" && <p className="mt-1 text-xs text-text-secondary">{nextRace.lapRecordHolder}{nextRace.lapRecordYear ? ` · ${nextRace.lapRecordYear}` : ""}</p>}
                 </div>
+                <Link href={`/circuits/${nextRace.slug}`} className="inline-flex min-h-11 items-center justify-between gap-4 border border-line px-4 py-3 text-sm text-text-secondary hover:bg-white/[0.04]">Explore the circuit <span aria-hidden>→</span></Link>
               </div>
-              <div
-                className="flex flex-wrap justify-between gap-x-4 gap-y-2"
-                style={{
-                  position: "absolute",
-                  bottom: 20,
-                  left: 20,
-                  right: 20,
-                }}
-              >
-                <div>
-                  <DataLabel>LAP RECORD</DataLabel>
-                  <div
-                    className="font-display"
-                    style={{ fontSize: 18, fontWeight: 600 }}
-                  >
-                    {nextRace.lapRecord}
-                  </div>
-                </div>
-                <div>
-                  <DataLabel>HOLDER</DataLabel>
-                  <div
-                    className="font-display"
-                    style={{ fontSize: 18, fontWeight: 600 }}
-                  >
-                    {nextRace.lapRecordHolder.toUpperCase()}
-                  </div>
-                </div>
-                <div>
-                  <DataLabel>{nextRace.isSprint ? "SPRINT" : "FORMAT"}</DataLabel>
-                  <div
-                    className="font-display"
-                    style={{
-                      fontSize: 18,
-                      fontWeight: 600,
-                      color: nextRace.isSprint ? F1.amber : F1.fg,
-                    }}
-                  >
-                    {nextRace.isSprint ? "YES" : "STANDARD"}
-                  </div>
-                </div>
-              </div>
-            </div>
+            </figure>
           </div>
         )}
 
@@ -469,7 +388,7 @@ export default async function CalendarPage() {
                   )}
                   <Link
                     href={`/circuits/${c.slug}`}
-                    className="relative z-20 mt-3 inline-block font-mono text-[9px] tracking-[0.14em] text-zinc-400 hover:text-white"
+                    className="control-md relative z-20 mt-3 justify-start font-mono text-[10px] tracking-[0.14em] text-zinc-400 hover:text-white"
                   >
                     CIRCUIT GUIDE →
                   </Link>

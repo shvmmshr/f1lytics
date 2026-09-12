@@ -35,7 +35,7 @@ async function fetchJolpica<T>(
 
   const res = await fetchWithRetry(url, {
     headers: { "User-Agent": USER_AGENT },
-    next: { revalidate },
+    next: { revalidate, tags: /^\/(?:2026|current)(?:\/|\.)/.test(path) ? ["f1-current-season"] : [] },
   });
 
   if (!res.ok) {

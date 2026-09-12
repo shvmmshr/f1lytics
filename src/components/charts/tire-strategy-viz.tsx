@@ -72,7 +72,7 @@ export function TireStrategyViz({ stints, drivers = [] }: TireStrategyVizProps) 
 
   return (
     <div style={{ background: "#141418", border: "1px solid #27272A", padding: 20 }}>
-      <div className="mb-4 flex flex-wrap gap-3 text-xs uppercase tracking-widest text-zinc-500">
+      <div className="mb-4 flex flex-wrap gap-3 text-xs uppercase tracking-widest text-text-secondary">
         {Object.entries(COMPOUND_COLORS).map(([compound, color]) => (
           <span key={compound} className="inline-flex items-center gap-2">
             <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />
@@ -90,7 +90,7 @@ export function TireStrategyViz({ stints, drivers = [] }: TireStrategyVizProps) 
               <p className="font-mono text-xs text-text-secondary">
                 {getDriverLabel(driverNumber, drivers)}
               </p>
-              <div className="relative flex h-8 overflow-hidden rounded-md bg-bg-tertiary">
+              <div className="relative flex h-8 overflow-hidden rounded-none bg-bg-tertiary">
                 {driverStints.map((stint, index) => {
                   const stintLaps = Math.max(stint.lap_end - stint.lap_start + 1, 1);
                   const width = (stintLaps / maxLap) * 100;

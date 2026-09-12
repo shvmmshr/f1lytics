@@ -2,6 +2,7 @@ const baseUrl = new URL(process.env.SEO_BASE_URL ?? "http://127.0.0.1:3200");
 const productionOrigin = "https://f1lytics.com";
 const concurrency = 6;
 const cancelledRacePaths = ["/races/bahrain-gp", "/races/saudi-arabian-gp"];
+const checkImages = process.env.SEO_CHECK_IMAGES === "1";
 
 const failures = [];
 const report = (condition, message) => {
@@ -12,7 +13,7 @@ const attr = (tag, name) =>
   tag.match(new RegExp(`\\b${name}=(?:"([^"]*)"|'([^']*)')`, "i"))?.slice(1).find(Boolean);
 
 async function fetchPath(path, init) {
-  return fetch(new URL(path, baseUrl), { redirect: "manual", ...init });
+  return fetch(new URL(path, baseUrl), { redirect: "manual", signal: AbortSignal.timeout(90000), ...init });
 }
 
 async function pool(items, worker) {
@@ -180,6 +181,46 @@ for (const path of cancelledRacePaths) {
   report(response.status === 200, `${path} returned ${response.status}`);
   const robotsValues = metaByName(html, "robots").join(",");
   report(/noindex/i.test(robotsValues) && /follow/i.test(robotsValues), `${path} lacks noindex, follow`);
+}
+
+if (checkImages) {
+  const variants = [
+    ...cancelledRacePaths,
+    ...["rb19", "w11", "f2004", "mp44", "fw14b", "rb9", "bgp001", "r25", "mp413"].map(car => `/garage?car=${car}`),
+    "/lockin", "/lockin/leaderboard",
+    "/lockin/leagues", "/lockin/account", "/lockin/sign-in", "/lockin/c/preview-check",
+  ];
+  const extraPages = await pool(variants, async pathname => {
+    const response = await fetchPath(pathname, { headers: { "User-Agent": "Twitterbot/1.0" } });
+    return { pathname, html: await response.text() };
+  });
+  const images = new Set(["/opengraph-image", "/twitter-image"]);
+  for (const { pathname, html } of [...pages, ...extraPages]) {
+    const image = metaByProperty(html, "og:image")[0]?.replaceAll("&amp;", "&");
+    report(Boolean(image), `${pathname} has no social image`);
+    if (!image) continue;
+    const url = new URL(image);
+    report(url.origin === productionOrigin, `${pathname} image uses an unexpected origin`);
+    report(Boolean(url.searchParams.get("v")), `${pathname} image has no design version`);
+    report(metaByName(html, "twitter:image")[0]?.replaceAll("&amp;", "&") === image, `${pathname} Twitter/OG images disagree`);
+    if (pathname.startsWith("/garage?car=")) {
+      report(url.searchParams.get("path") === pathname, `${pathname} shares the wrong exhibit`);
+    }
+    images.add(`${url.pathname}${url.search}`);
+  }
+  // Sequential image rendering keeps this optional check gentle on a local server.
+  for (const path of images) {
+    try {
+      const response = await fetchPath(path);
+      const png = Buffer.from(await response.arrayBuffer());
+      report(response.status === 200, `Social image returned ${response.status}: ${path}`);
+      report(response.headers.get("content-type")?.includes("image/png"), `Social image is not PNG: ${path}`);
+      report(png.length >= 24 && png.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])) && png.readUInt32BE(16) === 1200 && png.readUInt32BE(20) === 630, `Social image is not a 1200x630 PNG: ${path}`);
+    } catch (error) {
+      failures.push(`Social image failed: ${path}: ${error.message}`);
+    }
+  }
+  console.log(`Rendered ${images.size} distinct social images, including Garage selections and root fallbacks.`);
 }
 
 console.log(`SEO crawl checked ${sitemapUrls.length} sitemap URLs and ${allInternalTargets.size} internal targets.`);

@@ -2,6 +2,10 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+/* Explicit source root keeps new route/component utilities in both dev and
+   production output, independent of the compiler's working directory. */
+@source "../";
+
 @custom-variant dark (&:is(.dark *));
 
 /* ============================================================
@@ -119,82 +123,65 @@
 }
 
 /* ============================================================
-   :root — light mode fallback (kept for shadcn compatibility)
-   F1lytics is dark-first, so these are rarely used.
+   :root — shared component aliases for the dark broadcast palette.
    ============================================================ */
 
 :root {
   --radius: 0.625rem;
-  --background: #0C0C0E;
-  --foreground: #F4F4F5;
-  --card: #141418;
-  --card-foreground: #F4F4F5;
-  --popover: #141418;
-  --popover-foreground: #F4F4F5;
-  --primary: #F4F4F5;
-  --primary-foreground: #0C0C0E;
-  --secondary: #1C1C22;
-  --secondary-foreground: #F4F4F5;
-  --muted: #1C1C22;
-  --muted-foreground: #A1A1AA;
-  --accent: #1C1C22;
-  --accent-foreground: #F4F4F5;
-  --destructive: #EF4444;
-  --border: #27272A;
-  --input: #27272A;
-  --ring: #3F3F46;
+  --background: var(--color-bg-primary);
+  --foreground: var(--color-text-primary);
+  --card: var(--color-bg-secondary);
+  --card-foreground: var(--color-text-primary);
+  --popover: var(--color-bg-secondary);
+  --popover-foreground: var(--color-text-primary);
+  --primary: var(--color-text-primary);
+  --primary-foreground: var(--color-bg-primary);
+  --secondary: var(--color-bg-tertiary);
+  --secondary-foreground: var(--color-text-primary);
+  --muted: var(--color-bg-tertiary);
+  --muted-foreground: var(--color-text-secondary);
+  --accent: var(--color-bg-tertiary);
+  --accent-foreground: var(--color-text-primary);
+  --destructive: var(--color-status-red);
+  --border: var(--color-line);
+  --input: var(--color-line-hi);
+  --ring: var(--color-text-primary);
   --chart-1: #FF8000;
   --chart-2: #3671C6;
   --chart-3: #22C55E;
   --chart-4: #EAB308;
   --chart-5: #E8002D;
-  --sidebar: #141418;
-  --sidebar-foreground: #F4F4F5;
-  --sidebar-primary: #F4F4F5;
-  --sidebar-primary-foreground: #0C0C0E;
-  --sidebar-accent: #1C1C22;
-  --sidebar-accent-foreground: #F4F4F5;
-  --sidebar-border: #27272A;
-  --sidebar-ring: #3F3F46;
+  --sidebar: var(--color-bg-secondary);
+  --sidebar-foreground: var(--color-text-primary);
+  --sidebar-primary: var(--color-text-primary);
+  --sidebar-primary-foreground: var(--color-bg-primary);
+  --sidebar-accent: var(--color-bg-tertiary);
+  --sidebar-accent-foreground: var(--color-text-primary);
+  --sidebar-border: var(--color-line);
+  --sidebar-ring: var(--color-text-primary);
 }
 
-/* ============================================================
-   .dark — explicit dark class (same values since F1lytics is
-   dark-first, but kept for shadcn components that toggle)
-   ============================================================ */
+/* Shared layout/type roles. Team/livery paint stays independent of text roles. */
+:root {
+  color-scheme: dark;
+  --page-gutter: clamp(16px, 4vw, 32px);
+  --content-wide: 1400px;
+  --content-standard: 1280px;
+  --content-prose: 70ch;
+  --type-page: clamp(36px, 8vw, 96px);
+  --type-identity: clamp(48px, 10vw, 128px);
+  --type-section: clamp(24px, 3vw, 36px);
+  --type-card: clamp(20px, 2vw, 28px);
+  --focus-ring: #F4F4F5;
+  --focus-separation: #08080A;
+}
 
-.dark {
-  --background: #0C0C0E;
-  --foreground: #F4F4F5;
-  --card: #141418;
-  --card-foreground: #F4F4F5;
-  --popover: #141418;
-  --popover-foreground: #F4F4F5;
-  --primary: #F4F4F5;
-  --primary-foreground: #0C0C0E;
-  --secondary: #1C1C22;
-  --secondary-foreground: #F4F4F5;
-  --muted: #1C1C22;
-  --muted-foreground: #A1A1AA;
-  --accent: #1C1C22;
-  --accent-foreground: #F4F4F5;
-  --destructive: #EF4444;
-  --border: #27272A;
-  --input: #27272A;
-  --ring: #3F3F46;
-  --chart-1: #FF8000;
-  --chart-2: #3671C6;
-  --chart-3: #22C55E;
-  --chart-4: #EAB308;
-  --chart-5: #E8002D;
-  --sidebar: #141418;
-  --sidebar-foreground: #F4F4F5;
-  --sidebar-primary: #F4F4F5;
-  --sidebar-primary-foreground: #0C0C0E;
-  --sidebar-accent: #1C1C22;
-  --sidebar-accent-foreground: #F4F4F5;
-  --sidebar-border: #27272A;
-  --sidebar-ring: #3F3F46;
+/* F1 wrappers preserve the square broadcast treatment; base UI stays generic. */
+@layer components {
+  .control-md { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; }
+  .control-sm { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; }
+  @media (min-width: 1024px) { .control-sm { min-height: 40px; } }
+  .page-title { font-family: var(--font-antonio); font-size: var(--type-page); font-weight: 700; line-height: .96; letter-spacing: -.04em; text-transform: uppercase; }
 }
 
 /* ============================================================
@@ -218,12 +205,11 @@
   h1, h2, h3, h4, h5, h6 {
     @apply font-sans tracking-tight;
   }
-  /* Keyboard-only focus indicator. The default outline-ring/50 (#3F3F46 @50%)
-     is invisible on this near-black theme; give tab users the same red the
-     rest of the UI uses for signal. Mouse clicks (:focus) stay untouched. */
+  /* Two-tone keyboard focus stays visible on dark, red and light controls. */
   :focus-visible {
-    outline: 2px solid #ef4444;
-    outline-offset: 2px;
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 3px;
+    box-shadow: 0 0 0 3px var(--focus-separation);
   }
 }
 
@@ -276,6 +262,18 @@
   mask-image: linear-gradient(to right, black calc(100% - 28px), transparent);
   -webkit-mask-image: linear-gradient(to right, black calc(100% - 28px), transparent);
 }
+
+/* Enhanced regions clear the fallback mask once overflow has been measured. */
+.scroll-fade-x[data-scroll-ready="true"] {
+  --fade-left: 0px;
+  --fade-right: 0px;
+  mask-image: linear-gradient(to right, transparent, black var(--fade-left), black calc(100% - var(--fade-right)), transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black var(--fade-left), black calc(100% - var(--fade-right)), transparent);
+}
+.scroll-fade-x[data-scroll-left="true"] { --fade-left: 20px; }
+.scroll-fade-x[data-scroll-right="true"] { --fade-right: 20px; }
+.scroll-fade-x[data-scroll-left="false"][data-scroll-right="false"],
+.scroll-fade-x:focus-visible { mask-image: none; -webkit-mask-image: none; }
 
 /* ============================================================
    Keyframes & Utility Animations

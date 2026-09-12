@@ -1,0 +1,22 @@
+{
+  "slug": "rb9",
+  "id": "3c44792002c94d3887ebdce30cfec797",
+  "name": "Red Bull RB9",
+  "author": "JUSTGAME",
+  "authorUrl": "https://sketchfab.com/JUSTGAME",
+  "viewerUrl": "https://sketchfab.com/3d-models/red-bull-rb9-3c44792002c94d3887ebdce30cfec797",
+  "license": {
+    "uri": "https://api.sketchfab.com/v3/licenses/322a749bcfa841b29dff1e8a1bb74b0b",
+    "label": "CC Attribution",
+    "fullName": "Creative Commons Attribution",
+    "requirements": "Author must be credited. Commercial use is allowed.",
+    "url": "http://creativecommons.org/licenses/by/4.0/",
+    "slug": "by"
+  },
+  "thumbnail": "https://media.sketchfab.com/models/3c44792002c94d3887ebdce30cfec797/thumbnails/cf2a448f276f44aea102fa60890e46f8/b678a916d216413896998650230c40cf.jpeg",
+  "description": "The Red Bull RB9 was a Formula One racing car built by Red Bull for the 2013 Formula One season. It is the ninth generation of Red Bull car, and the successor to the World Championship winning Red Bull RB8. It was driven by reigning World Drivers' Champion, Sebastian Vettel, and his Australian team-mate, Mark Webber.",
+  "faces": 41007,
+  "historicalSource": "https://www.redbullracing.com/int-en/cars/rb9",
+  "verifiedAt": "2026-09-12",
+  "previewNote": "Public model thumbnail resized to WebP; model geometry and textures are not downloaded or rehosted."
+}

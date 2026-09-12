@@ -72,5 +72,96 @@
     "license": {},
     "description": "My Highest detailed model yet!! Williams racing FW14b. A car designed by the genius Adrian Newey, man who can see air, his first designed car to win a chmpionship.  The car with its innovative active suspension was instant success winning both the 1992 World Drivers as well as World Constructors Championship, driven by the infamous RED5 Nigel Mansell and Riccardo Patrese. The FW14B was the dominant car that year and Mansell wrapped up the 1992 Drivers' Championship with a then-record 9 wins in a season, whilst Patrese scored a further win at the Japanese Grand Prix.\n\n- Fixed Texture Issue (02/11/2025)",
     "thumbnail": "https://media.sketchfab.com/models/f154aee675144df4a47e2c3c9590ed50/thumbnails/ea9b36ec556849f4a100d6135ce05c4b/409e85d16ff34b61aa1461151b6e5528.jpeg"
+  },
+  {
+    "slug": "rb9",
+    "id": "3c44792002c94d3887ebdce30cfec797",
+    "name": "Red Bull RB9",
+    "author": "JUSTGAME",
+    "authorUrl": "https://sketchfab.com/JUSTGAME",
+    "viewerUrl": "https://sketchfab.com/3d-models/red-bull-rb9-3c44792002c94d3887ebdce30cfec797",
+    "license": {
+      "uri": "https://api.sketchfab.com/v3/licenses/322a749bcfa841b29dff1e8a1bb74b0b",
+      "label": "CC Attribution",
+      "fullName": "Creative Commons Attribution",
+      "requirements": "Author must be credited. Commercial use is allowed.",
+      "url": "http://creativecommons.org/licenses/by/4.0/",
+      "slug": "by"
+    },
+    "thumbnail": "https://media.sketchfab.com/models/3c44792002c94d3887ebdce30cfec797/thumbnails/cf2a448f276f44aea102fa60890e46f8/b678a916d216413896998650230c40cf.jpeg",
+    "description": "The Red Bull RB9 was a Formula One racing car built by Red Bull for the 2013 Formula One season. It is the ninth generation of Red Bull car, and the successor to the World Championship winning Red Bull RB8. It was driven by reigning World Drivers' Champion, Sebastian Vettel, and his Australian team-mate, Mark Webber.",
+    "faces": 41007,
+    "historicalSource": "https://www.redbullracing.com/int-en/cars/rb9",
+    "verifiedAt": "2026-09-12",
+    "previewNote": "Public model thumbnail resized to WebP; model geometry and textures are not downloaded or rehosted."
+  },
+  {
+    "slug": "bgp001",
+    "id": "4c02d48be0104a79b657e732890e6d54",
+    "name": "2009 Brawn GP",
+    "author": "Dave Love SketchFab",
+    "authorUrl": "https://sketchfab.com/Tyler_Dave",
+    "viewerUrl": "https://sketchfab.com/3d-models/2009-brawn-gp-4c02d48be0104a79b657e732890e6d54",
+    "license": {
+      "uri": "https://api.sketchfab.com/v3/licenses/322a749bcfa841b29dff1e8a1bb74b0b",
+      "label": "CC Attribution",
+      "fullName": "Creative Commons Attribution",
+      "requirements": "Author must be credited. Commercial use is allowed.",
+      "url": "http://creativecommons.org/licenses/by/4.0/",
+      "slug": "by"
+    },
+    "thumbnail": "https://media.sketchfab.com/models/4c02d48be0104a79b657e732890e6d54/thumbnails/c563697279a844ab8a4120da94fb0a18/1d68ee9186f4403b855f3ed07fca6f44.jpeg",
+    "thumbnailSize": [
+      1024,
+      576
+    ],
+    "description": "Brawn GP was a Formula One constructor which competed in the 2009 Formula One World Championship, with drivers Jenson Button and Rubens Barrichello. The team was formed in 2009 by a management buyout led by Ross Brawn of the Honda Racing F1 Team, after Honda announced their withdrawal from the sport in December 2008 due to the 2008 financial crisis, while other teams like Toyota and BMW Sauber raced in F1 until the end of the 2009 season, also choosing to depart from the sport. The team is famous for its symbolic £1 sale from Hiroshi Oshima to Ross Brawn. The team started development of their car in early 2008, when still owned by Honda. The car was originally named the RA109 until the team rebranded to Brawn GP, to which the car was redesigned to fit the Mercedes engine and was subsequently renamed the BGP-001. \n\n![](https://www.goodwood.com/globalassets/.road--racing/race/historic/2019/february/damien-brawn-gp/f1-brawn-gp-2009-lat-goodwood-25022019.jpg?rxy=0.5,0.5&width=1280&height=720)",
+    "faces": 35258,
+    "isPublished": null,
+    "historicalSource": "https://www.formula1.com/en/latest/article/exclusive-from-trendsetters-to-title-winners-ross-brawn-reveals-his.6FIAnV6e71kvi8PVInIuPo",
+    "verifiedAt": "2026-09-12",
+    "previewNote": "Public model thumbnail resized to WebP; model geometry and textures are not downloaded or rehosted."
+  },
+  {
+    "slug": "r25",
+    "id": "0d58fe125f5b41a2b8482576723120c4",
+    "name": "2005 Renault R25",
+    "author": "Dave Love SketchFab",
+    "authorUrl": "https://sketchfab.com/Tyler_Dave",
+    "viewerUrl": "https://sketchfab.com/3d-models/2005-renault-r25-0d58fe125f5b41a2b8482576723120c4",
+    "license": {
+      "uri": "https://api.sketchfab.com/v3/licenses/322a749bcfa841b29dff1e8a1bb74b0b",
+      "label": "CC Attribution",
+      "fullName": "Creative Commons Attribution",
+      "requirements": "Author must be credited. Commercial use is allowed.",
+      "url": "http://creativecommons.org/licenses/by/4.0/",
+      "slug": "by"
+    },
+    "thumbnail": "https://media.sketchfab.com/models/0d58fe125f5b41a2b8482576723120c4/thumbnails/854155fb7d4b4e498e569daba773cf99/442d642ae96e4300ba021b3f034b316f.jpeg",
+    "thumbnailSize": [
+      1024,
+      576
+    ],
+    "description": "The Renault R25 was the Formula One car entered by Renault in the 2005 Formula One season. The chassis was designed by Bob Bell, James Allison, Tim Densham and Dino Toso with Pat Symonds overseeing the design and production of the car as executive director of Engineering and Bernard Dudot leading the engine design.\n\nThe car won both the Drivers' and Constructors' Championships in 2005, the first titles for any car racing with a French licence since the Matra MS80's triumph in the 1969 season.[3] It also became the first Renault-powered Formula One car to win both championship titles since the Williams FW19 in 1997 and also the first Enstone-based Formula One car to win the world constructors' championship since the Benetton B195 in 1995.",
+    "faces": 93521,
+    "isPublished": null,
+    "historicalSource": "https://www.formula1.com/en/latest/article/alonso-to-run-title-winning-renault-r25-in-abu-dhabi-to-celebrate-the-teams.5e69LF1WmuVtINpTKlpGtd",
+    "verifiedAt": "2026-09-12",
+    "previewNote": "Public model thumbnail resized to WebP; model geometry and textures are not downloaded or rehosted."
+  },
+  {
+    "slug": "mp413",
+    "id": "a1a85be6c06f4c93b67da7e12693c978",
+    "name": "Mclaren MP4-13 1998",
+    "author": "jormapaappa1235",
+    "authorUrl": "https://sketchfab.com/jormapaappa1235",
+    "viewerUrl": "https://sketchfab.com/3d-models/mclaren-mp4-13-1998-a1a85be6c06f4c93b67da7e12693c978",
+    "license": {},
+    "thumbnail": "https://media.sketchfab.com/models/a1a85be6c06f4c93b67da7e12693c978/thumbnails/a0151366430b417984dcb3ac6a9094bf/f543161e19874924b22eb51d131ccf57.jpeg",
+    "description": "",
+    "faces": 77383,
+    "historicalSource": "https://www.mclaren.com/racing/heritage/formula-1/cars/mp4-13/",
+    "verifiedAt": "2026-09-12",
+    "previewNote": "Public model thumbnail resized to WebP; model geometry and textures are not downloaded or rehosted."
   }
 ]

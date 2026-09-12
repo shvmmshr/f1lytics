@@ -1,3 +1,4 @@
+import { PageHeader } from "@/components/shared/page-header";
 import Link from "next/link";
 import { CIRCUIT_LIST } from "@/lib/constants";
 import { getRaceResults } from "@/lib/api/jolpica";
@@ -61,7 +62,7 @@ export default async function RacesPage() {
   const today = new Date().toISOString().split("T")[0];
   // The single soonest race still to come — only this one gets the "UP NEXT" accent.
   const nextRaceDate = CIRCUIT_LIST.find(
-    (c) => !c.cancelled && c.raceDate >= today
+    (c) => !c.cancelled && c.raceDate >= today && !winnerByDate.has(c.raceDate)
   )?.raceDate;
 
   return (
@@ -80,34 +81,7 @@ export default async function RacesPage() {
       <div style={{ background: F1.bg, color: F1.fg, position: "relative" }}>
         <BroadcastGrid color={F1.line} size={64} opacity={0.18} />
 
-        <div
-          className="relative"
-          style={{ padding: "40px clamp(16px, 4vw, 32px) 28px", borderBottom: `1px solid ${F1.line}` }}
-        >
-          <div className="flex items-center gap-3.5">
-            <Mono style={{ color: F1.red, fontSize: 11, letterSpacing: "0.24em" }}>
-              SECTION 08
-            </Mono>
-            <span style={{ width: 40, height: 1, background: F1.line }} />
-            <Mono style={{ color: F1.fg3, fontSize: 11, letterSpacing: "0.18em" }}>
-              RACES · {CIRCUIT_LIST.length} ROUNDS · 2026
-            </Mono>
-          </div>
-          <h1
-            className="font-display uppercase m-0 mt-3"
-            style={{
-              fontWeight: 700,
-              fontSize: "clamp(36px, 8vw, 96px)",
-              lineHeight: 0.9,
-              letterSpacing: "-0.04em",
-            }}
-          >
-            THE RACES<span style={{ color: F1.red }}>.</span>
-          </h1>
-          <div className="mt-3" style={{ fontSize: 16, color: F1.fg2, maxWidth: 540 }}>
-            Every round of the 2026 Formula 1 World Championship.
-          </div>
-        </div>
+        <PageHeader eyebrow="SECTION 08" meta={<>RACES · {CIRCUIT_LIST.length} ROUNDS · 2026</>} title="THE RACES" description="Every round of the 2026 Formula 1 World Championship." />
 
         <div
           className="grid hairline-cells"

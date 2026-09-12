@@ -144,7 +144,7 @@ function TopBroadcastBar({
         >
           <Mono
             className="truncate"
-            style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.24em" }}
+            style={{ fontSize: 10, color: F1.fg3, letterSpacing: "0.24em" }}
           >
             {sessionType && sessionType.toUpperCase() !== sessionName.toUpperCase()
               ? `${sessionType.toUpperCase()} · ${countryName.toUpperCase()}`
@@ -208,7 +208,7 @@ function TopTile({
     >
       <Mono
         className="truncate"
-        style={{ fontSize: 8.5, color: F1.fg3, letterSpacing: "0.2em" }}
+        style={{ fontSize: 10, color: F1.fg3, letterSpacing: "0.2em" }}
       >
         {label}
       </Mono>
@@ -344,7 +344,7 @@ function TimingTower({
             key={i}
             className={h.className}
             style={{
-              fontSize: 9,
+              fontSize: 10,
               color: F1.fg3,
               letterSpacing: "0.18em",
               textAlign: h.right ? "right" : "left",
@@ -433,7 +433,7 @@ function TimingTower({
               <Mono
                 className="truncate"
                 style={{
-                  fontSize: 9,
+                  fontSize: 10,
                   color: F1.fg3,
                   letterSpacing: "0.14em",
                   marginTop: 2,
@@ -564,7 +564,7 @@ function TelemetryBlock({
       <div className="flex items-center gap-3" style={{ marginBottom: 20 }}>
         <span style={{ width: 4, height: 36, background: teamColor }} />
         <div>
-          <Mono style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.18em" }}>
+          <Mono style={{ fontSize: 10, color: F1.fg3, letterSpacing: "0.18em" }}>
             FOCUS · #{driver.driver_number} · {driver.name_acronym}
           </Mono>
           <div
@@ -593,18 +593,18 @@ function TelemetryBlock({
         }}
       >
         <div style={{ background: F1.bg, padding: 14 }}>
-          <Mono style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.24em" }}>
+          <Mono style={{ fontSize: 10, color: F1.fg3, letterSpacing: "0.24em" }}>
             SPEED
           </Mono>
           <StatValue size={36} color={teamColor} style={{ display: "block", marginTop: 4 }}>
             {hasData ? speed : "—"}
           </StatValue>
-          <Mono style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.18em" }}>
+          <Mono style={{ fontSize: 10, color: F1.fg3, letterSpacing: "0.18em" }}>
             KM/H
           </Mono>
         </div>
         <div style={{ background: F1.bg, padding: 14, textAlign: "center" }}>
-          <Mono style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.24em" }}>
+          <Mono style={{ fontSize: 10, color: F1.fg3, letterSpacing: "0.24em" }}>
             GEAR
           </Mono>
           <StatValue size={36} style={{ display: "block", marginTop: 4 }}>
@@ -612,13 +612,13 @@ function TelemetryBlock({
           </StatValue>
         </div>
         <div style={{ background: F1.bg, padding: 14, textAlign: "right" }}>
-          <Mono style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.24em" }}>
+          <Mono style={{ fontSize: 10, color: F1.fg3, letterSpacing: "0.24em" }}>
             RPM
           </Mono>
           <StatValue size={36} style={{ display: "block", marginTop: 4 }}>
             {hasData ? rpm.toLocaleString("en-US") : "—"}
           </StatValue>
-          <Mono style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.18em" }}>
+          <Mono style={{ fontSize: 10, color: F1.fg3, letterSpacing: "0.18em" }}>
             REV/MIN
           </Mono>
         </div>
@@ -627,7 +627,7 @@ function TelemetryBlock({
       {/* Throttle / Brake bars */}
       <div style={{ marginTop: 16 }}>
         <div className="flex items-center justify-between" style={{ marginBottom: 6 }}>
-          <Mono style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.18em" }}>
+          <Mono style={{ fontSize: 10, color: F1.fg3, letterSpacing: "0.18em" }}>
             THROTTLE
           </Mono>
           <Mono
@@ -656,7 +656,7 @@ function TelemetryBlock({
       </div>
       <div style={{ marginTop: 12 }}>
         <div className="flex items-center justify-between" style={{ marginBottom: 6 }}>
-          <Mono style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.18em" }}>
+          <Mono style={{ fontSize: 10, color: F1.fg3, letterSpacing: "0.18em" }}>
             BRAKE
           </Mono>
           <Mono
@@ -735,7 +735,7 @@ function FlagPill({ flag }: { flag: string | null }) {
         color: style.fg,
         padding: "1px 6px",
         fontFamily: "var(--font-mono)",
-        fontSize: 9,
+        fontSize: 10,
         fontWeight: 700,
         letterSpacing: "0.14em",
       }}
@@ -786,12 +786,12 @@ function RaceControlFeed({
                 borderLeft: `2px solid ${m.flag ? F1.amber : F1.line}`,
               }}
             >
-              <div className="flex items-center gap-2" style={{ marginBottom: 4 }}>
-                <Mono style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.14em" }}>
+              <div className="flex flex-wrap items-center gap-2" style={{ marginBottom: 4 }}>
+                <Mono style={{ fontSize: 10, color: F1.fg3, letterSpacing: "0.14em" }}>
                   {time} UTC
                 </Mono>
                 {m.flag && <FlagPill flag={m.flag} />}
-                <Mono style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.14em" }}>
+                <Mono style={{ fontSize: 10, color: F1.fg3, letterSpacing: "0.14em" }}>
                   {m.category.toUpperCase()}
                 </Mono>
               </div>
@@ -834,7 +834,7 @@ function RaceControlFeed({
                 href={r.recording_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-3 transition-shadow hover:shadow-[inset_0_0_0_999px_rgba(255,255,255,0.05)]"
+                className="flex min-h-11 items-center gap-3 transition-shadow hover:shadow-[inset_0_0_0_999px_rgba(255,255,255,0.05)]"
                 style={{
                   // Tall enough to tap during a live session on a phone.
                   padding: "12px",
@@ -843,7 +843,7 @@ function RaceControlFeed({
                   textDecoration: "none",
                 }}
               >
-                <Mono style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.14em" }}>
+                <Mono style={{ fontSize: 10, color: F1.fg3, letterSpacing: "0.14em" }}>
                   {time} UTC
                 </Mono>
                 <Mono
@@ -1342,19 +1342,19 @@ export function LiveContent({
               borderTop: `1px solid ${F1.line}`,
             }}
           >
-            <Mono style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.24em" }}>
+            <Mono style={{ fontSize: 10, color: F1.fg3, letterSpacing: "0.24em" }}>
               FEED · {view.feedLabel}
               {view.lastUpdated && ` · UPDATED ${formatTimeSince(view.lastUpdated)}`}
             </Mono>
             <Mono
               className="hidden md:inline"
-              style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.24em" }}
+              style={{ fontSize: 10, color: F1.fg3, letterSpacing: "0.24em" }}
             >
               SELECT A DRIVER TO INSPECT
             </Mono>
             <Mono
               className="md:hidden shrink-0"
-              style={{ fontSize: 9, color: F1.fg3, letterSpacing: "0.2em" }}
+              style={{ fontSize: 10, color: F1.fg3, letterSpacing: "0.2em" }}
             >
               TAP A DRIVER TO FOCUS
             </Mono>

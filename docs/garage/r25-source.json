@@ -1,0 +1,27 @@
+{
+  "slug": "r25",
+  "id": "0d58fe125f5b41a2b8482576723120c4",
+  "name": "2005 Renault R25",
+  "author": "Dave Love SketchFab",
+  "authorUrl": "https://sketchfab.com/Tyler_Dave",
+  "viewerUrl": "https://sketchfab.com/3d-models/2005-renault-r25-0d58fe125f5b41a2b8482576723120c4",
+  "license": {
+    "uri": "https://api.sketchfab.com/v3/licenses/322a749bcfa841b29dff1e8a1bb74b0b",
+    "label": "CC Attribution",
+    "fullName": "Creative Commons Attribution",
+    "requirements": "Author must be credited. Commercial use is allowed.",
+    "url": "http://creativecommons.org/licenses/by/4.0/",
+    "slug": "by"
+  },
+  "thumbnail": "https://media.sketchfab.com/models/0d58fe125f5b41a2b8482576723120c4/thumbnails/854155fb7d4b4e498e569daba773cf99/442d642ae96e4300ba021b3f034b316f.jpeg",
+  "thumbnailSize": [
+    1024,
+    576
+  ],
+  "description": "The Renault R25 was the Formula One car entered by Renault in the 2005 Formula One season. The chassis was designed by Bob Bell, James Allison, Tim Densham and Dino Toso with Pat Symonds overseeing the design and production of the car as executive director of Engineering and Bernard Dudot leading the engine design.\n\nThe car won both the Drivers' and Constructors' Championships in 2005, the first titles for any car racing with a French licence since the Matra MS80's triumph in the 1969 season.[3] It also became the first Renault-powered Formula One car to win both championship titles since the Williams FW19 in 1997 and also the first Enstone-based Formula One car to win the world constructors' championship since the Benetton B195 in 1995.",
+  "faces": 93521,
+  "isPublished": null,
+  "historicalSource": "https://www.formula1.com/en/latest/article/alonso-to-run-title-winning-renault-r25-in-abu-dhabi-to-celebrate-the-teams.5e69LF1WmuVtINpTKlpGtd",
+  "verifiedAt": "2026-09-12",
+  "previewNote": "Public model thumbnail resized to WebP; model geometry and textures are not downloaded or rehosted."
+}

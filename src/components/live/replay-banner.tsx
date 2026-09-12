@@ -16,7 +16,7 @@ export function ReplayBanner({ sessionName, countryName }: ReplayBannerProps) {
       style={{
         background: F1.amber,
         color: F1.ink,
-        padding: "8px clamp(12px, 2.5vw, 24px)",
+        padding: "0 clamp(12px, 2.5vw, 24px)",
         borderBottom: `1px solid ${F1.line}`,
       }}
     >
@@ -46,7 +46,7 @@ export function ReplayBanner({ sessionName, countryName }: ReplayBannerProps) {
       </div>
       <Link
         href="/live"
-        className="shrink-0 whitespace-nowrap"
+        className="control-md shrink-0 whitespace-nowrap px-2"
         style={{
           fontFamily: "var(--font-mono)",
           fontSize: 10,

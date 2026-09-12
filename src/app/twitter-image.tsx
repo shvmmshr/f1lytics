@@ -1,5 +1,2 @@
-export const alt = "F1lytics · Formula 1 telemetry, standings and live timing";
-export const size = { width: 1200, height: 630 };
-export const contentType = "image/png";
-
-export { default } from "./opengraph-image";
+export { alt, size, contentType, default } from "./opengraph-image";
+export const revalidate = 300;

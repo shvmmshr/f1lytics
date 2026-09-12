@@ -1,8 +1,3 @@
-"use client";
-
-import { useRef } from "react";
-import { useGSAP } from "@gsap/react";
-import { animateCounter } from "@/lib/gsap";
 import { F1, Mono } from "@/components/shared/broadcast";
 import { CIRCUIT_LIST, DRIVER_LIST, TEAM_LIST } from "@/lib/constants";
 
@@ -16,23 +11,8 @@ const stats = [
 ];
 
 export function StatsRow() {
-  const sectionRef = useRef<HTMLElement>(null);
-  const numberRefs = useRef<(HTMLSpanElement | null)[]>([]);
-
-  useGSAP(
-    () => {
-      numberRefs.current.forEach((el, i) => {
-        if (el) {
-          animateCounter(el, stats[i].value);
-        }
-      });
-    },
-    { scope: sectionRef }
-  );
-
   return (
     <section
-      ref={sectionRef}
       style={{
         background: F1.bg,
         borderTop: `1px solid ${F1.line}`,
@@ -43,13 +23,13 @@ export function StatsRow() {
       <div
         className="mx-auto grid grid-cols-2 sm:grid-cols-4"
         style={{
-          maxWidth: 1280,
+          maxWidth: "var(--content-wide)",
           gap: 1,
           background: F1.line,
           border: `1px solid ${F1.line}`,
         }}
       >
-        {stats.map((stat, i) => (
+        {stats.map((stat) => (
           <div
             key={stat.label}
             style={{
@@ -59,9 +39,6 @@ export function StatsRow() {
             }}
           >
             <span
-              ref={(el) => {
-                numberRefs.current[i] = el;
-              }}
               className="font-display tabular-nums"
               style={{
                 fontSize: "clamp(40px, 6vw, 72px)",
@@ -72,7 +49,7 @@ export function StatsRow() {
                 display: "block",
               }}
             >
-              0
+              {stat.value}
             </span>
             <Mono
               className="block"

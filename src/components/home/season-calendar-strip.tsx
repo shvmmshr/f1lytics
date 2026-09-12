@@ -18,9 +18,9 @@ export function SeasonCalendarStrip() {
         padding: "clamp(36px, 6vw, 60px) clamp(16px, 4vw, 32px)",
       }}
     >
-      <div className="mx-auto" style={{ maxWidth: 1280 }}>
-        <div className="flex items-center gap-3.5 mb-7">
-          <Mono style={{ color: F1.red, fontSize: 11, letterSpacing: "0.24em", fontWeight: 700 }}>
+      <div className="mx-auto" style={{ maxWidth: "var(--content-wide)" }}>
+        <div className="flex flex-wrap items-center gap-3.5 mb-7">
+          <Mono as="h2" style={{ color: F1.red, fontSize: 11, letterSpacing: "0.24em", fontWeight: 700 }}>
             CALENDAR
           </Mono>
           <span style={{ width: 40, height: 1, background: F1.line }} />

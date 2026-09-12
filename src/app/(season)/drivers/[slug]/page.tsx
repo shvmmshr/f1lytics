@@ -1,3 +1,5 @@
+import { getTeamTextColor } from "@/lib/design/team-color";
+import { ScrollableRegion } from "@/components/shared/scrollable-region";
 import { isRaceFinisher } from "@/lib/analytics/results";
 import type { Metadata } from "next";
 import { countryCodeToFlag } from "@/lib/utils";
@@ -423,7 +425,7 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
                 </Mono>
               </div>
             ) : (
-              <div className="mt-6 overflow-x-auto scroll-fade-x">
+              <ScrollableRegion label="Driver season results" className="mt-6 overflow-x-auto scroll-fade-x">
                 <div style={{ minWidth: 480 }}>
                 {/* Header row */}
                 <div
@@ -534,7 +536,7 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
                   );
                 })}
                 </div>
-              </div>
+              </ScrollableRegion>
             )}
 
             {/* CAREER TIMELINE */}
@@ -548,7 +550,7 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
                     </Mono>
                   }
                 />
-                <div className="overflow-x-auto scroll-fade-x mt-6">
+                <ScrollableRegion label="Driver career results" className="overflow-x-auto scroll-fade-x mt-6">
                 <div
                   className="grid"
                   style={{
@@ -583,7 +585,7 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
                       borderTop: `2px solid ${team.color}`,
                     }}
                   >
-                    <Mono style={{ fontSize: 10, color: team.color, letterSpacing: "0.18em", fontWeight: 600 }}>
+                    <Mono style={{ fontSize: 10, color: getTeamTextColor(team.color), letterSpacing: "0.18em", fontWeight: 600 }}>
                       2026
                     </Mono>
                     <StatValue size={28} color={team.color} style={{ display: "block", marginTop: 6 }}>
@@ -594,7 +596,7 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
                     </Mono>
                   </div>
                 </div>
-                </div>
+                </ScrollableRegion>
               </div>
             )}
           </div>

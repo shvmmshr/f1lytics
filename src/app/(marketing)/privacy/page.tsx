@@ -54,7 +54,7 @@ export default function PrivacyPage() {
           <p style={{ color: F1.fg2 }}>
             To delete your account and everything attached to it, open an issue on{" "}
             <a href="https://github.com/shvmmshr/f1lytics/issues" target="_blank" rel="noopener noreferrer" className="underline hover:text-white">GitHub</a>{" "}
-            mentioning the email you signed in with, or reply to any email F1lytics sent you. Deletion is done by hand within a few days and is permanent.
+            to request a private follow-up, or reply to a sign-in email F1lytics sent you. Do not post your email address or other private information in a public issue. Account deletion is handled manually.
           </p>
         </section>
         <div>

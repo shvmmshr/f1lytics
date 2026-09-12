@@ -1,0 +1,426 @@
+{
+  "season": 2026,
+  "circuits": [
+    {
+      "id": "albert_park",
+      "source": "https://www.formula1.com/en/racing/2026/australia",
+      "mapYear": 2026,
+      "date": "2026-03-08",
+      "cancelled": false
+    },
+    {
+      "id": "shanghai",
+      "source": "https://www.formula1.com/en/racing/2026/china",
+      "mapYear": 2026,
+      "date": "2026-03-15",
+      "cancelled": false
+    },
+    {
+      "id": "suzuka",
+      "source": "https://www.formula1.com/en/racing/2026/japan",
+      "mapYear": 2026,
+      "date": "2026-03-29",
+      "cancelled": false
+    },
+    {
+      "id": "bahrain",
+      "source": "https://www.formula1.com/en/racing/2025/bahrain",
+      "mapYear": 2025,
+      "date": "2026-04-12",
+      "cancelled": true
+    },
+    {
+      "id": "jeddah",
+      "source": "https://www.formula1.com/en/racing/2025/saudi-arabia",
+      "mapYear": 2025,
+      "date": "2026-04-19",
+      "cancelled": true
+    },
+    {
+      "id": "miami",
+      "source": "https://www.formula1.com/en/racing/2026/miami",
+      "mapYear": 2026,
+      "date": "2026-05-03",
+      "cancelled": false
+    },
+    {
+      "id": "montreal",
+      "source": "https://www.formula1.com/en/racing/2026/canada",
+      "mapYear": 2026,
+      "date": "2026-05-24",
+      "cancelled": false
+    },
+    {
+      "id": "monaco",
+      "source": "https://www.formula1.com/en/racing/2026/monaco",
+      "mapYear": 2026,
+      "date": "2026-06-07",
+      "cancelled": false
+    },
+    {
+      "id": "barcelona",
+      "source": "https://www.formula1.com/en/racing/2026/barcelona-catalunya",
+      "mapYear": 2026,
+      "date": "2026-06-14",
+      "cancelled": false
+    },
+    {
+      "id": "spielberg",
+      "source": "https://www.formula1.com/en/racing/2026/austria",
+      "mapYear": 2026,
+      "date": "2026-06-28",
+      "cancelled": false
+    },
+    {
+      "id": "silverstone",
+      "source": "https://www.formula1.com/en/racing/2026/great-britain",
+      "mapYear": 2026,
+      "date": "2026-07-05",
+      "cancelled": false
+    },
+    {
+      "id": "spa",
+      "source": "https://www.formula1.com/en/racing/2026/belgium",
+      "mapYear": 2026,
+      "date": "2026-07-19",
+      "cancelled": false
+    },
+    {
+      "id": "budapest",
+      "source": "https://www.formula1.com/en/racing/2026/hungary",
+      "mapYear": 2026,
+      "date": "2026-07-26",
+      "cancelled": false
+    },
+    {
+      "id": "zandvoort",
+      "source": "https://www.formula1.com/en/racing/2026/netherlands",
+      "mapYear": 2026,
+      "date": "2026-08-23",
+      "cancelled": false
+    },
+    {
+      "id": "monza",
+      "source": "https://www.formula1.com/en/racing/2026/italy",
+      "mapYear": 2026,
+      "date": "2026-09-06",
+      "cancelled": false
+    },
+    {
+      "id": "madrid",
+      "source": "https://www.formula1.com/en/racing/2026/spain",
+      "mapYear": 2026,
+      "date": "2026-09-13",
+      "cancelled": false
+    },
+    {
+      "id": "baku",
+      "source": "https://www.formula1.com/en/racing/2026/azerbaijan",
+      "mapYear": 2026,
+      "date": "2026-09-26",
+      "cancelled": false
+    },
+    {
+      "id": "sepang",
+      "source": "https://www.formula1.com/en/racing/2026/bahrain",
+      "mapYear": 2026,
+      "date": "2026-10-04",
+      "cancelled": false
+    },
+    {
+      "id": "singapore",
+      "source": "https://www.formula1.com/en/racing/2026/singapore",
+      "mapYear": 2026,
+      "date": "2026-10-11",
+      "cancelled": false
+    },
+    {
+      "id": "austin",
+      "source": "https://www.formula1.com/en/racing/2026/united-states",
+      "mapYear": 2026,
+      "date": "2026-10-25",
+      "cancelled": false
+    },
+    {
+      "id": "mexico_city",
+      "source": "https://www.formula1.com/en/racing/2026/mexico",
+      "mapYear": 2026,
+      "date": "2026-11-01",
+      "cancelled": false
+    },
+    {
+      "id": "interlagos",
+      "source": "https://www.formula1.com/en/racing/2026/brazil",
+      "mapYear": 2026,
+      "date": "2026-11-08",
+      "cancelled": false
+    },
+    {
+      "id": "las_vegas",
+      "source": "https://www.formula1.com/en/racing/2026/las-vegas",
+      "mapYear": 2026,
+      "date": "2026-11-22",
+      "cancelled": false
+    },
+    {
+      "id": "lusail",
+      "source": "https://www.formula1.com/en/racing/2026/qatar",
+      "mapYear": 2026,
+      "date": "2026-11-29",
+      "cancelled": false
+    },
+    {
+      "id": "yas_marina",
+      "source": "https://www.formula1.com/en/racing/2026/united-arab-emirates",
+      "mapYear": 2026,
+      "date": "2026-12-06",
+      "cancelled": false
+    }
+  ],
+  "teams": [
+    {
+      "id": "mclaren",
+      "url": "https://www.formula1.com/en/teams/mclaren",
+      "drivers": [
+        "lando-norris",
+        "oscar-piastri"
+      ]
+    },
+    {
+      "id": "ferrari",
+      "url": "https://www.formula1.com/en/teams/ferrari",
+      "drivers": [
+        "charles-leclerc",
+        "lewis-hamilton"
+      ]
+    },
+    {
+      "id": "red_bull",
+      "url": "https://www.formula1.com/en/teams/red-bull-racing",
+      "drivers": [
+        "max-verstappen",
+        "isack-hadjar"
+      ]
+    },
+    {
+      "id": "mercedes",
+      "url": "https://www.formula1.com/en/teams/mercedes",
+      "drivers": [
+        "george-russell",
+        "kimi-antonelli"
+      ]
+    },
+    {
+      "id": "aston_martin",
+      "url": "https://www.formula1.com/en/teams/aston-martin",
+      "drivers": [
+        "fernando-alonso",
+        "lance-stroll"
+      ]
+    },
+    {
+      "id": "alpine",
+      "url": "https://www.formula1.com/en/teams/alpine",
+      "drivers": [
+        "pierre-gasly",
+        "franco-colapinto"
+      ]
+    },
+    {
+      "id": "williams",
+      "url": "https://www.formula1.com/en/teams/williams",
+      "drivers": [
+        "alexander-albon",
+        "carlos-sainz"
+      ]
+    },
+    {
+      "id": "racing_bulls",
+      "url": "https://www.formula1.com/en/teams/racing-bulls",
+      "drivers": [
+        "liam-lawson",
+        "arvid-lindblad"
+      ]
+    },
+    {
+      "id": "haas",
+      "url": "https://www.formula1.com/en/teams/haas",
+      "drivers": [
+        "esteban-ocon",
+        "oliver-bearman"
+      ]
+    },
+    {
+      "id": "audi",
+      "url": "https://www.formula1.com/en/teams/audi",
+      "drivers": [
+        "nico-hulkenberg",
+        "gabriel-bortoleto"
+      ]
+    },
+    {
+      "id": "cadillac",
+      "url": "https://www.formula1.com/en/teams/cadillac",
+      "drivers": [
+        "valtteri-bottas",
+        "sergio-perez"
+      ]
+    }
+  ],
+  "drivers": [
+    {
+      "id": "verstappen",
+      "sourceId": "max_verstappen",
+      "slug": "max-verstappen",
+      "teamId": "red_bull"
+    },
+    {
+      "id": "norris",
+      "sourceId": "norris",
+      "slug": "lando-norris",
+      "teamId": "mclaren"
+    },
+    {
+      "id": "leclerc",
+      "sourceId": "leclerc",
+      "slug": "charles-leclerc",
+      "teamId": "ferrari"
+    },
+    {
+      "id": "hamilton",
+      "sourceId": "hamilton",
+      "slug": "lewis-hamilton",
+      "teamId": "ferrari"
+    },
+    {
+      "id": "piastri",
+      "sourceId": "piastri",
+      "slug": "oscar-piastri",
+      "teamId": "mclaren"
+    },
+    {
+      "id": "russell",
+      "sourceId": "russell",
+      "slug": "george-russell",
+      "teamId": "mercedes"
+    },
+    {
+      "id": "antonelli",
+      "sourceId": "antonelli",
+      "slug": "kimi-antonelli",
+      "teamId": "mercedes"
+    },
+    {
+      "id": "alonso",
+      "sourceId": "alonso",
+      "slug": "fernando-alonso",
+      "teamId": "aston_martin"
+    },
+    {
+      "id": "stroll",
+      "sourceId": "stroll",
+      "slug": "lance-stroll",
+      "teamId": "aston_martin"
+    },
+    {
+      "id": "gasly",
+      "sourceId": "gasly",
+      "slug": "pierre-gasly",
+      "teamId": "alpine"
+    },
+    {
+      "id": "colapinto",
+      "sourceId": "colapinto",
+      "slug": "franco-colapinto",
+      "teamId": "alpine"
+    },
+    {
+      "id": "albon",
+      "sourceId": "albon",
+      "slug": "alex-albon",
+      "teamId": "williams"
+    },
+    {
+      "id": "sainz",
+      "sourceId": "sainz",
+      "slug": "carlos-sainz",
+      "teamId": "williams"
+    },
+    {
+      "id": "lawson",
+      "sourceId": "lawson",
+      "slug": "liam-lawson",
+      "teamId": "racing_bulls"
+    },
+    {
+      "id": "lindblad",
+      "sourceId": "arvid_lindblad",
+      "slug": "arvid-lindblad",
+      "teamId": "racing_bulls"
+    },
+    {
+      "id": "ocon",
+      "sourceId": "ocon",
+      "slug": "esteban-ocon",
+      "teamId": "haas"
+    },
+    {
+      "id": "bearman",
+      "sourceId": "bearman",
+      "slug": "ollie-bearman",
+      "teamId": "haas"
+    },
+    {
+      "id": "hulkenberg",
+      "sourceId": "hulkenberg",
+      "slug": "nico-hulkenberg",
+      "teamId": "audi"
+    },
+    {
+      "id": "bortoleto",
+      "sourceId": "bortoleto",
+      "slug": "gabriel-bortoleto",
+      "teamId": "audi"
+    },
+    {
+      "id": "hadjar",
+      "sourceId": "hadjar",
+      "slug": "isack-hadjar",
+      "teamId": "red_bull"
+    },
+    {
+      "id": "bottas",
+      "sourceId": "bottas",
+      "slug": "valtteri-bottas",
+      "teamId": "cadillac"
+    },
+    {
+      "id": "perez",
+      "sourceId": "perez",
+      "slug": "sergio-perez",
+      "teamId": "cadillac"
+    }
+  ],
+  "confirmedSubstitutions": [
+    {
+      "sourceId": "lawson",
+      "teamId": "red_bull",
+      "dates": [
+        "2026-08-23",
+        "2026-09-06",
+        "2026-09-13"
+      ],
+      "source": "https://www.formula1.com/en/latest/article/lawson-to-stay-at-red-bull-for-third-race-weekend-in-madrid-as-hadjars-recovery-continues.Bxrk9FOVDChcWCo5vxY8v"
+    },
+    {
+      "sourceId": "tsunoda",
+      "teamId": "racing_bulls",
+      "dates": [
+        "2026-08-23",
+        "2026-09-06",
+        "2026-09-13"
+      ],
+      "source": "https://www.formula1.com/en/latest/article/lawson-to-stay-at-red-bull-for-third-race-weekend-in-madrid-as-hadjars-recovery-continues.Bxrk9FOVDChcWCo5vxY8v"
+    }
+  ]
+}

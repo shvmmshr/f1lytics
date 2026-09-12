@@ -1,0 +1,51 @@
+name: Refresh reference data
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 3 * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: reference-data
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: CI=true pnpm install --frozen-lockfile
+      - run: CI=true pnpm data:sync --write
+      - run: CI=true pnpm typecheck
+      - run: CI=true pnpm lint
+      - run: CI=true pnpm test
+      - name: Save source and drift report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reference-data-report
+          path: docs/quality/reference-sync.json
+      - name: Commit validated reference updates
+        shell: bash
+        run: |
+          git add src/lib/data/circuit-reference.json src/lib/data/team-reference.json src/lib/data/driver-reference.json src/lib/data/session-reference.json public/circuits/2026
+          if git diff --cached --quiet; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Refresh verified F1 reference data"
+          git push origin HEAD:main
+      - name: Surface changes that need identity or schedule review
+        run: |
+          node -e 'const r=require("./docs/quality/reference-sync.json"); for(const item of r.review) console.log("::warning::"+item); if(r.review.length) process.exitCode=1'
