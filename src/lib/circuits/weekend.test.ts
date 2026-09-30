@@ -28,9 +28,10 @@ describe("circuit weekend freshness", () => {
     expect(matchingCircuitRace(CIRCUITS.bahrain, race("1:20.000", CIRCUITS.bahrain.raceDate))).toBeUndefined();
   });
   it("fills a maiden circuit record from its first published race", () => {
-    expect(circuitLapRecord(madrid)).toBeNull();
-    expect(circuitLapRecord(madrid, race())).toEqual({ time: "1:32.000", holder: "Test Driver", year: 2026, source: "classification" });
-    expect(circuitLapRecord(madrid, race("1:20.000", "2026-09-06"))).toBeNull();
+    const maiden = { ...madrid, lapRecord: "—", lapRecordHolder: "—", lapRecordYear: undefined };
+    expect(circuitLapRecord(maiden)).toBeNull();
+    expect(circuitLapRecord(maiden, race())).toEqual({ time: "1:32.000", holder: "Test Driver", year: 2026, source: "classification" });
+    expect(circuitLapRecord(maiden, race("1:20.000", "2026-09-06"))).toBeNull();
   });
   it("only improves an existing record with a valid faster race lap", () => {
     const circuit = { ...madrid, lapRecord: "1:30.000", lapRecordHolder: "Previous Driver", lapRecordYear: 2025 };

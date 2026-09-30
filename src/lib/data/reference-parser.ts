@@ -28,7 +28,10 @@ function boundedNumber(value: string | undefined, minimum: number, maximum: numb
   return n;
 }
 
-export function parseCircuitReference(html: string, previous: CircuitReference): CircuitReference {
+export function parseCircuitReference(html: string, previous: CircuitReference, options?: {
+  /** Explicit opt-in: retain a verified record only if the source marks it unavailable. */
+  onPreservedLapRecord: (warning: string) => void;
+}): CircuitReference {
   const fields = referenceGrid(html);
   const next = {
     ...previous,
@@ -46,10 +49,15 @@ export function parseCircuitReference(html: string, previous: CircuitReference):
     next.lapRecord = lap.value;
     next.lapRecordHolder = holder[1];
     next.lapRecordYear = Number(holder[2]);
-  } else if (previous.lapRecord !== "—") {
-    throw new Error("Refusing to erase an established lap record");
-  } else if (!/^(?:--|—|N\/A)$/.test(lap.value)) {
+  } else if (!/^(?:--|—|N\/A)$/.test(lap.value) || lap.extra) {
     throw new Error("Unrecognised empty lap record");
+  } else if (previous.lapRecord !== "—") {
+    if (!options) throw new Error("Refusing to erase an established lap record");
+    if (next.firstGrandPrix !== previous.firstGrandPrix || next.length !== previous.length) throw new Error("Cannot preserve a lap record across circuit identity or layout changes");
+    if (!/^\d:[0-5]\d\.\d{3}$/.test(previous.lapRecord) || previous.lapRecord === "0:00.000" ||
+      !/^.{2,70}$/.test(previous.lapRecordHolder.trim()) || /^(?:--|—|N\/A)$/.test(previous.lapRecordHolder.trim()) ||
+      !Number.isInteger(previous.lapRecordYear) || previous.lapRecordYear! < 1950 || previous.lapRecordYear! > 2026) throw new Error("Cannot preserve an invalid saved lap record");
+    options.onPreservedLapRecord(`Official source marks the lap record unavailable (${lap.value}); preserved verified ${previous.lapRecord} by ${previous.lapRecordHolder} (${previous.lapRecordYear})`);
   }
   // Turn counts are not a consistently structured upstream field. Preserve the
   // reviewed value; a geometry change is reported for review by the sync job.

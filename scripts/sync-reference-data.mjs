@@ -15,7 +15,7 @@ const previous = {
   sessions: await read("src/lib/data/session-reference.json"),
 };
 const next = structuredClone(previous);
-const changes = [], review = [], failures = [], assets = [];
+const changes = [], review = [], warnings = [], failures = [], assets = [];
 const write = process.argv.includes("--write");
 const check = process.argv.includes("--check");
 
@@ -56,7 +56,9 @@ let cursor = 0;
 const tasks = [
   ...manifest.circuits.map(circuit => async () => {
     const html = (await download(circuit.source)).toString("utf8");
-    const candidate = parseCircuitReference(html, previous.circuits[circuit.id]);
+    const candidate = parseCircuitReference(html, previous.circuits[circuit.id], {
+      onPreservedLapRecord: warning => warnings.push(`${circuit.id}: ${warning}`),
+    });
     if (candidate.firstGrandPrix !== previous.circuits[circuit.id].firstGrandPrix) throw Error("Circuit identity/history changed; review its source mapping");
     if (candidate.length !== previous.circuits[circuit.id].length) {
       // A changed layout may also alter corner numbers and invalidate old records.
@@ -124,7 +126,7 @@ try {
   }
 } catch (error) { failures.push(`Season cross-check: ${error.message}`); }
 
-const report = { checkedAt: new Date().toISOString(), changes, review: [...new Set(review)], failures, wrote: write && !failures.length };
+const report = { checkedAt: new Date().toISOString(), changes, review: [...new Set(review)], warnings: [...new Set(warnings)], failures, wrote: write && !failures.length };
 await mkdir(join(root, "docs/quality"), { recursive: true });
 await writeFile(join(root, "docs/quality/reference-sync.json"), JSON.stringify(report, null, 2) + "\n");
 if (failures.length) throw Error(`Reference refresh aborted; existing data preserved. ${failures.join("; ")}`);
@@ -136,6 +138,7 @@ if (write) {
 console.log(`${write ? "Applied" : "Found"} ${changes.length} reference changes; ${report.review.length} items require identity/schedule review.`);
 for (const item of changes) console.log(`  ${item}`);
 for (const item of report.review) console.log(`  REVIEW: ${item}`);
+for (const item of report.warnings) console.warn(`  WARNING: ${item}`);
 if (check && (changes.length || review.length)) process.exitCode = 1;
 // Deterministic digest is available to CI without exposing any private data.
 console.log(`Reference digest: ${createHash("sha256").update(JSON.stringify(next)).digest("hex").slice(0, 16)}`);
