@@ -202,9 +202,10 @@
     "mapYear": 2026,
     "length": 5.414,
     "turns": 22,
-    "lapRecord": "—",
-    "lapRecordHolder": "—",
-    "trackImage": "/circuits/2026/madrid.webp"
+    "lapRecord": "1:35.587",
+    "lapRecordHolder": "George Russell",
+    "trackImage": "/circuits/2026/madrid.webp",
+    "lapRecordYear": 2026
   },
   "baku": {
     "firstGrandPrix": 2016,
@@ -222,7 +223,7 @@
   "sepang": {
     "firstGrandPrix": 1999,
     "raceLaps": 56,
-    "raceDistance": 310.418,
+    "raceDistance": 310.398,
     "source": "https://www.formula1.com/en/racing/2026/bahrain",
     "mapYear": 2026,
     "length": 5.543,
@@ -248,7 +249,7 @@
   "austin": {
     "firstGrandPrix": 2012,
     "raceLaps": 56,
-    "raceDistance": 308.432,
+    "raceDistance": 308.405,
     "source": "https://www.formula1.com/en/racing/2026/united-states",
     "mapYear": 2026,
     "length": 5.513,

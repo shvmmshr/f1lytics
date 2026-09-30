@@ -48,4 +48,4 @@ jobs:
           git push origin HEAD:main
       - name: Surface changes that need identity or schedule review
         run: |
-          node -e 'const r=require("./docs/quality/reference-sync.json"); for(const item of r.review) console.log("::warning::"+item); if(r.review.length) process.exitCode=1'
+          node -e 'const r=require("./docs/quality/reference-sync.json"); for(const item of [...r.review, ...(r.warnings ?? [])]) console.log("::warning::"+item); if(r.review.length) process.exitCode=1'
