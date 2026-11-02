@@ -1,4 +1,6 @@
 import { nowMs } from "@/lib/clock";
+import { ChampionCelebration } from "@/components/home/champion-celebration";
+import { showChampion } from "@/lib/home/champion";
 import { Hero } from "@/components/home/hero";
 import { SeasonCalendarStrip } from "@/components/home/season-calendar-strip";
 import { NewsStrip } from "@/components/home/news-strip";
@@ -120,6 +122,7 @@ export default async function Home() {
 
   return (
     <>
+      {showChampion(nowMs()) && <ChampionCelebration />}
       <Hero
         initialNow={nowMs()}
         initialEvent={event}
