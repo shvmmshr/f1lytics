@@ -1,9 +1,10 @@
 "use client";
 
-import { Suspense, useRef, useState, useCallback, useMemo, useEffect } from "react";
+import { Suspense, useRef, useState, useCallback, useMemo, useEffect, useReducer } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls, Sphere, Line } from "@react-three/drei";
 import * as THREE from "three";
+import { globeMotion, INITIAL_GLOBE_MOTION } from "@/lib/design/globe-motion";
 
 export interface GlobeCircuit {
   id: string;
@@ -329,12 +330,14 @@ function Globe({
 
 function SceneContent({
   circuits,
+  rotating,
   onHover,
   hovered,
   containerRef,
   cardRef,
 }: {
   circuits: GlobeCircuit[];
+  rotating: boolean;
   onHover: (c: GlobeCircuit | null) => void;
   hovered: GlobeCircuit | null;
   containerRef: React.RefObject<HTMLDivElement | null>;
@@ -358,7 +361,7 @@ function SceneContent({
       <OrbitControls
         enableZoom
         enablePan={false}
-        autoRotate
+        autoRotate={rotating}
         autoRotateSpeed={0.4}
         minDistance={1.8}
         maxDistance={4}
@@ -399,8 +402,19 @@ function LoadingFallback() {
 
 export function CircuitGlobe({ circuits }: CircuitGlobeProps) {
   const [hovered, setHovered] = useState<GlobeCircuit | null>(null);
+  const [motion, dispatchMotion] = useReducer(globeMotion, INITIAL_GLOBE_MOTION);
   const containerRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => dispatchMotion({ type: "preference", reducedMotion: preference.matches });
+    const frame = requestAnimationFrame(update);
+    preference.addEventListener("change", update);
+    return () => {
+      cancelAnimationFrame(frame);
+      preference.removeEventListener("change", update);
+    };
+  }, []);
   return (
     <section
       style={{
@@ -411,7 +425,7 @@ export function CircuitGlobe({ circuits }: CircuitGlobeProps) {
       }}
     >
       <div className="mx-auto" style={{ maxWidth: 1400 }}>
-        <div className="flex items-center gap-3.5 mb-4">
+        <div className="flex flex-wrap items-center gap-3.5 mb-4">
           <span
             className="font-mono"
             style={{
@@ -430,8 +444,21 @@ export function CircuitGlobe({ circuits }: CircuitGlobeProps) {
           >
             {circuits.length} STOPS · LIVE GLOBE
           </span>
+          <button
+            type="button"
+            aria-controls="circuit-globe"
+            aria-pressed={motion.playing}
+            onClick={() => dispatchMotion({ type: "toggle" })}
+            className="ml-auto min-h-11 border border-line-hi px-3 font-mono text-[11px] text-text-secondary hover:bg-bg-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+          >
+            {motion.playing ? "Pause globe rotation" : "Resume globe rotation"}
+          </button>
         </div>
+        <p role="status" className="sr-only">
+          {motion.playing ? "Globe rotation on." : motion.reducedMotion ? "Globe rotation paused for reduced motion. You can resume it manually." : "Globe rotation paused."}
+        </p>
         <div
+          id="circuit-globe"
           ref={containerRef}
           className="relative h-[450px] w-full overflow-hidden"
           style={{ background: "#0C0C0E", border: "1px solid #27272A" }}
@@ -445,6 +472,7 @@ export function CircuitGlobe({ circuits }: CircuitGlobeProps) {
               <Suspense fallback={null}>
                 <SceneContent
                   circuits={circuits}
+                  rotating={motion.playing}
                   onHover={setHovered}
                   hovered={hovered}
                   containerRef={containerRef}

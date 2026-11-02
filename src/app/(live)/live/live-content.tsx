@@ -61,7 +61,7 @@ function formatTimeSince(date: Date): string {
 }
 
 /** Team colour for an F1 feed or OpenF1 team name; dim grey when unknown. */
-const teamColorFromDriverTeam = (teamName: string): string => teamColorForName(teamName, F1.fg4);
+const teamColorFromDriverTeam = (teamName: string | null | undefined): string => teamColorForName(teamName, F1.fg4);
 
 function compoundShort(c: string | null): "S" | "M" | "H" | "I" | "W" | "?" {
   if (!c) return "?"; // OpenF1 sometimes reports stints with a null compound

@@ -26,8 +26,8 @@ export const CONSTRUCTOR_TO_TEAM: Record<string, string> = {
   andretti_cadillac: "cadillac",
 };
 
-function normalize(value: string): string {
-  return value.toLowerCase().replace(/[^a-z0-9]/g, "");
+function normalize(value: string | null | undefined): string {
+  return (value ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
 }
 
 /**
@@ -36,7 +36,7 @@ function normalize(value: string): string {
  */
 export function mapConstructorToTeamId(
   constructorId: string,
-  constructorName: string,
+  constructorName: string | null | undefined,
 ): string | undefined {
   const mappedId = CONSTRUCTOR_TO_TEAM[constructorId];
   if (mappedId && TEAMS[mappedId]) return mappedId;
@@ -72,7 +72,7 @@ export function mapConstructorToTeamId(
  * `fallback` when nothing matches with confidence. The single place for this;
  * pages must not grow their own fuzzy copies.
  */
-export function teamColorForName(name: string, fallback = "#84848F"): string {
+export function teamColorForName(name: string | null | undefined, fallback = "#84848F"): string {
   const id = mapConstructorToTeamId("", name);
   return (id && TEAMS[id]?.color) || fallback;
 }

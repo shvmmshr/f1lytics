@@ -20,6 +20,8 @@ interface Feed {
   name: string;
   url: string;
   siteUrl: string;
+  /** General motorsport feeds must opt into an F1 article section. */
+  articlePathPrefix?: string;
 }
 
 const FEEDS: Feed[] = [
@@ -42,6 +44,7 @@ const FEEDS: Feed[] = [
     name: "The Race",
     url: "https://www.the-race.com/rss/",
     siteUrl: "https://www.the-race.com",
+    articlePathPrefix: "/formula-1/",
   },
   {
     name: "PlanetF1",
@@ -117,7 +120,7 @@ function parseFeed(xml: string, feed: Feed): NewsItem[] {
   const chunks = xml.split(/<item\b/i).slice(1);
   const items: NewsItem[] = [];
 
-  for (const raw of chunks.slice(0, MAX_ITEMS_PER_FEED)) {
+  for (const raw of chunks) {
     const content = raw.split(/<\/item>/i)[0] ?? raw;
 
     const title = extractTag(content, "title");
@@ -125,6 +128,12 @@ function parseFeed(xml: string, feed: Feed): NewsItem[] {
     if (!title || !link) continue;
     const url = feedUrl(decodeEntities(link));
     if (!url) continue;
+    if (feed.articlePathPrefix) {
+      const article = new URL(url);
+      const publisher = new URL(feed.siteUrl);
+      const hostname = (value: string) => value.replace(/^www\./, "");
+      if (hostname(article.hostname) !== hostname(publisher.hostname) || !article.pathname.startsWith(feed.articlePathPrefix)) continue;
+    }
 
     const pubDate = extractTag(content, "pubDate");
     const rawDescription = extractTag(content, "description") ?? "";
@@ -154,6 +163,8 @@ function parseFeed(xml: string, feed: Feed): NewsItem[] {
       source: feed.name,
       sourceUrl: feed.siteUrl,
     });
+    // Count accepted articles, not unrelated entries at the top of a mixed feed.
+    if (items.length >= MAX_ITEMS_PER_FEED) break;
   }
 
   return items;

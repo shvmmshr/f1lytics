@@ -1,6 +1,7 @@
 import { getTeamTextColor } from "@/lib/design/team-color";
 import { ScrollableRegion } from "@/components/shared/scrollable-region";
 import { isRaceFinisher } from "@/lib/analytics/results";
+import { profileRaceRound } from "@/lib/analytics/profile-results";
 import type { Metadata } from "next";
 import { countryCodeToFlag } from "@/lib/utils";
 import Image from "next/image";
@@ -144,7 +145,7 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
       if (!result) return null;
       const pos = Number.parseInt(result.position, 10);
       return {
-        round: Number.parseInt(race.round, 10),
+        round: profileRaceRound(race),
         raceName: race.raceName,
         position: Number.isNaN(pos) ? null : pos,
         points: Number.parseFloat(result.points) || 0,
