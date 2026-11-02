@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { requestLockIn } from "@/lib/lockin/client-request";
 import { F1, Mono } from "@/components/shared/broadcast";
 
 const input: React.CSSProperties = { background: "#0C0C0E", border: "1px solid #27272A", color: "#F4F4F5", padding: "12px", fontSize: 16, width: "100%" };
@@ -14,13 +15,12 @@ export function CreateLeagueForm() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setState({ kind: "busy" });
-    const res = await fetch("/api/lockin/leagues", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name }) });
-    const json = (await res.json().catch(() => null)) as { error?: string; code?: string } | null;
-    if (!res.ok || !json?.code) {
-      setState({ kind: "error", message: json?.error ?? "Could not create the league." });
+    const result = await requestLockIn<{ code?: string }>("/api/lockin/leagues", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name }) }, "Could not create the league.");
+    if (!result.ok || !result.data?.code) {
+      setState({ kind: "error", message: !result.ok ? result.error : "Could not create the league." });
       return;
     }
-    router.push(`/lockin/l/${json.code}`);
+    router.push(`/lockin/l/${result.data.code}`);
   };
   return (
     <form onSubmit={submit} className="grid gap-3" style={{ background: F1.bg2, border: `1px solid ${F1.line}`, padding: "clamp(16px, 3vw, 24px)" }}>
@@ -48,13 +48,12 @@ export function JoinLeagueForm() {
     e.preventDefault();
     setState({ kind: "busy" });
     const clean = code.trim().toUpperCase();
-    const res = await fetch(`/api/lockin/leagues/${encodeURIComponent(clean)}/join`, { method: "POST" });
-    const json = (await res.json().catch(() => null)) as { error?: string; code?: string } | null;
-    if (!res.ok || !json?.code) {
-      setState({ kind: "error", message: json?.error ?? "Could not join." });
+    const result = await requestLockIn<{ code?: string }>(`/api/lockin/leagues/${encodeURIComponent(clean)}/join`, { method: "POST" }, "Could not join.");
+    if (!result.ok || !result.data?.code) {
+      setState({ kind: "error", message: !result.ok ? result.error : "Could not join." });
       return;
     }
-    router.push(`/lockin/l/${json.code}`);
+    router.push(`/lockin/l/${result.data.code}`);
   };
   return (
     <form onSubmit={submit} className="grid gap-3" style={{ background: F1.bg2, border: `1px solid ${F1.line}`, padding: "clamp(16px, 3vw, 24px)" }}>
@@ -78,10 +77,9 @@ export function JoinLeagueButton({ code }: { code: string }) {
   const [state, setState] = useState<{ kind: "idle" | "busy" | "error"; message?: string }>({ kind: "idle" });
   const join = async () => {
     setState({ kind: "busy" });
-    const res = await fetch(`/api/lockin/leagues/${encodeURIComponent(code)}/join`, { method: "POST" });
-    const json = (await res.json().catch(() => null)) as { error?: string } | null;
-    if (!res.ok) {
-      setState({ kind: "error", message: json?.error ?? "Could not join." });
+    const result = await requestLockIn(`/api/lockin/leagues/${encodeURIComponent(code)}/join`, { method: "POST" }, "Could not join.");
+    if (!result.ok) {
+      setState({ kind: "error", message: result.error });
       return;
     }
     router.refresh();

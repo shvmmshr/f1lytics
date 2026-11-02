@@ -13,8 +13,9 @@ export default async function LockInLayout({ children }: { children: React.React
   const profile = user ? await getProfile(user.id).catch(() => null) : null;
   return (
     <div className="flex min-h-screen flex-col" style={{ background: F1.ink }}>
+      <a href="#main-content" className="skip-link">Skip to content</a>
       <Navbar />
-      <main className="w-full flex-1">
+      <main id="main-content" tabIndex={-1} className="w-full flex-1">
         <div
           className="mx-auto w-full min-h-full"
           style={{ maxWidth: 1480, background: F1.bg, borderLeft: `1px solid ${F1.line}`, borderRight: `1px solid ${F1.line}` }}

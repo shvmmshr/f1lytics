@@ -340,7 +340,7 @@ export interface OpenF1Driver {
   driver_number: number;
   full_name: string;
   name_acronym: string;
-  team_name: string;
+  team_name: string | null;
   team_colour: string;
   headshot_url: string | null;
   country_code: string;

@@ -6,6 +6,7 @@ import { F1, Mono, Brackets } from "@/components/shared/broadcast";
 import { useCountdownTick } from "@/hooks/use-countdown-tick";
 import type { BoardDriver } from "@/lib/lockin/board-data";
 import type { Picks } from "@/lib/lockin/scoring";
+import { createDraftStorage } from "@/lib/lockin/draft-storage";
 import type { RoundSummary } from "@/lib/lockin/rounds";
 
 type SlotKey = "pole" | "p1" | "p2" | "p3" | "fastestLap" | "sprintWinner";
@@ -57,7 +58,13 @@ interface PickBoardProps {
  * call. Podium slots refuse duplicates. A signed-out player can build a full
  * set of calls; the draft survives sign-in through localStorage.
  */
-export function PickBoard({ round, drivers, initialPicks, signedIn, signInHref }: PickBoardProps) {
+export function PickBoard(props: PickBoardProps) {
+  // A different round or newly saved server picks start a fresh editing session.
+  // This also cancels a pending restoration frame before it can cross rounds.
+  return <PickBoardSession key={`${props.round.raceDate}:${JSON.stringify(props.initialPicks)}`} {...props} />;
+}
+
+function PickBoardSession({ round, drivers, initialPicks, signedIn, signInHref }: PickBoardProps) {
   const router = useRouter();
   const [draft, setDraft] = useState<Draft>(() => (initialPicks ? draftFromPicks(initialPicks) : emptyDraft()));
   const [armedSlot, setArmedSlot] = useState<SlotKey | null>(null);
@@ -68,36 +75,35 @@ export function PickBoard({ round, drivers, initialPicks, signedIn, signInHref }
 
   const slots = useMemo(() => SLOTS.filter((s) => !s.sprintOnly || round.isSprint), [round.isSprint]);
 
-  // Restore a draft made before signing in (or before a reload), once, after
-  // hydration. Deferred a frame so the server HTML and first client render agree.
+  const draftStorage = useMemo(() => createDraftStorage<Draft>(draftKey(round.raceDate), (raw) => {
+    const parsed = JSON.parse(raw) as Partial<Draft> | null;
+    if (!parsed || typeof parsed !== "object") return null;
+    const safe = emptyDraft();
+    for (const slot of SLOTS) {
+      const value = parsed[slot.key];
+      if (value === null || typeof value === "string") safe[slot.key] = value;
+    }
+    if (typeof parsed.marginSeconds === "string") safe.marginSeconds = parsed.marginSeconds;
+    const hasContent = SLOTS.some((slot) => Boolean(safe[slot.key])) || Boolean(safe.marginSeconds);
+    return hasContent ? safe : null;
+  }), [round.raceDate]);
+
+  // Read before enabling writes. The initial persistence effect must not erase
+  // unsaved calls while this hydration frame is still pending.
   useEffect(() => {
-    if (initialPicks) return;
     const raf = requestAnimationFrame(() => {
-      try {
-        const raw = localStorage.getItem(draftKey(round.raceDate));
-        if (!raw) return;
-        const parsed = JSON.parse(raw) as Partial<Draft>;
-        const hasContent =
-          Boolean(parsed.pole || parsed.p1 || parsed.p2 || parsed.p3 || parsed.fastestLap || parsed.sprintWinner) ||
-          Boolean(parsed.marginSeconds);
-        if (!hasContent) return; // a blank draft from a previous visit is not worth announcing
-        setDraft((d) => ({ ...d, ...parsed }));
+      const stored = draftStorage.restore(Boolean(initialPicks));
+      if (stored) {
+        setDraft(stored);
         setRestored(true);
-      } catch {
-        /* ignore a corrupt draft */
       }
     });
     return () => cancelAnimationFrame(raf);
-  }, [initialPicks, round.raceDate]);
+  }, [initialPicks, draftStorage]);
 
-  // Persist the draft locally so nothing is lost across sign-in or a refresh.
   useEffect(() => {
-    try {
-      localStorage.setItem(draftKey(round.raceDate), JSON.stringify(draft));
-    } catch {
-      /* storage unavailable */
-    }
-  }, [draft, round.raceDate]);
+    draftStorage.persist(draft);
+  }, [draft, draftStorage]);
 
   useCountdownTick(round.lockAtMs, ({ d, h, m, s, done }) => {
     if (!countdownRef.current) return;

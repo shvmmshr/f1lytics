@@ -7,6 +7,7 @@ import { notFound } from "next/navigation";
 import { getConstructorStandings, getDriverStandings, getRaceResults } from "@/lib/api/jolpica";
 import { TEAM_LIST, getTeamBySlug } from "@/lib/constants";
 import { mapConstructorToTeamId } from "@/lib/constructor-map";
+import { profileRaceRound, teamRaceEntries } from "@/lib/analytics/profile-results";
 import { DRIVERS, type Driver } from "@/lib/constants/drivers";
 import { PageTransition } from "@/components/layout/page-transition";
 import {
@@ -132,12 +133,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
   // Build race summaries
   const raceSummaries = raceResults
     .map((race) => {
-      const teamEntries = (race.Results ?? []).filter((e) => {
-        const mapped = mapConstructorToTeamId(e.Constructor.constructorId, e.Constructor.name);
-        if (mapped === team.id) return true;
-        const code = e.Driver.code?.toUpperCase();
-        return Boolean(code && driverCodeSet.has(code));
-      });
+      const teamEntries = teamRaceEntries(race.Results ?? [], team.id, driverCodeSet);
       if (!teamEntries.length) return null;
 
       const positions = teamEntries.map((e) => Number.parseInt(e.position, 10)).filter((p) => !Number.isNaN(p));
@@ -157,7 +153,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
       });
 
       return {
-        round: Number.parseInt(race.round, 10),
+        round: profileRaceRound(race),
         raceName: race.raceName,
         bestFinish,
         racePoints,

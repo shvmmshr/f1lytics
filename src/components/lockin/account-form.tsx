@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { F1, Mono } from "@/components/shared/broadcast";
+import { requestLockIn } from "@/lib/lockin/client-request";
 import { authClient } from "@/lib/auth/client";
 
 export function AccountForm({ displayName, newsletterOptIn }: { displayName: string; newsletterOptIn: boolean }) {
@@ -14,14 +15,13 @@ export function AccountForm({ displayName, newsletterOptIn }: { displayName: str
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
     setState({ kind: "busy" });
-    const res = await fetch("/api/lockin/profile", {
+    const result = await requestLockIn("/api/lockin/profile", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ displayName: name, newsletterOptIn: opt }),
-    });
-    const json = (await res.json().catch(() => null)) as { error?: string } | null;
-    if (!res.ok) {
-      setState({ kind: "error", message: json?.error ?? "Could not save." });
+    }, "Could not save.");
+    if (!result.ok) {
+      setState({ kind: "error", message: result.error });
       return;
     }
     setState({ kind: "saved" });
