@@ -21,7 +21,8 @@ describe("2026 champion celebration", () => {
   });
   it("works when browser storage is unavailable", () => {
     vi.stubGlobal("localStorage", { getItem: () => { throw Error("blocked"); }, setItem: () => { throw Error("blocked"); } });
-    expect(readCelebration("seen")).toBe(false);
-    expect(() => saveCelebration("dismissed")).not.toThrow();
+    expect(readCelebration("storage-blocked")).toBe(false);
+    expect(() => saveCelebration("storage-blocked")).not.toThrow();
+    expect(readCelebration("storage-blocked")).toBe(true);
   });
 });

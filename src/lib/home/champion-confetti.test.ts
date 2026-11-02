@@ -29,3 +29,47 @@ it("bounds animation duration and cancels frames and listeners on cleanup", () =
   cleanup();
   expect(motion.removeEventListener).toHaveBeenCalledWith("change", expect.any(Function));
 });
+
+it("cancels pending finale and finish when skipped before the reveal", async () => {
+  vi.useFakeTimers();
+  const { scheduleChampionReveal } = await import("./champion-confetti");
+  const getContext = vi.fn();
+  const finish = vi.fn();
+  const cleanup = scheduleChampionReveal({ getContext } as unknown as HTMLCanvasElement, finish, false);
+  cleanup();
+  vi.runAllTimers();
+  expect(finish).not.toHaveBeenCalled();
+  expect(getContext).not.toHaveBeenCalled();
+  vi.useRealTimers();
+});
+it("delivers a static reduced-motion announcement and automatically clears it", async () => {
+  vi.useFakeTimers();
+  const { scheduleChampionReveal } = await import("./champion-confetti");
+  const getContext = vi.fn();
+  const finish = vi.fn();
+  const cleanup = scheduleChampionReveal({ getContext } as unknown as HTMLCanvasElement, finish, true);
+  vi.advanceTimersByTime(3499);
+  expect(finish).not.toHaveBeenCalled();
+  vi.advanceTimersByTime(1);
+  expect(finish).toHaveBeenCalledOnce();
+  expect(getContext).not.toHaveBeenCalled();
+  cleanup();
+  vi.useRealTimers();
+});
+it("starts one finale and stops all work after repeated replay/skip cycles", async () => {
+  vi.useFakeTimers();
+  const { scheduleChampionReveal } = await import("./champion-confetti");
+  vi.stubGlobal("matchMedia", () => ({ matches: false }));
+  const getContext = vi.fn(() => null);
+  const finish = vi.fn();
+  for (let i = 0; i < 4; i++) {
+    const cleanup = scheduleChampionReveal({ getContext } as unknown as HTMLCanvasElement, finish, false);
+    vi.advanceTimersByTime(1400);
+    cleanup();
+  }
+  vi.runAllTimers();
+  expect(getContext).toHaveBeenCalledTimes(4);
+  expect(finish).not.toHaveBeenCalled();
+  expect(vi.getTimerCount()).toBe(0);
+  vi.useRealTimers();
+});

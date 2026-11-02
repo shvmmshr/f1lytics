@@ -1,24 +1,39 @@
-.champion { position:relative; isolation:isolate; overflow:hidden; min-height:360px; background:#0a1919; color:#f4f4f5; border-block:1px solid #32615a; display:flex; align-items:center; padding:42px max(24px, calc((100vw - 1280px)/2)); }
-.grid { position:absolute; inset:0; z-index:-1; opacity:.22; background:repeating-linear-gradient(125deg, transparent 0 78px,#27f4d2 79px,transparent 80px),radial-gradient(ellipse at 75% 100%,#27f4d2,transparent 65%); }
-.copy { position:relative; z-index:2; width:66%; }
-.eyebrow { display:flex; align-items:center; gap:10px; font:10px var(--font-jetbrains-mono), monospace; letter-spacing:.18em; color:#e8be68; margin-bottom:18px; }
-.eyebrow span { width:18px; height:3px; background:#e8be68; }
-.title { font:600 clamp(32px,4.6vw,66px)/1.05 var(--font-antonio), sans-serif; letter-spacing:-.025em; }
-.title span { display:block; color:#27f4d2; margin-top:5px; }
-.description { font-size:14px; color:#c0cfcc; margin:20px 0; }
-.actions { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
-.profile,.replay { display:inline-flex; align-items:center; gap:8px; padding:11px 15px; font-size:12px; font-weight:600; border:1px solid #53726b; cursor:pointer; }
-.profile { background:#27f4d2; color:#081512; border-color:#27f4d2; }
-.replay { color:#e5efed; background:#142b27; }
-.profile:hover,.replay:hover { filter:brightness(1.15); }
-.replay:disabled { opacity:.6; cursor:default; }
-.source { display:inline-block; font:9px var(--font-jetbrains-mono), monospace; letter-spacing:.08em; color:#adbbb8; margin-top:22px; text-underline-offset:4px; }
-.source:hover { text-decoration:underline; }
-.dismiss { position:absolute; right:18px; top:14px; z-index:4; padding:10px; color:#c6d6d1; cursor:pointer; }
-.champion a:focus-visible,.champion button:focus-visible { outline:2px solid #e8be68; outline-offset:4px; }
-.portrait { position:absolute; right:max(24px,calc((100vw - 1280px)/2)); bottom:0; width:34%; max-width:400px; height:95%; }
-.driver { object-fit:contain; object-position:bottom; filter:drop-shadow(0 0 30px #27f4d225); }
-.number { position:absolute; top:8%; right:8%; font:700 clamp(130px,19vw,280px)/1 var(--font-antonio), sans-serif; color:#ffffff09; -webkit-text-stroke:1px #6fb4a84a; }
-.signature { position:absolute; right:18px; bottom:18px; font:9px var(--font-jetbrains-mono), monospace; letter-spacing:.18em; color:#f4f4f5; padding:7px 10px; background:#081512d9; border-left:2px solid #e8be68; }
-.confetti { position:absolute; inset:0; width:100%; height:100%; z-index:3; pointer-events:none; }
-@media(max-width:640px) { .champion { padding:34px 20px 26px; min-height:440px; align-items:flex-start; } .copy { width:100%; } .eyebrow { font-size:8px; } .title { font-size:clamp(30px,7.8vw,48px); } .description { max-width:60%; font-size:12px; line-height:1.6; margin-block:16px; } .actions { flex-direction:column; align-items:flex-start; gap:8px; } .source { max-width:58%; font-size:8px; line-height:1.6; } .portrait { right:-12px; width:48%; height:56%; } .signature { font-size:7px; right:15px; bottom:12px; } .number { font-size:145px; top:0; } }
+/* Fixed and input-transparent: zero document flow, no scroll lock or focus trap. */
+.reveal { position:fixed; inset:64px 0 0; z-index:45; overflow:hidden; pointer-events:none; color:#f4f4f5; animation:depart 6.2s both; }
+.ambient { position:absolute; inset:0; background:radial-gradient(ellipse at 50% 50%,#071c1bfa 0%,#061312f5 55%,#08080ae8 100%); }
+.stage { position:absolute; inset:0; margin:auto; width:min(1100px,100%); height:min(720px,100%); }
+.streaks { position:absolute; inset:0; overflow:hidden; }
+.streaks i { position:absolute; top:50%; left:-50%; width:150%; height:2px; background:linear-gradient(90deg,transparent,#27f4d2,transparent); transform:rotate(-28deg); animation:streak 1s both; }
+.streaks i:nth-child(2) { top:65%; height:20px; opacity:.25; animation-delay:.12s; }
+.streaks i:nth-child(3) { top:35%; background:linear-gradient(90deg,transparent,#e8be68,transparent); animation-delay:.22s; }
+.number { position:absolute; left:2%; top:50%; transform:translateY(-53%); font:700 clamp(280px,46vw,620px)/.9 var(--font-antonio),sans-serif; letter-spacing:-.08em; color:#27f4d20c; -webkit-text-stroke:2px #27f4d263; animation:numberIn 1.1s cubic-bezier(.16,1,.3,1) both; }
+.portrait { position:absolute; right:2%; bottom:8%; height:85%; width:43%; opacity:.9; mask-image:linear-gradient(#000 70%,transparent); animation:portraitIn 1.2s .2s both; }
+.driver { object-fit:contain; object-position:bottom; filter:drop-shadow(0 0 40px #27f4d235); }
+.copy { position:absolute; left:9%; top:50%; transform:translateY(-50%); }
+.kicker { font:10px var(--font-jetbrains-mono),monospace; letter-spacing:.4em; color:#e8be68; margin-bottom:22px; animation:copyIn .55s .4s both; }
+.name { font:700 clamp(56px,8vw,110px)/.95 var(--font-antonio),sans-serif; letter-spacing:-.04em; text-shadow:0 4px 36px #000; animation:copyIn .7s .55s both; }
+.name span { display:block; color:#27f4d2; }
+.title { display:inline-block; margin-top:24px; padding:8px 12px; background:#e8be68; color:#091512; font:600 clamp(12px,1.7vw,19px) var(--font-jetbrains-mono),monospace; letter-spacing:.1em; animation:titleIn .65s .9s both; }
+.tagline { margin-top:18px; font-size:13px; color:#cbd6d3; animation:copyIn .6s 1.1s both; }
+.source { display:inline-block; pointer-events:auto; font:9px var(--font-jetbrains-mono),monospace; letter-spacing:.12em; color:#b6c9c3; margin-top:18px; animation:copyIn .6s 1.1s both; }
+.source:hover { text-decoration:underline; text-underline-offset:4px; }
+.finishLine { position:absolute; bottom:12%; left:8%; width:84%; height:2px; background:linear-gradient(90deg,#27f4d2,#e8be68,transparent); transform-origin:left; animation:lineIn 1.1s .3s both; }
+.confetti { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+.skip { position:absolute; pointer-events:auto; top:18px; right:22px; display:flex; align-items:center; gap:8px; border:1px solid #4c615d; background:#0b1716e8; padding:10px 12px; font-size:11px; cursor:pointer; }
+.replay { min-width:44px; min-height:44px; justify-content:center; position:fixed; left:16px; bottom:18px; z-index:46; display:flex; align-items:center; gap:8px; padding:10px 12px; background:#0b1716ec; color:#e8be68; border:1px solid #4c615d; border-radius:24px; font:9px var(--font-jetbrains-mono),monospace; letter-spacing:.08em; cursor:pointer; box-shadow:0 3px 16px #0004; }
+.replay:hover { border-color:#27f4d2; color:#27f4d2; }
+.reveal a:focus-visible,.reveal button:focus-visible,.replay:focus-visible { outline:2px solid #27f4d2; outline-offset:4px; }
+.announcement { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+@keyframes depart { 0% {opacity:0} 6%,80% {opacity:1} 100% {opacity:0} }
+@keyframes numberIn { from {opacity:0; translate:0 25px; scale:1.15} to {opacity:1; translate:0 0; scale:1} }
+@keyframes portraitIn { from {opacity:0; translate:30px 0} to {opacity:.9; translate:0 0} }
+@keyframes copyIn { from {opacity:0; translate:0 20px; filter:blur(5px)} to {opacity:1; translate:0 0; filter:blur(0)} }
+@keyframes titleIn { from {opacity:0; clip-path:inset(0 100% 0 0)} to {opacity:1; clip-path:inset(0)} }
+@keyframes streak { from {translate:-40% 40%; opacity:0} 30% {opacity:1} to {translate:60% -60%; opacity:0} }
+@keyframes lineIn { from {scale:0 1} to {scale:1 1} }
+@media(max-width:640px) { .stage { height:85%; } .copy {left:7%; top:46%;} .kicker {font-size:8px; letter-spacing:.25em; margin-bottom:18px;} .name {font-size:clamp(50px,14vw,78px);} .title {font-size:11px; letter-spacing:.04em; margin-top:18px;} .tagline {font-size:11px; max-width:220px;} .source {font-size:8px;} .portrait {right:-8%; width:64%; height:63%; bottom:4%; opacity:.55;} .copy {z-index:1;} .number {font-size:90vw; left:0; top:40%;} .finishLine {bottom:10%;} .skip {top:12px; right:12px;} .replay {left:10px; bottom:12px;} .replay span {display:none;} }
+/* Static, short-lived announcement for motion-sensitive visitors, including a
+   preference change mid-reveal. It remains skippable and has no animated pixels. */
+.reduced,.reduced * { animation:none !important; }
+.reduced .streaks { display:none; }
+@media(prefers-reduced-motion:reduce) { .reveal,.reveal * {animation:none !important;} .streaks {display:none;} }

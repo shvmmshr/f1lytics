@@ -1,62 +1,83 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
-import { ArrowUpRight, PartyPopper, X } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Trophy, X } from "lucide-react";
 import { CHAMPION_SOURCE, readCelebration, saveCelebration } from "@/lib/home/champion";
-import { confetti } from "@/lib/home/champion-confetti";
+import { scheduleChampionReveal } from "@/lib/home/champion-confetti";
 import styles from "./champion-celebration.module.css";
 
+/** An ephemeral layer, never a homepage section or a modal. Navigation stays usable. */
 export function ChampionCelebration() {
   const [visible, setVisible] = useState(false);
   const [reduced, setReduced] = useState(false);
   const canvas = useRef<HTMLCanvasElement>(null);
+  const replay = useRef<HTMLButtonElement>(null);
+  const layer = useRef<HTMLDivElement>(null);
   const cleanup = useRef<() => void>(() => {});
+  const finish = useCallback(() => {
+    cleanup.current();
+    // Return focus only if the disappearing reveal held it; never steal it
+    // from someone already using the navigation or underlying page.
+    if (layer.current?.contains(document.activeElement)) replay.current?.focus();
+    setVisible(false);
+  }, []);
+
   useEffect(() => {
     const motion = matchMedia("(prefers-reduced-motion: reduce)");
     const updateMotion = () => setReduced(motion.matches);
     updateMotion();
     motion.addEventListener("change", updateMotion);
     const frame = requestAnimationFrame(() => {
-      const dismissed = readCelebration("dismissed");
-      setVisible(!dismissed);
+      if (!readCelebration("reveal-seen") && !readCelebration("dismissed")) {
+        saveCelebration("reveal-seen");
+        setVisible(true);
+      }
     });
     return () => { cancelAnimationFrame(frame); motion.removeEventListener("change", updateMotion); };
   }, []);
+
   useEffect(() => {
     if (!visible || !canvas.current) return;
-    if (!readCelebration("seen")) {
-      saveCelebration("seen");
-      cleanup.current = confetti(canvas.current);
-    }
-    return () => cleanup.current();
-  }, [visible]);
-  if (!visible) return null;
+    cleanup.current = scheduleChampionReveal(canvas.current, finish, reduced);
+    const onKey = (event: KeyboardEvent) => { if (event.key === "Escape") finish(); };
+    const onVisibility = () => { if (document.hidden) finish(); };
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      cleanup.current();
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [visible, reduced, finish]);
+
   return (
-    <section className={styles.champion} aria-labelledby="champion-title">
-      <canvas ref={canvas} className={styles.confetti} aria-hidden="true" />
-      <div className={styles.grid} aria-hidden="true" />
-      <button className={styles.dismiss} aria-label="Dismiss championship celebration" onClick={() => {
-        cleanup.current(); saveCelebration("dismissed"); setVisible(false);
-      }}><X size={18} /></button>
-      <div className={styles.copy}>
-        <p className={styles.eyebrow}><span /> THE CROWN IS HIS · 2026</p>
-        <h2 id="champion-title" className={styles.title}>KIMI ANTONELLI<span>WORLD CHAMPION.</span></h2>
-        <p className={styles.description}>History made. A first world title. A new era in silver.</p>
-        <div className={styles.actions}>
-          <Link href="/drivers/kimi-antonelli" className={styles.profile}>Meet the champion <ArrowUpRight size={16} /></Link>
-          <button className={styles.replay} disabled={reduced} onClick={() => {
-            cleanup.current(); if (canvas.current) cleanup.current = confetti(canvas.current);
-          }}><PartyPopper size={16} /> {reduced ? "Motion reduced" : "Let it rain"}</button>
+    <>
+      <button ref={replay} className={styles.replay} aria-label="Replay Antonelli championship celebration" title="Celebrate Kimi’s 2026 title" onClick={() => {
+        if (visible) finish();
+        else setVisible(true);
+      }}><Trophy size={15} /><span>12 / CHAMPION</span></button>
+      {visible && (
+        <div ref={layer} className={`${styles.reveal} ${reduced ? styles.reduced : ""}`} aria-label="Antonelli championship celebration">
+          <div className={styles.ambient} aria-hidden="true" />
+          <div className={styles.streaks} aria-hidden="true"><i /><i /><i /></div>
+          <div className={styles.stage}>
+            <span className={styles.number} aria-hidden="true">12</span>
+            <div className={styles.portrait} aria-hidden="true"><Image src="/drivers/antonelli.webp" alt="" fill sizes="(max-width: 640px) 220px, 420px" className={styles.driver} /></div>
+            <div className={styles.copy}>
+              <p className={styles.kicker}>THE CROWN IS HIS</p>
+              <p className={styles.name}>KIMI<span>ANTONELLI</span></p>
+              <p className={styles.title}>2026 WORLD CHAMPION</p>
+              <p className={styles.tagline}>History made. A new era in silver.</p>
+              <a href={CHAMPION_SOURCE} className={styles.source} target="_blank" rel="noopener noreferrer">MEXICO · 01 NOV 2026 ↗</a>
+            </div>
+            <div className={styles.finishLine} aria-hidden="true" />
+          </div>
+          <canvas ref={canvas} className={styles.confetti} aria-hidden="true" />
+          <button className={styles.skip} onClick={() => { saveCelebration("dismissed"); finish(); }}>Skip celebration <X size={16} /></button>
+          <p className={styles.announcement} role="status">Kimi Antonelli, 2026 World Drivers’ Champion.</p>
         </div>
-        <a className={styles.source} href={CHAMPION_SOURCE} target="_blank" rel="noopener noreferrer">TITLE CLINCHED · MEXICO, 01 NOV 2026 ↗</a>
-      </div>
-      <div className={styles.portrait}>
-        <span className={styles.number} aria-hidden="true">12</span>
-        <Image src="/drivers/antonelli.webp" alt="Kimi Antonelli" fill sizes="(max-width: 640px) 180px, 400px" className={styles.driver} />
-        <span className={styles.signature}>KIMI / MERCEDES</span>
-      </div>
-    </section>
+      )}
+    </>
   );
 }

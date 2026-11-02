@@ -41,3 +41,10 @@ export function confetti(canvas: HTMLCanvasElement): () => void {
   return () => { stop(); motion.removeEventListener("change", stop); };
 }
 
+/** Delay the finale until the title lands. Every timer and frame is cancellable. */
+export function scheduleChampionReveal(canvas: HTMLCanvasElement, finish: () => void, reduced: boolean): () => void {
+  let stopConfetti = () => {};
+  const finale = reduced ? undefined : setTimeout(() => { stopConfetti = confetti(canvas); }, 1400);
+  const end = setTimeout(finish, reduced ? 3500 : 6200);
+  return () => { clearTimeout(finale); clearTimeout(end); stopConfetti(); };
+}
