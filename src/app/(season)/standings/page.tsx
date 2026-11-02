@@ -17,6 +17,7 @@ import { AnimatedBar } from "@/components/shared/animated-bar";
 import { createPageMetadata } from "@/lib/seo/metadata";
 import { JsonLd } from "@/components/shared/json-ld";
 import { collectionSchema } from "@/lib/seo/schema";
+import { WorldChampionBadge } from "@/components/shared/world-champion-badge";
 
 const description =
   "Follow the 2026 F1 driver and constructor standings with points, wins, leader gaps, and team contributions, updated after each round.";
@@ -242,6 +243,7 @@ export default async function StandingsPage() {
                       {d.teamName.toUpperCase()}
                       {d.number && ` · #${d.number}`}
                     </Mono>
+                    <WorldChampionBadge season={2026} driverId={d.id} className="mt-2 self-start" />
                   </div>
                   <div style={{ position: "relative", textAlign: "right" }}>
                     <StatValue size={28} color={F1.fg}>

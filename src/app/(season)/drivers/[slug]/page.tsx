@@ -23,6 +23,7 @@ import { Breadcrumbs, type BreadcrumbItem } from "@/components/shared/breadcrumb
 import { JsonLd } from "@/components/shared/json-ld";
 import { createPageMetadata } from "@/lib/seo/metadata";
 import { breadcrumbSchema, driverSchema } from "@/lib/seo/schema";
+import { WorldChampionBadge } from "@/components/shared/world-champion-badge";
 
 interface DriverProfilePageProps {
   params: Promise<{ slug: string }>;
@@ -290,6 +291,7 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
             </div>
 
             <div className="min-w-0">
+              <WorldChampionBadge season={2026} driverId={driver.id} className="mb-5" />
               <div className="flex items-center gap-3 mb-3">
                 <span
                   style={{
