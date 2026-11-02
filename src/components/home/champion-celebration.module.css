@@ -1,37 +1,36 @@
 /* Fixed and input-transparent: zero document flow, no scroll lock or focus trap. */
-.reveal { position:fixed; inset:64px 0 0; z-index:45; overflow:hidden; pointer-events:none; color:#f4f4f5; animation:depart 6.2s both; }
+.reveal { position:fixed; inset:64px 0 0; z-index:45; overflow:hidden; pointer-events:none; color:#f4f4f5; animation:depart var(--reveal-duration) cubic-bezier(.22,1,.36,1) both; }
 .ambient { position:absolute; inset:0; background:radial-gradient(ellipse at 50% 50%,#071c1bfa 0%,#061312f5 55%,#08080ae8 100%); }
-.stage { position:absolute; inset:0; margin:auto; width:min(1100px,100%); height:min(720px,100%); }
+.stage { position:absolute; inset:0; margin:auto; width:min(1100px,100%); height:min(720px,100%); --entrance-ease:cubic-bezier(.16,1,.3,1); }
 .streaks { position:absolute; inset:0; overflow:hidden; }
-.streaks i { position:absolute; top:50%; left:-50%; width:150%; height:2px; background:linear-gradient(90deg,transparent,#27f4d2,transparent); transform:rotate(-28deg); animation:streak 1s both; }
-.streaks i:nth-child(2) { top:65%; height:20px; opacity:.25; animation-delay:.12s; }
+.streaks i { position:absolute; top:50%; left:-50%; width:150%; height:2px; background:linear-gradient(90deg,transparent,#27f4d2,transparent); transform:rotate(-28deg); animation:streak 1.15s cubic-bezier(.22,1,.36,1) both; }
+.streaks i:nth-child(2) { top:65%; height:14px; opacity:.18; animation-delay:.12s; }
 .streaks i:nth-child(3) { top:35%; background:linear-gradient(90deg,transparent,#e8be68,transparent); animation-delay:.22s; }
 .number { position:absolute; left:2%; top:50%; transform:translateY(-53%); font:700 clamp(280px,46vw,620px)/.9 var(--font-antonio),sans-serif; letter-spacing:-.08em; color:#27f4d20c; -webkit-text-stroke:2px #27f4d263; animation:numberIn 1.1s cubic-bezier(.16,1,.3,1) both; }
-.portrait { position:absolute; right:2%; bottom:8%; height:85%; width:43%; opacity:.9; mask-image:linear-gradient(#000 70%,transparent); animation:portraitIn 1.2s .2s both; }
+.portrait { position:absolute; right:2%; bottom:8%; height:85%; width:43%; --portrait-opacity:.9; opacity:var(--portrait-opacity); mask-image:linear-gradient(#000 70%,transparent); animation:portraitIn 1.15s .12s var(--entrance-ease) both; }
 .driver { object-fit:contain; object-position:bottom; filter:drop-shadow(0 0 40px #27f4d235); }
 .copy { position:absolute; left:9%; top:50%; transform:translateY(-50%); }
-.kicker { font:10px var(--font-jetbrains-mono),monospace; letter-spacing:.4em; color:#e8be68; margin-bottom:22px; animation:copyIn .55s .4s both; }
-.name { font:700 clamp(56px,8vw,110px)/.95 var(--font-antonio),sans-serif; letter-spacing:-.04em; text-shadow:0 4px 36px #000; animation:copyIn .7s .55s both; }
+.kicker { font:11px var(--font-jetbrains-mono),monospace; letter-spacing:.32em; color:#e8be68; margin-bottom:20px; animation:copyIn .65s .24s var(--entrance-ease) both; }
+.name { font:700 clamp(56px,8vw,110px)/.98 var(--font-antonio),sans-serif; letter-spacing:-.04em; text-shadow:0 4px 36px #000; animation:copyIn .85s .34s var(--entrance-ease) both; }
 .name span { display:block; color:#27f4d2; }
-.title { display:inline-block; margin-top:24px; padding:8px 12px; background:#e8be68; color:#091512; font:600 clamp(12px,1.7vw,19px) var(--font-jetbrains-mono),monospace; letter-spacing:.1em; animation:titleIn .65s .9s both; }
-.tagline { margin-top:18px; font-size:13px; color:#cbd6d3; animation:copyIn .6s 1.1s both; }
-.source { display:inline-block; pointer-events:auto; font:9px var(--font-jetbrains-mono),monospace; letter-spacing:.12em; color:#b6c9c3; margin-top:18px; animation:copyIn .6s 1.1s both; }
+.title { display:inline-block; margin-top:26px; padding:9px 13px; background:#e8be68; color:#091512; font:600 clamp(12px,1.7vw,19px) var(--font-jetbrains-mono),monospace; letter-spacing:.08em; animation:titleIn .75s .65s var(--entrance-ease) both; }
+.tagline { margin-top:18px; font-size:13px; line-height:1.6; color:#cbd6d3; animation:copyIn .75s .85s var(--entrance-ease) both; }
+.source { display:inline-block; pointer-events:auto; font:9px var(--font-jetbrains-mono),monospace; letter-spacing:.12em; color:#b6c9c3; margin-top:16px; animation:copyIn .75s .95s var(--entrance-ease) both; }
 .source:hover { text-decoration:underline; text-underline-offset:4px; }
-.finishLine { position:absolute; bottom:12%; left:8%; width:84%; height:2px; background:linear-gradient(90deg,#27f4d2,#e8be68,transparent); transform-origin:left; animation:lineIn 1.1s .3s both; }
-.confetti { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+.finishLine { position:absolute; bottom:12%; left:8%; width:84%; height:2px; background:linear-gradient(90deg,#27f4d2,#e8be68,transparent); transform-origin:left; animation:lineIn 1.3s .25s var(--entrance-ease) both; }
 .skip { position:absolute; pointer-events:auto; top:18px; right:22px; display:flex; align-items:center; gap:8px; border:1px solid #4c615d; background:#0b1716e8; padding:10px 12px; font-size:11px; cursor:pointer; }
 .replay { min-width:44px; min-height:44px; justify-content:center; position:fixed; left:16px; bottom:18px; z-index:46; display:flex; align-items:center; gap:8px; padding:10px 12px; background:#0b1716ec; color:#e8be68; border:1px solid #4c615d; border-radius:24px; font:9px var(--font-jetbrains-mono),monospace; letter-spacing:.08em; cursor:pointer; box-shadow:0 3px 16px #0004; }
 .replay:hover { border-color:#27f4d2; color:#27f4d2; }
 .reveal a:focus-visible,.reveal button:focus-visible,.replay:focus-visible { outline:2px solid #27f4d2; outline-offset:4px; }
 .announcement { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
-@keyframes depart { 0% {opacity:0} 6%,80% {opacity:1} 100% {opacity:0} }
-@keyframes numberIn { from {opacity:0; translate:0 25px; scale:1.15} to {opacity:1; translate:0 0; scale:1} }
-@keyframes portraitIn { from {opacity:0; translate:30px 0} to {opacity:.9; translate:0 0} }
-@keyframes copyIn { from {opacity:0; translate:0 20px; filter:blur(5px)} to {opacity:1; translate:0 0; filter:blur(0)} }
+@keyframes depart { 0% {opacity:0} 9%,78% {opacity:1} 100% {opacity:0} }
+@keyframes numberIn { from {opacity:0; translate:0 25px; scale:1.08} to {opacity:1; translate:0 0; scale:1} }
+@keyframes portraitIn { from {opacity:0; translate:20px 0} to {opacity:var(--portrait-opacity); translate:0 0} }
+@keyframes copyIn { from {opacity:0; translate:0 14px} to {opacity:1; translate:0 0} }
 @keyframes titleIn { from {opacity:0; clip-path:inset(0 100% 0 0)} to {opacity:1; clip-path:inset(0)} }
 @keyframes streak { from {translate:-40% 40%; opacity:0} 30% {opacity:1} to {translate:60% -60%; opacity:0} }
 @keyframes lineIn { from {scale:0 1} to {scale:1 1} }
-@media(max-width:640px) { .stage { height:85%; } .copy {left:7%; top:46%;} .kicker {font-size:8px; letter-spacing:.25em; margin-bottom:18px;} .name {font-size:clamp(50px,14vw,78px);} .title {font-size:11px; letter-spacing:.04em; margin-top:18px;} .tagline {font-size:11px; max-width:220px;} .source {font-size:8px;} .portrait {right:-8%; width:64%; height:63%; bottom:4%; opacity:.55;} .copy {z-index:1;} .number {font-size:90vw; left:0; top:40%;} .finishLine {bottom:10%;} .skip {top:12px; right:12px;} .replay {left:10px; bottom:12px;} .replay span {display:none;} }
+@media(max-width:640px) { .stage { height:85%; } .copy {left:7%; top:44%;} .kicker {font-size:8px; letter-spacing:.25em; margin-bottom:18px;} .name {font-size:clamp(50px,14vw,78px);} .title {font-size:10px; letter-spacing:.06em; margin-top:20px; padding:9px 11px;} .tagline {font-size:11px; max-width:220px;} .source {font-size:8px;} .portrait {right:-6%; width:62%; height:63%; bottom:4%; --portrait-opacity:.72;} .copy {z-index:1;} .number {font-size:90vw; left:0; top:40%;} .finishLine {bottom:10%;} .skip {top:12px; right:12px;} .replay {left:10px; bottom:12px;} .replay span {display:none;} }
 /* Static, short-lived announcement for motion-sensitive visitors, including a
    preference change mid-reveal. It remains skippable and has no animated pixels. */
 .reduced,.reduced * { animation:none !important; }

@@ -1,17 +1,16 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import { Trophy, X } from "lucide-react";
 import { CHAMPION_SOURCE, readCelebration, saveCelebration } from "@/lib/home/champion";
-import { scheduleChampionReveal } from "@/lib/home/champion-confetti";
+import { scheduleChampionReveal, REVEAL_DURATION_MS } from "@/lib/home/champion-reveal";
 import styles from "./champion-celebration.module.css";
 
 /** An ephemeral layer, never a homepage section or a modal. Navigation stays usable. */
 export function ChampionCelebration() {
   const [visible, setVisible] = useState(false);
   const [reduced, setReduced] = useState(false);
-  const canvas = useRef<HTMLCanvasElement>(null);
   const replay = useRef<HTMLButtonElement>(null);
   const layer = useRef<HTMLDivElement>(null);
   const cleanup = useRef<() => void>(() => {});
@@ -38,8 +37,8 @@ export function ChampionCelebration() {
   }, []);
 
   useEffect(() => {
-    if (!visible || !canvas.current) return;
-    cleanup.current = scheduleChampionReveal(canvas.current, finish, reduced);
+    if (!visible) return;
+    cleanup.current = scheduleChampionReveal(finish, reduced);
     const onKey = (event: KeyboardEvent) => { if (event.key === "Escape") finish(); };
     const onVisibility = () => { if (document.hidden) finish(); };
     document.addEventListener("keydown", onKey);
@@ -58,7 +57,7 @@ export function ChampionCelebration() {
         else setVisible(true);
       }}><Trophy size={15} /><span>12 / CHAMPION</span></button>
       {visible && (
-        <div ref={layer} className={`${styles.reveal} ${reduced ? styles.reduced : ""}`} aria-label="Antonelli championship celebration">
+        <div ref={layer} className={`${styles.reveal} ${reduced ? styles.reduced : ""}`} aria-label="Antonelli championship celebration" style={{ "--reveal-duration": `${REVEAL_DURATION_MS}ms` } as CSSProperties}>
           <div className={styles.ambient} aria-hidden="true" />
           <div className={styles.streaks} aria-hidden="true"><i /><i /><i /></div>
           <div className={styles.stage}>
@@ -73,7 +72,6 @@ export function ChampionCelebration() {
             </div>
             <div className={styles.finishLine} aria-hidden="true" />
           </div>
-          <canvas ref={canvas} className={styles.confetti} aria-hidden="true" />
           <button className={styles.skip} onClick={() => { saveCelebration("dismissed"); finish(); }}>Skip celebration <X size={16} /></button>
           <p className={styles.announcement} role="status">Kimi Antonelli, 2026 World Drivers’ Champion.</p>
         </div>
