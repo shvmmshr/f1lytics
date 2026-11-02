@@ -59,18 +59,23 @@ export function ChampionCelebration() {
       {visible && (
         <div ref={layer} className={`${styles.reveal} ${reduced ? styles.reduced : ""}`} aria-label="Antonelli championship celebration" style={{ "--reveal-duration": `${REVEAL_DURATION_MS}ms` } as CSSProperties}>
           <div className={styles.ambient} aria-hidden="true" />
-          <div className={styles.streaks} aria-hidden="true"><i /><i /><i /></div>
           <div className={styles.stage}>
             <span className={styles.number} aria-hidden="true">12</span>
-            <div className={styles.portrait} aria-hidden="true"><Image src="/drivers/antonelli.webp" alt="" fill sizes="(max-width: 640px) 220px, 420px" className={styles.driver} /></div>
-            <div className={styles.copy}>
-              <p className={styles.kicker}>THE CROWN IS HIS</p>
-              <p className={styles.name}>KIMI<span>ANTONELLI</span></p>
-              <p className={styles.title}>2026 WORLD CHAMPION</p>
-              <p className={styles.tagline}>History made. A new era in silver.</p>
-              <a href={CHAMPION_SOURCE} className={styles.source} target="_blank" rel="noopener noreferrer">MEXICO · 01 NOV 2026 ↗</a>
+            <div className={styles.portrait} aria-hidden="true">
+              <div className={styles.backlight} />
+              <Image src="/drivers/antonelli-champion-2026.webp" alt="" fill sizes="(max-width: 640px) 120vw, 75vw" className={styles.driver} />
+              <div className={styles.lightSweep} />
             </div>
-            <div className={styles.finishLine} aria-hidden="true" />
+            <div className={styles.topline} aria-hidden="true"><span>F1LYTICS / CHAMPION EDITION</span><span>2026</span></div>
+            <div className={styles.copy}>
+              <p className={styles.name}><span className={styles.nameRule} aria-hidden="true" />KIMI ANTONELLI<span className={styles.driverNumber}> / 12</span></p>
+              <h2 className={styles.title}><span><b>WORLD</b></span><span><b>CHAMPION.</b></span></h2>
+              <p className={styles.team}>MERCEDES<span aria-hidden="true"> / </span>ITALY<span className={styles.firstTitle}>FIRST WORLD TITLE</span></p>
+            </div>
+            <div className={styles.bottomline}>
+              <a href={CHAMPION_SOURCE} className={styles.source} target="_blank" rel="noopener noreferrer">MEXICO CITY · 01 NOV 2026 <span aria-hidden="true">↗</span></a>
+              <span className={styles.season}>WORLD DRIVERS’ CHAMPIONSHIP</span>
+            </div>
           </div>
           <button className={styles.skip} onClick={() => { saveCelebration("dismissed"); finish(); }}>Skip celebration <X size={16} /></button>
           <p className={styles.announcement} role="status">Kimi Antonelli, 2026 World Drivers’ Champion.</p>
