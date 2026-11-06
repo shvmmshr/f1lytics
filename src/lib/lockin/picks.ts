@@ -1,3 +1,4 @@
+import { getEligibleDriverIds } from "./eligibility";
 import { z } from "zod";
 import { DRIVER_LIST } from "@/lib/constants/drivers";
 import type { Picks } from "./scoring";
@@ -28,7 +29,7 @@ export type PicksInput = z.infer<typeof picksInputSchema>;
 export type PicksValidation = { ok: true; picks: Picks } | { ok: false; error: string };
 
 /** Validate a submission for a round: sprint winner only exists on sprint weekends. */
-export function validatePicks(input: unknown, round: { isSprint: boolean }): PicksValidation {
+export function validatePicks(input: unknown, round: { isSprint: boolean; raceDate: string }): PicksValidation {
   const parsed = picksInputSchema.safeParse(input);
   if (!parsed.success) {
     const issue = parsed.error.issues[0];
@@ -36,6 +37,13 @@ export function validatePicks(input: unknown, round: { isSprint: boolean }): Pic
   }
   const p = parsed.data;
   if (round.isSprint && p.sprintWinner === null) return { ok: false, error: "sprintWinner: pick a sprint winner" };
+  const eligibleIds = getEligibleDriverIds(round.raceDate);
+  const slots = ["pole", "p1", "p2", "p3", "fastestLap", ...(round.isSprint ? ["sprintWinner"] as const : [])] as const;
+  for (const slot of slots) {
+    if (!eligibleIds.has(p[slot] ?? "")) {
+      return { ok: false, error: `${slot}: driver is not confirmed for this round; choose another driver` };
+    }
+  }
   return {
     ok: true,
     picks: {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseCircuitReference, parseTeamReference, referenceGrid, referenceText, trustedCircuitImage, validateScheduleRefresh, type CircuitReference } from "./reference-parser";
+import { matchesDriverReference, parseCircuitReference, parseTeamReference, referenceGrid, referenceText, trustedCircuitImage, validateScheduleRefresh, type CircuitReference } from "./reference-parser";
 import reference from "./circuit-reference.json";
 import schedules from "./session-reference.json";
 
@@ -100,5 +100,24 @@ describe("reference refresh source guards", () => {
     expect(() => validateScheduleRefresh(old, { ...old, race: "2026-09-14T13:00:00Z" }, "2026-09-13", Date.parse("2026-09-10"))).toThrow(/date/);
     expect(() => validateScheduleRefresh(old, { ...old, fp1: "2026-09-13T14:00:00Z" }, "2026-09-13", Date.parse("2026-09-10"))).toThrow(/order/);
     expect(() => validateScheduleRefresh(old, { ...old, sprint: "2026-09-12T10:00:00Z" }, "2026-09-13", Date.parse("2026-09-10"))).toThrow(/format/);
+  });
+});
+
+
+describe("reviewed debutant driver identity", () => {
+  const entry = { sourceId: null, identity: { givenName: "Rafael", familyName: "Câmara", dateOfBirth: "2005-05-05" } };
+  it("accepts a later upstream ID only with the reviewed full identity", () => {
+    expect(matchesDriverReference(entry, { ...entry.identity, driverId: "upstream_assigned_id", familyName: "Camara" })).toBe(true);
+    expect(matchesDriverReference(entry, { ...entry.identity, familyName: "Câmara" })).toBe(true);
+  });
+  it("does not guess IDs or match incomplete and different identities", () => {
+    expect(matchesDriverReference(entry, { driverId: "camara", familyName: "Camara" })).toBe(false);
+    expect(matchesDriverReference(entry, { ...entry.identity, givenName: "Other" })).toBe(false);
+    expect(matchesDriverReference(entry, { ...entry.identity, dateOfBirth: "2000-01-01" })).toBe(false);
+    expect(matchesDriverReference({ sourceId: null }, entry.identity)).toBe(false);
+  });
+  it("retains exact ID matching for already catalogued drivers", () => {
+    expect(matchesDriverReference({ ...entry, sourceId: "known_id" }, { ...entry.identity, driverId: "different_id" })).toBe(false);
+    expect(matchesDriverReference({ sourceId: "ocon" }, { driverId: "ocon" })).toBe(true);
   });
 });

@@ -98,3 +98,24 @@ export function validateScheduleRefresh(previous: Record<string, string>, candid
   for (let i = 1; i < order.length; i++) if (Date.parse(candidate[order[i]]) <= Date.parse(candidate[order[i - 1]])) throw new Error("Invalid session order");
   return candidate;
 }
+
+interface DriverIdentity {
+  givenName: string;
+  familyName: string;
+  dateOfBirth: string;
+}
+
+/** Debutants may not have a Jolpica ID yet. Match only a reviewed full identity,
+ * including birth date, instead of guessing an ID or using a surname alone. */
+export function matchesDriverReference(
+  entry: { sourceId: string | null; identity?: DriverIdentity },
+  driver: Partial<DriverIdentity> & { driverId?: string },
+): boolean {
+  if (entry.sourceId) return entry.sourceId === driver.driverId;
+  const identity = entry.identity;
+  if (!identity || !driver.givenName || !driver.familyName || !driver.dateOfBirth) return false;
+  const normalized = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+  return normalized(identity.givenName) === normalized(driver.givenName)
+    && normalized(identity.familyName) === normalized(driver.familyName)
+    && identity.dateOfBirth === driver.dateOfBirth;
+}

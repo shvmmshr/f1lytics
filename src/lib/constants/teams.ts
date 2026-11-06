@@ -91,7 +91,7 @@ export const TEAMS: Record<string, Team> = {
     id: "haas",
     name: "Haas",
     color: "#B6BABD",
-    drivers: ["ocon", "bearman"],
+    drivers: ["camara", "bearman"],
     logo: "/teams/haas.webp",
     slug: "haas",
   },

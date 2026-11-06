@@ -246,7 +246,7 @@
       "id": "haas",
       "url": "https://www.formula1.com/en/teams/haas",
       "drivers": [
-        "esteban-ocon",
+        "rafael-camara",
         "oliver-bearman"
       ]
     },
@@ -399,6 +399,18 @@
       "sourceId": "perez",
       "slug": "sergio-perez",
       "teamId": "cadillac"
+    },
+    {
+      "id": "camara",
+      "sourceId": null,
+      "slug": "rafael-camara",
+      "teamId": "haas",
+      "identity": {
+        "givenName": "Rafael",
+        "familyName": "C\u00e2mara",
+        "dateOfBirth": "2005-05-05"
+      },
+      "source": "https://www.formula1.com/en/drivers/rafael-camara"
     }
   ],
   "confirmedSubstitutions": [
