@@ -64,7 +64,7 @@ export default async function LockInPage() {
       </RoundHeader>
 
       <div style={{ padding: "clamp(16px, 3vw, 28px) clamp(12px, 3vw, 32px)" }}>
-        <PickBoard round={summary} drivers={getBoardDrivers()} initialPicks={initialPicks} signedIn={user !== null} signInHref="/lockin/sign-in?next=%2Flockin" />
+        <PickBoard round={summary} drivers={getBoardDrivers(round.raceDate)} initialPicks={initialPicks} signedIn={user !== null} signInHref="/lockin/sign-in?next=%2Flockin" />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2" style={{ padding: "0 clamp(12px, 3vw, 32px) clamp(24px, 4vw, 40px)" }}>

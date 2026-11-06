@@ -2,7 +2,7 @@ import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
-import { parseCircuitReference, parseTeamReference, trustedCircuitImage, validateScheduleRefresh } from "../src/lib/data/reference-parser.ts";
+import { matchesDriverReference, parseCircuitReference, parseTeamReference, trustedCircuitImage, validateScheduleRefresh } from "../src/lib/data/reference-parser.ts";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const read = async path => JSON.parse(await readFile(join(root, path), "utf8"));
@@ -98,7 +98,7 @@ try {
   for (const result of race.Results ?? []) {
     if (!/^[a-z][a-z0-9_]{1,40}$/.test(result.Driver?.driverId ?? "")) throw Error("Invalid driver identity");
     const confirmed = manifest.confirmedSubstitutions?.find(item => item.dates.includes(race.date) && item.sourceId === result.Driver.driverId);
-    const driver = manifest.drivers.find(d => d.sourceId === result.Driver?.driverId);
+    const driver = manifest.drivers.find(d => matchesDriverReference(d, result.Driver));
     if (!driver) { if (!confirmed) review.push(`Latest classification includes uncatalogued driver ${result.Driver?.driverId}; preserve their race row and review season entry`); continue; }
     const number = Number(result.Driver.permanentNumber);
     if (!Number.isInteger(number) || number < 1 || number > 99) throw Error("Invalid driver number");

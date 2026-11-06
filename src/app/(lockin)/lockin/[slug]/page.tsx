@@ -62,7 +62,7 @@ export default async function LockInRoundPage({ params }: Props) {
       <>
         <RoundHeader round={summary} state={state} players={players} />
         <div style={{ padding: "clamp(16px, 3vw, 28px) clamp(12px, 3vw, 32px)" }}>
-          <PickBoard round={summary} drivers={getBoardDrivers()} initialPicks={initialPicks} signedIn={user !== null} signInHref={`/lockin/sign-in?next=${encodeURIComponent(`/lockin/${round.slug}`)}`} />
+          <PickBoard round={summary} drivers={getBoardDrivers(round.raceDate)} initialPicks={initialPicks} signedIn={user !== null} signInHref={`/lockin/sign-in?next=${encodeURIComponent(`/lockin/${round.slug}`)}`} />
         </div>
       </>
     );

@@ -8,7 +8,7 @@ import { DRIVER_LIST } from "@/lib/constants/drivers";
  */
 
 function normalize(value: string): string {
-  return value.toLowerCase().replace(/[^a-z0-9]/g, "");
+  return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]/g, "");
 }
 
 /** Jolpica driver to constants id; unknown drivers become "code:XXX" so no pick can match them by accident. */

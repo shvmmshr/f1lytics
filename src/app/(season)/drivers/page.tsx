@@ -73,7 +73,7 @@ export default async function DriversPage() {
         <BroadcastGrid color={F1.line} size={64} opacity={0.18} />
 
         {/* Page header */}
-        <PageHeader eyebrow="SECTION 03" meta={<>2026 LINEUP · {DRIVER_LIST.length} LISTED DRIVERS · {Object.keys(TEAMS).length} TEAMS</>} title="THE GRID" description="The listed season lineup, sorted by championship position. Additional race entrants appear below." />
+        <PageHeader eyebrow="SECTION 03" meta={<>2026 ENTRANTS · {DRIVER_LIST.length} LISTED DRIVERS · {Object.keys(TEAMS).length} TEAMS</>} title="THE GRID" description="Season entrants, including former drivers, sorted by championship position. Additional race entrants appear below." />
 
         {/* Driver tile grid */}
         <DriversGrid>
@@ -156,7 +156,7 @@ export default async function DriversPage() {
                       letterSpacing: "0.18em",
                     }}
                   >
-                    {team.name.toUpperCase()}
+                    {team.name.toUpperCase()}{!team.drivers.includes(d.id) && " · FORMER ENTRY"}
                   </Mono>
                 </div>
 

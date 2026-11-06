@@ -1,3 +1,4 @@
+import { getEligibleDriverIds } from "./eligibility";
 import { DRIVER_LIST } from "@/lib/constants/drivers";
 import { TEAMS, TEAM_LIST } from "@/lib/constants/teams";
 
@@ -16,7 +17,7 @@ export interface BoardDriver {
 let cached: BoardDriver[] | null = null;
 
 /** Drivers ordered by team (constructor order), teammates adjacent, so the grid reads like a pit wall. */
-export function getBoardDrivers(): BoardDriver[] {
+function getAllBoardDrivers(): BoardDriver[] {
   if (!cached) {
     const teamOrder = new Map(TEAM_LIST.map((t, i) => [t.id, i]));
     cached = [...DRIVER_LIST]
@@ -38,9 +39,15 @@ export function getBoardDrivers(): BoardDriver[] {
   return cached;
 }
 
+/** Only confirmed entries for this round are offered as new picks. */
+export function getBoardDrivers(raceDate: string): BoardDriver[] {
+  const eligibleIds = getEligibleDriverIds(raceDate);
+  return getAllBoardDrivers().filter((driver) => eligibleIds.has(driver.id));
+}
+
 export function driverById(id: string | null | undefined): BoardDriver | null {
   if (!id) return null;
-  return getBoardDrivers().find((d) => d.id === id) ?? null;
+  return getAllBoardDrivers().find((d) => d.id === id) ?? null;
 }
 
 /** "code:XXX" results (unknown driver) render as their code. */

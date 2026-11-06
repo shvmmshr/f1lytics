@@ -40,7 +40,7 @@ export async function generateMetadata({ params }: DriverProfilePageProps): Prom
   const team = TEAMS[driver.teamId];
   return createPageMetadata({
     title: `${driver.firstName} ${driver.lastName} F1 Stats, Results & Profile (2026)`,
-    description: `${driver.firstName} ${driver.lastName} drives car ${driver.number} for ${team.name}. Follow 2026 standings, race form, wins, podiums, teammate comparison, and career history.`,
+    description: `${driver.firstName} ${driver.lastName}, car ${driver.number}, ${team.name} 2026 season entrant. Follow 2026 standings, race form, wins, podiums, teammate comparison, and career history.`,
     path: `/drivers/${driver.slug}`,
     imageEyebrow: `DRIVER PROFILE · ${team.name.toUpperCase()}`,
   });
@@ -131,9 +131,10 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
     (s) => s.Driver.code?.toUpperCase() === driver.abbreviation
   );
 
-  const teammate = DRIVER_LIST.find(
-    (d) => d.teamId === driver.teamId && d.id !== driver.id
-  );
+  // Former entrants keep their history without borrowing the current pairing.
+  const teammate = team.drivers.includes(driver.id) ? DRIVER_LIST.find(
+    (d) => d.id !== driver.id && team.drivers.includes(d.id)
+  ) : undefined;
   const teammateStanding = teammate
     ? standings.find((s) => s.Driver.code?.toUpperCase() === teammate.abbreviation)
     : undefined;
