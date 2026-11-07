@@ -6,6 +6,7 @@ import { F1, Mono, Brackets } from "@/components/shared/broadcast";
 import { useCountdownTick } from "@/hooks/use-countdown-tick";
 import type { BoardDriver } from "@/lib/lockin/board-data";
 import type { Picks } from "@/lib/lockin/scoring";
+import { clearIneligibleSelections } from "@/lib/lockin/eligibility";
 import { createDraftStorage } from "@/lib/lockin/draft-storage";
 import type { RoundSummary } from "@/lib/lockin/rounds";
 
@@ -21,6 +22,8 @@ const SLOTS: { key: SlotKey; label: string; hint: string; sprintOnly?: boolean }
 ];
 
 type Draft = Record<SlotKey, string | null> & { marginSeconds: string };
+
+const SLOT_KEYS = SLOTS.map((slot) => slot.key);
 
 const emptyDraft = (): Draft => ({ pole: null, p1: null, p2: null, p3: null, fastestLap: null, sprintWinner: null, marginSeconds: "" });
 
@@ -61,12 +64,14 @@ interface PickBoardProps {
 export function PickBoard(props: PickBoardProps) {
   // A different round or newly saved server picks start a fresh editing session.
   // This also cancels a pending restoration frame before it can cross rounds.
-  return <PickBoardSession key={`${props.round.raceDate}:${JSON.stringify(props.initialPicks)}`} {...props} />;
+  return <PickBoardSession key={`${props.round.raceDate}:${props.drivers.map(d => d.id).join(",")}:${JSON.stringify(props.initialPicks)}`} {...props} />;
 }
 
 function PickBoardSession({ round, drivers, initialPicks, signedIn, signInHref }: PickBoardProps) {
   const router = useRouter();
-  const [draft, setDraft] = useState<Draft>(() => (initialPicks ? draftFromPicks(initialPicks) : emptyDraft()));
+  const eligibleIds = useMemo(() => new Set(drivers.map((driver) => driver.id)), [drivers]);
+  const [draft, setDraft] = useState<Draft>(() => clearIneligibleSelections(initialPicks ? draftFromPicks(initialPicks) : emptyDraft(), SLOT_KEYS, eligibleIds));
+  const savedSelectionChanged = initialPicks && SLOT_KEYS.some(slot => initialPicks[slot] !== null && !eligibleIds.has(initialPicks[slot]!));
   const [armedSlot, setArmedSlot] = useState<SlotKey | null>(null);
   const [armedDriver, setArmedDriver] = useState<string | null>(null);
   const [status, setStatus] = useState<{ kind: "idle" | "saving" | "saved" | "error"; message?: string }>({ kind: "idle" });
@@ -85,8 +90,8 @@ function PickBoardSession({ round, drivers, initialPicks, signedIn, signInHref }
     }
     if (typeof parsed.marginSeconds === "string") safe.marginSeconds = parsed.marginSeconds;
     const hasContent = SLOTS.some((slot) => Boolean(safe[slot.key])) || Boolean(safe.marginSeconds);
-    return hasContent ? safe : null;
-  }), [round.raceDate]);
+    return hasContent ? clearIneligibleSelections(safe, SLOT_KEYS, eligibleIds) : null;
+  }), [round.raceDate, eligibleIds]);
 
   // Read before enabling writes. The initial persistence effect must not erase
   // unsaved calls while this hydration frame is still pending.
@@ -149,7 +154,7 @@ function PickBoardSession({ round, drivers, initialPicks, signedIn, signInHref }
 
   const marginMs = Math.round(Number.parseFloat(draft.marginSeconds || "0") * 1000);
   const complete =
-    slots.every((s) => draft[s.key] !== null) && Number.isFinite(marginMs) && marginMs >= 0 && marginMs <= 600_000;
+    slots.every((s) => eligibleIds.has(draft[s.key] ?? "")) && Number.isFinite(marginMs) && marginMs >= 0 && marginMs <= 600_000;
 
   const submit = async () => {
     if (!complete) return;
@@ -199,9 +204,14 @@ function PickBoardSession({ round, drivers, initialPicks, signedIn, signInHref }
             LOCKS IN <span ref={countdownRef} style={{ color: F1.fg }}>--</span>
           </Mono>
         </div>
+        {savedSelectionChanged && (
+          <p className="mt-2" style={{ fontSize: 12, color: F1.red }}>
+            The lineup changed. Replace the cleared calls and lock in again. Your saved picks stay unchanged until you save.
+          </p>
+        )}
         {restored && (
           <p className="mt-2" style={{ fontSize: 12, color: F1.fg3 }}>
-            Your unsaved calls from earlier are back.
+            Your unsaved calls from earlier are back. Any drivers not confirmed for this round have been cleared.
           </p>
         )}
 
@@ -313,6 +323,9 @@ function PickBoardSession({ round, drivers, initialPicks, signedIn, signInHref }
             {armedSlot ? `CHOOSE ${SLOTS.find((s) => s.key === armedSlot)?.label}` : armedDriver ? "NOW TAP A SLOT" : "TAP A SLOT, THEN A DRIVER"}
           </Mono>
         </div>
+        {drivers.filter(driver => driver.teamId === "haas").length < 2 && (
+          <p className="mt-2" style={{ fontSize: 12, color: F1.fg3 }}>Haas has not confirmed its second driver for this round. Only confirmed drivers are available.</p>
+        )}
         <div className="mt-3 grid grid-cols-2 gap-1.5 sm:grid-cols-4" role="group" aria-label="Driver plates">
           {drivers.map((d) => {
             const armed = armedDriver === d.id;
