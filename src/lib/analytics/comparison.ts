@@ -2,10 +2,7 @@ import type { DriverStanding, ConstructorStanding, RaceResult, QualifyingResult,
 import { mapConstructorToTeamId } from "@/lib/constructor-map";
 import { isRaceFinisher } from "./results";
 import { buildPointsProgression } from "./points";
-
-function driverCode(driver: { code?: string; familyName: string }): string {
-  return (driver.code ?? driver.familyName.slice(0, 3)).toUpperCase();
-}
+import { jolpicaDriverCode } from "@/lib/driver-map";
 
 export interface RecentFormEntry {
   round: number;
@@ -61,7 +58,7 @@ export function buildComparisonStats(
   const driverStats: Record<string, DriverStat> = {};
 
   for (const s of driverStandings) {
-    const code = driverCode(s.Driver);
+    const code = jolpicaDriverCode(s.Driver);
     const pos = Number.parseInt(s.position, 10);
     driverStats[code] = {
       position: Number.isNaN(pos) ? null : pos,
@@ -88,7 +85,7 @@ export function buildComparisonStats(
   for (const race of sortedRaces) {
     const round = Number.parseInt(race.round, 10);
     for (const result of race.Results ?? []) {
-      const code = driverCode(result.Driver);
+      const code = jolpicaDriverCode(result.Driver);
       if (!driverStats[code]) continue;
       const pos = Number.parseInt(result.position, 10);
       const pts = Number.parseFloat(result.points) || 0;
@@ -135,7 +132,7 @@ export function buildComparisonStats(
   for (const quali of qualifyingResults) {
     const round = Number.parseInt(quali.round, 10);
     for (const result of quali.QualifyingResults ?? []) {
-      const code = driverCode(result.Driver);
+      const code = jolpicaDriverCode(result.Driver);
       if (!driverStats[code]) continue;
       const pos = Number.parseInt(result.position, 10);
       if (!Number.isNaN(pos)) {

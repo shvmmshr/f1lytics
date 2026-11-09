@@ -2,6 +2,7 @@ import { getTeamTextColor } from "@/lib/design/team-color";
 import { ScrollableRegion } from "@/components/shared/scrollable-region";
 import { isRaceFinisher } from "@/lib/analytics/results";
 import { profileRaceRound } from "@/lib/analytics/profile-results";
+import { getDriverFromJolpica } from "@/lib/driver-map";
 import type { Metadata } from "next";
 import { countryCodeToFlag } from "@/lib/utils";
 import Image from "next/image";
@@ -111,7 +112,7 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
     for (let i = 0; i < historyYears.length; i++) {
       const yearStandings = histResults[i];
       const entry = yearStandings.find(
-        (s) => s.Driver.code?.toUpperCase() === driver.abbreviation
+        (s) => getDriverFromJolpica(s.Driver)?.id === driver.id
       );
       if (entry) {
         const pos = Number.parseInt(entry.position, 10);
@@ -128,7 +129,7 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
   }
 
   const driverStanding = standings.find(
-    (s) => s.Driver.code?.toUpperCase() === driver.abbreviation
+    (s) => getDriverFromJolpica(s.Driver)?.id === driver.id
   );
 
   // Former entrants keep their history without borrowing the current pairing.
@@ -136,13 +137,13 @@ export default async function DriverProfilePage({ params }: DriverProfilePagePro
     (d) => d.id !== driver.id && team.drivers.includes(d.id)
   ) : undefined;
   const teammateStanding = teammate
-    ? standings.find((s) => s.Driver.code?.toUpperCase() === teammate.abbreviation)
+    ? standings.find((s) => getDriverFromJolpica(s.Driver)?.id === teammate.id)
     : undefined;
 
   const driverRaceResults = raceResults
     .map((race) => {
       const result = race.Results?.find(
-        (e) => e.Driver.code?.toUpperCase() === driver.abbreviation
+        (e) => getDriverFromJolpica(e.Driver)?.id === driver.id
       );
       if (!result) return null;
       const pos = Number.parseInt(result.position, 10);

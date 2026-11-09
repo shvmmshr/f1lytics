@@ -8,8 +8,9 @@ import { getRaceResults, getSprintResults } from "@/lib/api/jolpica";
 import { getStartingGrid, type GridRow } from "@/lib/api/weekend";
 import type { ResultItem, SprintRace } from "@/lib/api/types";
 import { getLaps, getRaceControl, getSessions, getStints } from "@/lib/api/openf1";
-import { CIRCUIT_LIST, DRIVER_LIST, TEAMS, getApiRound, getCircuitBySlug } from "@/lib/constants";
+import { CIRCUIT_LIST, TEAMS, getApiRound, getCircuitBySlug } from "@/lib/constants";
 import { mapConstructorToTeamId, teamColorForName } from "@/lib/constructor-map";
+import { driverProfileHref, jolpicaDriverCode } from "@/lib/driver-map";
 import { getWeekendSchedule } from "@/lib/constants/sessions";
 import { SessionSchedule } from "@/components/shared/session-schedule";
 import { PageTransition } from "@/components/layout/page-transition";
@@ -121,22 +122,6 @@ export async function generateMetadata({ params }: RacePageProps): Promise<Metad
     noIndex: state === "cancelled",
     imageEyebrow: `ROUND ${String(circuit.round).padStart(2, "0")} · ${state === "completed" ? "RESULTS" : state === "weekend" ? "RACE WEEKEND" : state === "cancelled" ? "CANCELLED" : "SCHEDULE"}`,
   });
-}
-
-function normalize(value: string): string {
-  return value.toLowerCase().replace(/[^a-z0-9]/g, "");
-}
-
-function driverHref(driver: { code?: string; driverId?: string; familyName: string }) {
-  const code = driver.code?.toUpperCase();
-  const normalizedFamily = normalize(driver.familyName);
-  const local = DRIVER_LIST.find(
-    (candidate) =>
-      (code && candidate.abbreviation === code) ||
-      candidate.id === driver.driverId ||
-      normalize(candidate.lastName) === normalizedFamily,
-  );
-  return local ? `/drivers/${local.slug}` as const : null;
 }
 
 function teamHref(constructor: { constructorId?: string; name: string }) {
@@ -299,7 +284,7 @@ export default async function RacePage({ params }: RacePageProps) {
 
   const chartDrivers = sortedResults.map((result) => {
     const driverNumber = Number.parseInt(result.number, 10);
-    const label = result.Driver.code ?? result.Driver.familyName.slice(0, 3).toUpperCase();
+    const label = jolpicaDriverCode(result.Driver);
     const color = mapConstructorToTeamColor(result.Constructor.name);
     const teamId = mapConstructorToTeamId(result.Constructor.constructorId ?? "", result.Constructor.name);
 
@@ -437,8 +422,8 @@ export default async function RacePage({ params }: RacePageProps) {
                     >
                       <PositionBadge position={row.position} />
                       <div className="flex flex-col min-w-0 flex-1">
-                        {driverHref({ familyName: row.familyName }) ? <Link
-                          href={driverHref({ familyName: row.familyName })!}
+                        {driverProfileHref({ familyName: row.familyName }) ? <Link
+                          href={driverProfileHref({ familyName: row.familyName })!}
                           className="font-display truncate"
                           style={{
                             fontSize: "clamp(14px, 3.4vw, 16px)",
@@ -546,8 +531,8 @@ export default async function RacePage({ params }: RacePageProps) {
                           lineHeight: 1.05,
                         }}
                       >
-                        {driverHref(result.Driver) ? (
-                          <Link href={driverHref(result.Driver)!} className="hover:underline">
+                        {driverProfileHref(result.Driver) ? (
+                          <Link href={driverProfileHref(result.Driver)!} className="hover:underline">
                             {result.Driver.givenName.toUpperCase()}{" "}
                             <span style={{ color }}>{result.Driver.familyName.toUpperCase()}</span>
                           </Link>
@@ -667,8 +652,8 @@ export default async function RacePage({ params }: RacePageProps) {
                                 verticalAlign: "middle",
                               }}
                             />
-                            {driverHref(result.Driver) ? (
-                              <Link href={driverHref(result.Driver)!} className="hover:underline">
+                            {driverProfileHref(result.Driver) ? (
+                              <Link href={driverProfileHref(result.Driver)!} className="hover:underline">
                                 {result.Driver.givenName} {result.Driver.familyName}
                               </Link>
                             ) : <>{result.Driver.givenName} {result.Driver.familyName}</>}
@@ -809,8 +794,8 @@ export default async function RacePage({ params }: RacePageProps) {
                                   verticalAlign: "middle",
                                 }}
                               />
-                              {driverHref(result.Driver) ? (
-                                <Link href={driverHref(result.Driver)!} className="hover:underline">
+                              {driverProfileHref(result.Driver) ? (
+                                <Link href={driverProfileHref(result.Driver)!} className="hover:underline">
                                   {result.Driver.givenName} {result.Driver.familyName}
                                 </Link>
                               ) : <>{result.Driver.givenName} {result.Driver.familyName}</>}

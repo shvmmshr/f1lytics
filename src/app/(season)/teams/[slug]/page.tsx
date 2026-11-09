@@ -7,6 +7,7 @@ import { notFound } from "next/navigation";
 import { getConstructorStandings, getDriverStandings, getRaceResults } from "@/lib/api/jolpica";
 import { TEAM_LIST, getTeamBySlug } from "@/lib/constants";
 import { mapConstructorToTeamId } from "@/lib/constructor-map";
+import { getDriverFromJolpica } from "@/lib/driver-map";
 import { profileRaceRound, teamRaceEntries } from "@/lib/analytics/profile-results";
 import { DRIVERS, type Driver } from "@/lib/constants/drivers";
 import { PageTransition } from "@/components/layout/page-transition";
@@ -121,10 +122,10 @@ export default async function TeamPage({ params }: TeamPageProps) {
 
   const driverStandingMap = new Map<string, { points: number; position: number | null }>();
   for (const s of driverStandings) {
-    const code = s.Driver.code?.toUpperCase();
-    if (!code) continue;
+    const driver = getDriverFromJolpica(s.Driver);
+    if (!driver) continue;
     const pos = Number.parseInt(s.position, 10);
-    driverStandingMap.set(code, {
+    driverStandingMap.set(driver.id, {
       points: Number.parseFloat(s.points) || 0,
       position: Number.isNaN(pos) ? null : pos,
     });
@@ -142,7 +143,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
 
       // Per-driver results
       const driverResults = teamDrivers.map((d) => {
-        const entry = teamEntries.find((e) => e.Driver.code?.toUpperCase() === d.abbreviation);
+        const entry = teamEntries.find((e) => getDriverFromJolpica(e.Driver)?.id === d.id);
         if (!entry) return { driver: d, position: null, points: 0 };
         const pos = Number.parseInt(entry.position, 10);
         return {
@@ -372,7 +373,7 @@ export default async function TeamPage({ params }: TeamPageProps) {
               }}
             >
               {teamDrivers.map((d) => {
-                const standing = driverStandingMap.get(d.abbreviation);
+                const standing = driverStandingMap.get(d.id);
                 const pos = standing?.position;
                 const pts = standing?.points ?? 0;
                 return (

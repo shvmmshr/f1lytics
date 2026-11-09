@@ -16,6 +16,7 @@ import { JsonLd } from "@/components/shared/json-ld";
 import { createPageMetadata } from "@/lib/seo/metadata";
 import { collectionSchema } from "@/lib/seo/schema";
 import { mapConstructorToTeamId } from "@/lib/constructor-map";
+import { getDriverFromJolpica } from "@/lib/driver-map";
 
 const description =
   "Explore every 2026 F1 driver with championship points, wins, teams, race form, career history, and teammate comparisons.";
@@ -38,23 +39,23 @@ export default async function DriversPage() {
 
   const pointsMap = new Map<string, { points: number; position: number; wins: number }>();
   standings.forEach((s) => {
-    const code = s.Driver.code?.toUpperCase();
-    if (!code) return;
+    const driver = getDriverFromJolpica(s.Driver);
+    if (!driver) return;
     const pts = Number.parseFloat(s.points) || 0;
     const pos = Number.parseInt(s.position, 10);
     const wins = Number.parseInt(s.wins, 10) || 0;
-    if (!Number.isNaN(pos)) pointsMap.set(code, { points: pts, position: pos, wins });
+    if (!Number.isNaN(pos)) pointsMap.set(driver.id, { points: pts, position: pos, wins });
   });
 
   const sortedDrivers = [...DRIVER_LIST].sort((a, b) => {
-    const aS = pointsMap.get(a.abbreviation);
-    const bS = pointsMap.get(b.abbreviation);
+    const aS = pointsMap.get(a.id);
+    const bS = pointsMap.get(b.id);
     if (aS && bS) return aS.position - bS.position;
     if (aS) return -1;
     if (bS) return 1;
     return 0;
   });
-  const additionalEntrants = standings.filter(entry => !DRIVER_LIST.some(driver => driver.abbreviation === entry.Driver.code?.toUpperCase()));
+  const additionalEntrants = standings.filter(entry => !getDriverFromJolpica(entry.Driver));
 
   return (
     <PageTransition>
@@ -79,7 +80,7 @@ export default async function DriversPage() {
         <DriversGrid>
             {sortedDrivers.map((d) => {
               const team = TEAMS[d.teamId];
-              const stat = pointsMap.get(d.abbreviation);
+              const stat = pointsMap.get(d.id);
               return (
                 <Link
                   key={d.id}

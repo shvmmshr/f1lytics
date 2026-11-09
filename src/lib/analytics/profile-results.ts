@@ -1,6 +1,7 @@
 import type { RaceResult, ResultItem } from "@/lib/api/types";
 import { CIRCUIT_LIST } from "@/lib/constants/circuits";
 import { mapConstructorToTeamId } from "@/lib/constructor-map";
+import { getDriverFromJolpica } from "@/lib/driver-map";
 
 /** Match the reviewed calendar by date, since cancelled events shift API rounds.
  * Unknown dates retain their source round rather than attaching another race. */
@@ -19,7 +20,7 @@ export function teamRaceEntries(
   return results.filter((result) => {
     const mapped = mapConstructorToTeamId(result.Constructor.constructorId, result.Constructor.name);
     if (mapped) return mapped === teamId;
-    const code = result.Driver.code?.toUpperCase();
+    const code = getDriverFromJolpica(result.Driver)?.abbreviation ?? result.Driver.code?.toUpperCase();
     return Boolean(code && fallbackDriverCodes.has(code));
   });
 }

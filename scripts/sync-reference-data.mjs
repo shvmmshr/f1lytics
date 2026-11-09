@@ -2,7 +2,7 @@ import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
-import { matchesDriverReference, parseCircuitReference, parseTeamReference, trustedCircuitImage, validateScheduleRefresh } from "../src/lib/data/reference-parser.ts";
+import { matchesDriverReference, resolveDriverReferenceNumber, parseCircuitReference, parseTeamReference, trustedCircuitImage, validateScheduleRefresh } from "../src/lib/data/reference-parser.ts";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const read = async path => JSON.parse(await readFile(join(root, path), "utf8"));
@@ -100,8 +100,7 @@ try {
     const confirmed = manifest.confirmedSubstitutions?.find(item => item.dates.includes(race.date) && item.sourceId === result.Driver.driverId);
     const driver = manifest.drivers.find(d => matchesDriverReference(d, result.Driver));
     if (!driver) { if (!confirmed) review.push(`Latest classification includes uncatalogued driver ${result.Driver?.driverId}; preserve their race row and review season entry`); continue; }
-    const number = Number(result.Driver.permanentNumber);
-    if (!Number.isInteger(number) || number < 1 || number > 99) throw Error("Invalid driver number");
+    const number = resolveDriverReferenceNumber(result.Driver.permanentNumber, result.number, previous.drivers[driver.id]?.number);
     changed("drivers", driver.id, { number });
     const actualTeam = result.Constructor?.constructorId === "rb" ? "racing_bulls" : result.Constructor?.constructorId;
     if (actualTeam && actualTeam !== driver.teamId && confirmed?.teamId !== actualTeam) review.push(`${driver.id}: latest race team differs from the listed season team; review temporary entry or permanent transfer`);

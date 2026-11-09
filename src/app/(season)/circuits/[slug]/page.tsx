@@ -3,13 +3,14 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getRaceResults } from "@/lib/api/jolpica";
 import type { RaceResult } from "@/lib/api/types";
-import { CIRCUIT_LIST, DRIVER_LIST, TEAMS, getApiRound, getCircuitBySlug } from "@/lib/constants";
+import { CIRCUIT_LIST, TEAMS, getApiRound, getCircuitBySlug } from "@/lib/constants";
 import { getWeekendSchedule } from "@/lib/constants/sessions";
 import { CIRCUIT_FACTS } from "@/lib/circuits/facts";
 import { CIRCUIT_GUIDES } from "@/lib/circuits/guides";
 import { circuitLapRecord, circuitWeekendState, matchingCircuitRace } from "@/lib/circuits/weekend";
 import { nowMs } from "@/lib/clock";
 import { mapConstructorToTeamId } from "@/lib/constructor-map";
+import { getDriverFromJolpica } from "@/lib/driver-map";
 import { countryCodeToFlag } from "@/lib/utils";
 import { PageTransition } from "@/components/layout/page-transition";
 import { F1, Grid as BroadcastGrid, SectionHeader } from "@/components/shared/broadcast";
@@ -150,7 +151,7 @@ export default async function CircuitPage({ params }: CircuitPageProps) {
                 <caption className="sr-only">Top five finishers, 2026 {circuit.fullName}</caption>
                 <thead><tr className="border-b border-line bg-bg-primary"><th scope="col" className={`${labelClass} w-12 py-3 pl-4 text-left sm:w-14`}>Pos</th><th scope="col" className={`${labelClass} py-3 pl-2 text-left`}>Driver / team</th><th scope="col" className={`${labelClass} w-24 py-3 pr-4 text-right sm:w-28`}>Time / gap</th></tr></thead>
                 <tbody>{topResults.map(result => {
-                  const driver = DRIVER_LIST.find(candidate => candidate.id === result.Driver.driverId || candidate.abbreviation === result.Driver.code?.toUpperCase());
+                  const driver = getDriverFromJolpica(result.Driver);
                   const teamId = mapConstructorToTeamId(result.Constructor?.constructorId ?? "", result.Constructor?.name ?? "");
                   const team = teamId ? TEAMS[teamId] : undefined;
                   const name = `${result.Driver.givenName} ${result.Driver.familyName}`;
