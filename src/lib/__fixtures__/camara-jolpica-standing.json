@@ -1,0 +1,19 @@
+{
+  "position": "25",
+  "positionText": "25",
+  "points": "0",
+  "wins": "0",
+  "Driver": {
+    "driverId": "rafael_camara",
+    "givenName": "Rafael",
+    "familyName": "Camara"
+  },
+  "Constructors": [
+    {
+      "constructorId": "haas",
+      "url": "https://en.wikipedia.org/wiki/Haas_F1_Team",
+      "name": "Haas F1 Team",
+      "nationality": "American"
+    }
+  ]
+}

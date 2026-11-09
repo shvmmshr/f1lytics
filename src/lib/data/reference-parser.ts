@@ -119,3 +119,23 @@ export function matchesDriverReference(
     && normalized(identity.familyName) === normalized(driver.familyName)
     && identity.dateOfBirth === driver.dateOfBirth;
 }
+
+/** A race number is not automatically a permanent number. When the upstream
+ * bio is incomplete, only corroborate a previously reviewed reference value.
+ * Present-but-invalid data must never silently fall back to saved data. */
+export function resolveDriverReferenceNumber(permanentNumber: unknown, raceNumber: unknown, previousNumber: unknown): number {
+  const parse = (value: unknown): number => {
+    if (typeof value !== "string" || !/^[1-9][0-9]?$/.test(value)) throw new Error("Invalid driver number");
+    return Number(value);
+  };
+  if (permanentNumber !== undefined && permanentNumber !== null) {
+    const number = parse(permanentNumber);
+    if (raceNumber !== undefined && parse(raceNumber) !== number) throw new Error("Driver number conflicts with race entry");
+    return number;
+  }
+  if (typeof previousNumber !== "number" || !Number.isInteger(previousNumber) || previousNumber < 1 || previousNumber > 99) {
+    throw new Error("Missing reviewed driver number");
+  }
+  if (parse(raceNumber) !== previousNumber) throw new Error("Race number differs from reviewed driver number");
+  return previousNumber;
+}

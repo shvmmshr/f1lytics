@@ -1,8 +1,9 @@
 import { PageHeader } from "@/components/shared/page-header";
 import Link from "next/link";
 import { getConstructorStandings, getDriverStandings } from "@/lib/api/jolpica";
-import { DRIVER_LIST, TEAMS } from "@/lib/constants";
+import { TEAMS } from "@/lib/constants";
 import { mapConstructorToTeamId } from "@/lib/constructor-map";
+import { getDriverFromJolpica, jolpicaDriverCode } from "@/lib/driver-map";
 import { PageTransition } from "@/components/layout/page-transition";
 import {
   F1,
@@ -47,20 +48,17 @@ export default async function StandingsPage() {
 
   const drivers = driverStandings
     .map((s) => {
-      const code = s.Driver.code?.toUpperCase();
-      const localDriver = code
-        ? DRIVER_LIST.find((d) => d.abbreviation === code)
-        : undefined;
+      const localDriver = getDriverFromJolpica(s.Driver);
       const seasonTeams = s.Constructors.map(constructor => {
         const id = mapConstructorToTeamId(constructor.constructorId, constructor.name);
         return { name: id ? TEAMS[id].name : constructor.name, color: id ? TEAMS[id].color : F1.fg3 };
       });
       return {
         id: s.Driver.driverId,
-        code: code ?? s.Driver.familyName.slice(0, 3).toUpperCase(),
+        code: jolpicaDriverCode(s.Driver),
         first: s.Driver.givenName,
         last: s.Driver.familyName,
-        number: s.Driver.permanentNumber ?? "",
+        number: s.Driver.permanentNumber ?? localDriver?.number ?? "",
         position: Number.parseInt(s.position, 10),
         points: Number.parseFloat(s.points),
         wins: Number.parseInt(s.wins, 10),

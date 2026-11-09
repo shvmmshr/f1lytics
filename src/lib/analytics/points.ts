@@ -1,6 +1,7 @@
 import type { RaceResult, SprintRace, ResultItem } from "@/lib/api/types";
 import { CIRCUIT_LIST, getApiRound } from "@/lib/constants/circuits";
 import { mapConstructorToTeamId } from "@/lib/constructor-map";
+import { jolpicaDriverCode } from "@/lib/driver-map";
 
 export interface PointsEntry { round: number; cumulativePoints: number }
 
@@ -22,7 +23,7 @@ export function buildPointsProgression(races: RaceResult[], sprints: SprintRace[
     for (const row of weekend.rows) {
       const points = Number(row.points);
       if (!Number.isFinite(points) || points < 0) continue;
-      const code = (row.Driver.code ?? row.Driver.familyName.slice(0, 3)).toUpperCase();
+      const code = jolpicaDriverCode(row.Driver);
       driverTotals[code] = (driverTotals[code] ?? 0) + points;
       const id = mapConstructorToTeamId(row.Constructor.constructorId, row.Constructor.name);
       if (id) teamTotals[id] = (teamTotals[id] ?? 0) + points;

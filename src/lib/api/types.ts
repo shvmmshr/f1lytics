@@ -35,11 +35,11 @@ export interface Driver {
   driverId: string;
   permanentNumber?: string;
   code?: string;
-  url: string;
+  url?: string;
   givenName: string;
   familyName: string;
-  dateOfBirth: string;
-  nationality: string;
+  dateOfBirth?: string;
+  nationality?: string;
 }
 
 /** Constructor info as returned by the Jolpica API */

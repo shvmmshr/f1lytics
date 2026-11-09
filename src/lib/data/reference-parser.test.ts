@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { matchesDriverReference, parseCircuitReference, parseTeamReference, referenceGrid, referenceText, trustedCircuitImage, validateScheduleRefresh, type CircuitReference } from "./reference-parser";
+import { matchesDriverReference, resolveDriverReferenceNumber, parseCircuitReference, parseTeamReference, referenceGrid, referenceText, trustedCircuitImage, validateScheduleRefresh, type CircuitReference } from "./reference-parser";
 import reference from "./circuit-reference.json";
 import schedules from "./session-reference.json";
+import manifest from "../../../scripts/reference-manifest.json";
 
 const grid = (pairs: [string, string, string?][]) => pairs.map(([k, v, extra]) => `<dt class="label">${k}</dt><dd><strong>${v}</strong></dd>${extra ? `<span>${extra}</span>` : ""}`).join("\n");
 const circuit = grid([["Circuit Length", "5.414km"], ["First Grand Prix", "2026"], ["Number of Laps", "57"], ["Race Distance", "308.399km"], ["Fastest lap time", "1:32.000", "Test Driver (2026)"]]);
@@ -119,5 +120,32 @@ describe("reviewed debutant driver identity", () => {
   it("retains exact ID matching for already catalogued drivers", () => {
     expect(matchesDriverReference({ ...entry, sourceId: "known_id" }, { ...entry.identity, driverId: "different_id" })).toBe(false);
     expect(matchesDriverReference({ sourceId: "ocon" }, { driverId: "ocon" })).toBe(true);
+  });
+});
+
+
+describe("incomplete classification driver reference", () => {
+  it("matches the reviewed source ID without inventing missing bio fields", () => {
+    const entry = manifest.drivers.find(driver => driver.id === "camara")!;
+    expect(entry.sourceId).toBe("rafael_camara");
+    const driver = { driverId: "rafael_camara", givenName: "Rafael", familyName: "Camara" };
+    expect(matchesDriverReference(entry, driver)).toBe(true);
+    expect(matchesDriverReference(entry, { ...driver, driverId: "another_camara" })).toBe(false);
+    expect(resolveDriverReferenceNumber(undefined, "51", 51)).toBe(51);
+  });
+  it("preserves a reviewed number only when the actual entry corroborates it", () => {
+    expect(resolveDriverReferenceNumber(null, "51", 51)).toBe(51);
+    expect(() => resolveDriverReferenceNumber(undefined, "52", 51)).toThrow(/differs/);
+    expect(() => resolveDriverReferenceNumber(undefined, "51", undefined)).toThrow(/reviewed/);
+    expect(() => resolveDriverReferenceNumber(undefined, undefined, 51)).toThrow(/Invalid/);
+  });
+  it.each(["", "0", "100", "51abc", "5.1", "-1", 51])("rejects malformed numbers instead of using a fallback: %s", value => {
+    expect(() => resolveDriverReferenceNumber(value, "51", 51)).toThrow(/Invalid/);
+    expect(() => resolveDriverReferenceNumber(undefined, value, 51)).toThrow(/Invalid/);
+  });
+  it("accepts valid permanent-number updates but rejects conflicting entry data", () => {
+    expect(resolveDriverReferenceNumber("1", "1", 4)).toBe(1);
+    expect(resolveDriverReferenceNumber("51", undefined, 51)).toBe(51);
+    expect(() => resolveDriverReferenceNumber("51", "52", 51)).toThrow(/conflicts/);
   });
 });
