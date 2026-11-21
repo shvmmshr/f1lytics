@@ -1,5 +1,6 @@
 import { getWeekendSchedule, SESSION_DURATIONS_MS } from "@/lib/constants/sessions";
 import { describe, expect, it } from "vitest";
+import { publishedGridSnapshot } from "@/lib/api/published-grids";
 import { CIRCUIT_LIST, DRIVER_LIST } from "@/lib/constants";
 import type { GridRow, RecentRace } from "@/lib/api/weekend";
 import { HEADLINE_MAX_EM, fitsHeadline, headlineWidthEm, heroCopy, properName, type HeroCopyInput } from "./hero-copy";
@@ -84,13 +85,13 @@ describe("heroCopy phases", () => {
   });
 
   it("live wins over a set grid", () => {
-    const copy = heroCopy({ ...base, weekend: { ...base.weekend!, grid: monzaGrid }, liveSession: { raceDate: monza.raceDate, session: "race" } });
+    const copy = heroCopy({ ...base, weekend: { ...base.weekend!, grid: { status: "published", rows: monzaGrid } }, liveSession: { raceDate: monza.raceDate, session: "race" } });
     expect(copy.phase).toBe("live");
     expect(copy.description).toContain("The race is scheduled now at Monza");
   });
 
   it("grid set: pole sitter in the headline, labelled clock, grid button", () => {
-    const copy = heroCopy({ ...base, weekend: { ...base.weekend!, grid: monzaGrid } });
+    const copy = heroCopy({ ...base, weekend: { ...base.weekend!, grid: { status: "published", rows: monzaGrid } } });
     expect(copy.phase).toBe("grid-set");
     expect(copy.eyebrow).toBe("GRID SET · RD 15 · ITALIAN GRAND PRIX");
     expect(copy.line1).toBe("GASLY");
@@ -98,15 +99,41 @@ describe("heroCopy phases", () => {
     expect(copy.srSuffix).toBe(" · Italian Grand Prix");
     expect(copy.clock).toEqual({ label: "LIGHTS OUT IN" });
     expect(copy.description).toBe(
-      "Pierre Gasly takes pole for Alpine, ahead of Russell and Piastri. Penalties can still move the grid. Full order, schedule and live timing in one place."
+      "Pierre Gasly takes pole for Alpine, ahead of Russell and Piastri. The published grid includes applied penalties. Full order, schedule and live timing in one place."
     );
     expect(copy.primary).toEqual({ label: "STARTING GRID", href: "/races/italian-gp#starting-grid" });
     expect(copy.secondary.href).toBe("/standings");
   });
 
+  it("never declares the qualifying leader to be on pole in the provisional preview", () => {
+    const copy = heroCopy({
+      ...base,
+      weekend: { ...base.weekend!, grid: { status: "qualifying-preview", rows: monzaGrid } },
+    });
+    expect(copy.phase).toBe("qualifying-preview");
+    expect(copy.eyebrow).toContain("PROVISIONAL GRID");
+    expect(copy.line2).toBe("QUICKEST.");
+    expect(fitsHeadline(copy.line2!)).toBe(true);
+    expect(copy.primary.label).toBe("GRID PREVIEW");
+  });
+
+  it("uses Verstappen for pole and keeps the published Vegas grid marked provisional", () => {
+    const vegas = CIRCUIT_LIST.find((c) => c.slug === "las-vegas-gp")!;
+    const grid = publishedGridSnapshot(vegas.raceDate, Date.parse("2026-11-21T08:00:00Z"))!;
+    const copy = heroCopy({
+      ...base,
+      nextRace: vegas,
+      weekend: { raceSlug: vegas.slug, isSprint: false, grid },
+    });
+    expect(copy.line1).toBe("VERSTAPPEN");
+    expect(copy.line2).toBe("ON POLE.");
+    expect(copy.eyebrow).toContain("PUBLISHED GRID · PROVISIONAL");
+    expect(copy.primary.href).toBe("/races/las-vegas-gp#starting-grid");
+  });
+
   it("grid set: OpenF1's capitalised surnames read as names in the sentence", () => {
     const openF1Grid = [row(1, "Pierre GASLY", "Alpine"), row(2, "George RUSSELL", "Mercedes"), row(3, "Nyck DE VRIES", "Audi")];
-    const copy = heroCopy({ ...base, weekend: { ...base.weekend!, grid: openF1Grid } });
+    const copy = heroCopy({ ...base, weekend: { ...base.weekend!, grid: { status: "published", rows: openF1Grid } } });
     expect(copy.line1).toBe("GASLY");
     expect(copy.description.startsWith("Pierre Gasly takes pole for Alpine, ahead of Russell and Vries.")).toBe(true);
     expect(properName("Pato O'WARD")).toBe("Pato O'Ward");
@@ -115,8 +142,8 @@ describe("heroCopy phases", () => {
   });
 
   it("grid set: a short classification still reads correctly", () => {
-    const copy = heroCopy({ ...base, weekend: { ...base.weekend!, grid: [monzaGrid[0]] } });
-    expect(copy.description).toContain("takes pole for Alpine. Penalties");
+    const copy = heroCopy({ ...base, weekend: { ...base.weekend!, grid: { status: "published", rows: [monzaGrid[0]] } } });
+    expect(copy.description).toContain("takes pole for Alpine. The published grid");
   });
 
   it("sprint done: winner in the headline until the grid is set", () => {
@@ -132,7 +159,7 @@ describe("heroCopy phases", () => {
   });
 
   it("grid set beats sprint done", () => {
-    const weekend = { raceSlug: sprintRound.slug, isSprint: true, sprintWinner: { name: "Verstappen" }, grid: monzaGrid };
+    const weekend = { raceSlug: sprintRound.slug, isSprint: true, sprintWinner: { name: "Verstappen" }, grid: { status: "published" as const, rows: monzaGrid } };
     expect(heroCopy({ ...base, nextRace: sprintRound, weekend }).phase).toBe("grid-set");
   });
 
@@ -156,7 +183,7 @@ describe("heroCopy phases", () => {
   });
 
   it("ignores weekend data for a race that is no longer next (post-race rollover)", () => {
-    const stale = { raceSlug: "italian-gp", isSprint: false, grid: monzaGrid };
+    const stale = { raceSlug: "italian-gp", isSprint: false, grid: { status: "published" as const, rows: monzaGrid } };
     const afterRace = heroCopy({ ...base, nextRace: madrid, weekend: stale, recentRace: monzaResult });
     expect(afterRace.phase).toBe("post-race");
     const noResultYet = heroCopy({ ...base, nextRace: madrid, weekend: stale });
@@ -251,7 +278,7 @@ describe("clock-driven weekend transitions", () => {
   it("waits for qualifying publication, then uses the available classification", () => {
     const now = Date.parse(schedule.qualifying!) + SESSION_DURATIONS_MS.qualifying + 1;
     expect(heroCopy({ ...base, now }).phase).toBe("awaiting-results");
-    expect(heroCopy({ ...base, now, weekend: { ...base.weekend!, grid: monzaGrid } }).phase).toBe("grid-set");
+    expect(heroCopy({ ...base, now, weekend: { ...base.weekend!, grid: { status: "published", rows: monzaGrid } } }).phase).toBe("grid-set");
   });
 
   it("does not fall back to a championship story when race results are delayed", () => {

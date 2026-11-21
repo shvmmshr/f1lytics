@@ -78,8 +78,8 @@ export default async function Home() {
   }
 
   // Weekend mode: once the next event's race weekend is underway (race day
-  // minus 3 days), surface what's already decided — the starting grid (from
-  // OpenF1, minutes after qualifying) and the sprint winner — in the Hero's
+  // minus 3 days), surface the grid (or a clearly marked qualifying preview)
+  // and the sprint winner in the Hero's
   // UP NEXT card. After a race, the LAST RACE podium card shows for 3 days.
   let weekend: WeekendInfo | null = null;
   let recentRace: RecentRace | null = null;
@@ -96,7 +96,7 @@ export default async function Home() {
 
   try {
     const [grid, sprint, recent] = await Promise.all([
-      circuit ? getStartingGrid(circuit) : Promise.resolve([]),
+      circuit ? getStartingGrid(circuit) : Promise.resolve(null),
       circuit?.isSprint
         ? getSprintResults("2026", String(getApiRound(circuit))).catch((error) => { console.warn("[f1lytics] home sprint unavailable:", error); return null; })
         : Promise.resolve(null),
@@ -105,7 +105,7 @@ export default async function Home() {
     recentRace = recent;
     if (circuit) {
       weekend = { raceSlug: circuit.slug, isSprint: circuit.isSprint };
-      if (grid.length > 0) weekend.grid = grid.slice(0, 8);
+      if (grid) weekend.grid = { ...grid, rows: grid.rows.slice(0, 8) };
       const sprintWinner =
         sprint?.date === circuit.raceDate
           ? sprint.SprintResults?.find((r) => r.position === "1")

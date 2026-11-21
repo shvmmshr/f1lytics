@@ -1,6 +1,6 @@
 import { CIRCUIT_LIST, type Circuit } from "@/lib/constants";
 import { SESSION_LABELS, SESSION_DURATIONS_MS, getActiveSession, getWeekendSchedule, type ActiveSession } from "@/lib/constants/sessions";
-import type { GridRow, RecentRace } from "@/lib/api/weekend";
+import type { GridRow, RecentRace, StartingGrid } from "@/lib/api/weekend";
 
 /**
  * The homepage headline, generated from season state rather than a slogan.
@@ -14,8 +14,8 @@ import type { GridRow, RecentRace } from "@/lib/api/weekend";
 export interface HeroWeekend {
   raceSlug: string;
   isSprint: boolean;
-  /** Top of the starting grid once qualifying results publish. P1 = pole. */
-  grid?: GridRow[];
+  /** Top rows and provenance of the published grid or qualifying preview. */
+  grid?: StartingGrid;
   /** Sprint winner, once the sprint has run (sprint weekends only). */
   sprintWinner?: { name: string };
 }
@@ -44,6 +44,7 @@ export type HeroPhase =
   | "awaiting-results"
   | "live"
   | "grid-set"
+  | "qualifying-preview"
   | "sprint-done"
   | "weekend"
   | "post-race"
@@ -201,17 +202,32 @@ function clockFor(eventType: HeroCopyInput["eventType"]): HeroCopy["clock"] {
   return { label: eventType === "sprint" ? "SPRINT IN" : "LIGHTS OUT IN" };
 }
 
-function gridSetCopy(circuit: Circuit, weekend: HeroWeekend, grid: GridRow[], eventType: HeroCopyInput["eventType"]): HeroCopy {
-  const pole = grid[0];
+function gridSetCopy(circuit: Circuit, weekend: HeroWeekend, grid: StartingGrid, eventType: HeroCopyInput["eventType"]): HeroCopy {
+  const leader = grid.rows[0];
+  const href = `/races/${weekend.raceSlug}#starting-grid`;
+  if (grid.status === "qualifying-preview") {
+    return {
+      phase: "qualifying-preview",
+      eyebrow: `PROVISIONAL GRID · ${rd(circuit)} · ${circuit.fullName.toUpperCase()}`,
+      line1: leader.familyName.toUpperCase(),
+      line2: "QUICKEST.",
+      srSuffix: ` · ${circuit.fullName}`,
+      clock: clockFor(eventType),
+      description: `${properName(leader.driverName)} topped qualifying for ${leader.teamName}. This preview uses the qualifying order; the race grid has not been confirmed here.`,
+      primary: { label: "GRID PREVIEW", href },
+      secondary: STANDINGS_SECONDARY,
+    };
+  }
+  const pole = leader;
   return {
     phase: "grid-set",
-    eyebrow: `GRID SET · ${rd(circuit)} · ${circuit.fullName.toUpperCase()}`,
+    eyebrow: `${grid.status === "published-provisional" ? "PUBLISHED GRID · PROVISIONAL" : "GRID SET"} · ${rd(circuit)} · ${circuit.fullName.toUpperCase()}`,
     line1: pole.familyName.toUpperCase(),
     line2: "ON POLE.",
     srSuffix: ` · ${circuit.fullName}`,
     clock: clockFor(eventType),
-    description: `${properName(pole.driverName)} takes pole for ${pole.teamName}${aheadOf(grid)}. Penalties can still move the grid. Full order, schedule and live timing in one place.`,
-    primary: { label: "STARTING GRID", href: `/races/${weekend.raceSlug}#starting-grid` },
+    description: `${properName(pole.driverName)} takes pole for ${pole.teamName}${aheadOf(grid.rows)}. The published grid includes applied penalties. Full order, schedule and live timing in one place.`,
+    primary: { label: "STARTING GRID", href },
     secondary: STANDINGS_SECONDARY,
   };
 }
@@ -348,7 +364,7 @@ export function heroCopy(input: HeroCopyInput): HeroCopy {
     if (!inWeekend) weekend = null;
     else if (nextRace && schedule) {
       weekend ??= { raceSlug: nextRace.slug, isSprint: nextRace.isSprint };
-      if (schedule.qualifying && now > Date.parse(schedule.qualifying) + SESSION_DURATIONS_MS.qualifying && !weekend.grid?.length) {
+      if (schedule.qualifying && now > Date.parse(schedule.qualifying) + SESSION_DURATIONS_MS.qualifying && !weekend.grid?.rows.length) {
         return awaitingCopy(nextRace, "Qualifying");
       }
     }
@@ -359,7 +375,7 @@ export function heroCopy(input: HeroCopyInput): HeroCopy {
     }
   }
   if (weekend && nextRace) {
-    if (weekend.grid?.length) return gridSetCopy(nextRace, weekend, weekend.grid, eventType);
+    if (weekend.grid?.rows.length) return gridSetCopy(nextRace, weekend, weekend.grid, eventType);
     if (weekend.sprintWinner) return sprintDoneCopy(nextRace, weekend, weekend.sprintWinner.name, eventType);
     return weekendCopy(nextRace, weekend, eventType);
   }

@@ -362,6 +362,15 @@ export interface OpenF1SessionResult {
   gap_to_leader: number | string | (number | null)[] | null;
 }
 
+/** Race starting position from OpenF1's starting_grid endpoint. */
+export interface OpenF1StartingGrid {
+  session_key: number;
+  meeting_key: number;
+  position: number | null;
+  driver_number: number;
+  lap_duration: number | null;
+}
+
 /** Weather reading from OpenF1 (one row per ~minute during a session) */
 export interface OpenF1Weather {
   session_key: number;
