@@ -28,8 +28,8 @@ import {
 import { StartLights } from "@/components/home/start-lights";
 import { SessionSchedule } from "@/components/shared/session-schedule";
 import { LiveNow } from "@/components/home/live-now";
-import type { GridRow, RecentRace } from "@/lib/api/weekend";
-import { heroCopy } from "@/lib/home/hero-copy";
+import type { RecentRace } from "@/lib/api/weekend";
+import { heroCopy, type HeroWeekend } from "@/lib/home/hero-copy";
 
 type Standing = {
   position: number;
@@ -38,15 +38,7 @@ type Standing = {
   points: number;
 };
 
-/** Server-computed race-weekend context for the UP NEXT card. */
-export interface WeekendInfo {
-  raceSlug: string;
-  isSprint: boolean;
-  /** Top of the starting grid (OpenF1, minutes after qualifying). P1 = pole. */
-  grid?: GridRow[];
-  /** Sprint winner, once the sprint has run (sprint weekends only). */
-  sprintWinner?: { name: string };
-}
+export type WeekendInfo = HeroWeekend;
 
 function pad(n: number) {
   return String(n).padStart(2, "0");
@@ -583,7 +575,7 @@ export function Hero({
               )}
 
               {/* Weekend context — sprint winner + starting grid preview as
-                  they get decided (grid is OpenF1-live, minutes after quali) */}
+                  they get decided */}
               {weekend && (weekend.grid || weekend.sprintWinner) && (
                 <div
                   className="flex flex-col gap-2"
@@ -606,13 +598,17 @@ export function Hero({
                       </Mono>
                     </div>
                   )}
-                  {weekend.grid && weekend.grid.length > 0 && (
+                  {weekend.grid && weekend.grid.rows.length > 0 && (
                     <>
                       <div className="flex items-center justify-between gap-3">
                         <Mono
                           style={{ fontSize: 10, color: F1.fg3, letterSpacing: "0.2em" }}
                         >
-                          STARTING GRID
+                          {weekend.grid.status === "qualifying-preview"
+                            ? "PROVISIONAL GRID · QUALIFYING ORDER"
+                            : weekend.grid.status === "published-provisional"
+                              ? "PUBLISHED STARTING GRID · PROVISIONAL"
+                              : "STARTING GRID"}
                         </Mono>
                         <Link
                           href={`/races/${weekend.raceSlug}#starting-grid`}
@@ -629,7 +625,7 @@ export function Hero({
                         </Link>
                       </div>
                       <div className="grid grid-cols-2 gap-x-3 gap-y-1">
-                        {weekend.grid.map((row) => (
+                        {weekend.grid.rows.map((row) => (
                           <div
                             key={row.position}
                             className="flex items-center gap-2 min-w-0"
@@ -674,7 +670,7 @@ export function Hero({
                   marginTop: 18,
                   gap: 10,
                   fontFamily: "var(--font-display)",
-                  display: weekend?.grid?.length ? "none" : undefined,
+                  display: weekend?.grid?.rows.length ? "none" : undefined,
                 }}
               >
                 {(

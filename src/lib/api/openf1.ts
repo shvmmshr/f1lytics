@@ -12,6 +12,7 @@ import type {
   OpenF1TeamRadio,
   OpenF1Weather,
   OpenF1SessionResult,
+  OpenF1StartingGrid,
 } from "./types";
 import { fetchWithRetry } from "./fetch-retry";
 
@@ -196,6 +197,11 @@ export async function getRaceControl(
 // =============================================================================
 // Session results (final classification — available minutes after a session)
 // =============================================================================
+
+/** Published, penalty-adjusted grid for a Grand Prix race session. */
+export async function getRaceStartingGrid(params: { session_key: number }): Promise<OpenF1StartingGrid[]> {
+  return fetchOpenF1<OpenF1StartingGrid>("/starting_grid", params, 60);
+}
 
 /** Fetch the final classification of a session. Published by OpenF1 within
  *  minutes of the chequered flag — hours before Jolpica/Ergast mirrors it.

@@ -5,7 +5,7 @@ import { buildLapChart } from "@/lib/analytics/lap-chart";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getRaceResults, getSprintResults } from "@/lib/api/jolpica";
-import { getStartingGrid, type GridRow } from "@/lib/api/weekend";
+import { getStartingGrid, type StartingGrid } from "@/lib/api/weekend";
 import type { ResultItem, SprintRace } from "@/lib/api/types";
 import { getLaps, getRaceControl, getSessions, getStints } from "@/lib/api/openf1";
 import { CIRCUIT_LIST, TEAMS, getApiRound, getCircuitBySlug } from "@/lib/constants";
@@ -179,16 +179,15 @@ export default async function RacePage({ params }: RacePageProps) {
   // rate limits when much of the season is still in the future.
   const raceHasHappened = circuit.raceDate <= new Date().toISOString().split("T")[0];
 
-  // Qualifying (→ starting grid) and sprint results exist BEFORE the race —
+  // A starting grid and sprint results can be published BEFORE the race —
   // fetch them as soon as the weekend is underway (race day minus 3 days).
   const weekendHasStarted =
     Date.now() >= raceDate.getTime() - 3 * 24 * 60 * 60 * 1000;
 
-  let gridRows: GridRow[] = [];
+  let startingGrid: StartingGrid | null = null;
   let sprintRows: ResultItem[] = [];
   if (!circuit.cancelled && weekendHasStarted) {
     const [grid, sprint] = await Promise.all([
-      // OpenF1-first (grid appears minutes after quali), Jolpica fallback.
       getStartingGrid(circuit),
       circuit.isSprint
         ? getSprintResults("2026", String(getApiRound(circuit))).catch(
@@ -200,7 +199,7 @@ export default async function RacePage({ params }: RacePageProps) {
           )
         : Promise.resolve(null),
     ]);
-    gridRows = grid;
+    startingGrid = grid;
     // Same round-renumbering guard as the race results below.
     if (sprint && sprint.date === circuit.raceDate) {
       sprintRows = [...(sprint.SprintResults ?? [])].sort(
@@ -383,8 +382,8 @@ export default async function RacePage({ params }: RacePageProps) {
           </section>
         )}
 
-        {/* STARTING GRID — from qualifying, shown until race results arrive */}
-        {results.length === 0 && gridRows.length > 0 && (
+        {/* STARTING GRID — published order or an explicitly marked preview */}
+        {results.length === 0 && startingGrid && startingGrid.rows.length > 0 && (
           <section
             id="starting-grid"
             // scroll-mt clears the 56px sticky navbar on #starting-grid jumps.
@@ -393,10 +392,14 @@ export default async function RacePage({ params }: RacePageProps) {
           >
             <div className="mx-auto" style={{ maxWidth: 1400 }}>
               <SectionHeader
-                label="STARTING GRID"
+                label={startingGrid.status === "qualifying-preview" ? "PROVISIONAL GRID" : "STARTING GRID"}
                 right={
                   <Mono style={{ fontSize: 10, color: F1.fg3, letterSpacing: "0.18em" }}>
-                    BASED ON QUALIFYING · PENALTIES MAY APPLY
+                    {startingGrid.status === "qualifying-preview"
+                      ? "QUALIFYING ORDER · PENALTIES NOT APPLIED"
+                      : startingGrid.status === "published-provisional"
+                        ? "PUBLISHED PROVISIONAL GRID · PENALTIES APPLIED"
+                        : "PUBLISHED GRID · PENALTIES APPLIED"}
                   </Mono>
                 }
               />
@@ -404,7 +407,7 @@ export default async function RacePage({ params }: RacePageProps) {
                 className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1"
                 style={{ maxWidth: 980 }}
               >
-                {gridRows.map((row, i) => {
+                {startingGrid.rows.map((row, i) => {
                   const teamColor = row.teamColor;
                   const bestLap = row.time ?? "—";
                   return (

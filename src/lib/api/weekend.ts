@@ -1,10 +1,11 @@
-import { getSessions, getSessionResult, getDrivers } from "./openf1";
+import { getSessions, getSessionResult, getDrivers, getRaceStartingGrid } from "./openf1";
 import { getQualifyingResults, getRaceResults } from "./jolpica";
 import type { OpenF1Session } from "./types";
 import { CIRCUIT_LIST, getApiRound, type Circuit } from "@/lib/constants";
 import { teamColorForName } from "@/lib/constructor-map";
 import { getWeekendSchedule } from "@/lib/constants/sessions";
 import { formatLapTime } from "@/lib/utils";
+import { publishedGridSnapshot } from "./published-grids";
 
 /** One slot of a starting grid / podium, normalized across data sources. */
 export interface GridRow {
@@ -15,6 +16,11 @@ export interface GridRow {
   teamColor: string;
   /** Best qualifying lap (grid) or points (podium), already formatted. */
   time: string | null;
+}
+
+export interface StartingGrid {
+  status: "published" | "published-provisional" | "qualifying-preview";
+  rows: GridRow[];
 }
 
 /** The most recently finished Grand Prix, for the homepage LAST RACE card. */
@@ -40,7 +46,7 @@ async function findWeekendSession(
   sessionName: string
 ): Promise<OpenF1Session | null> {
   const raceMs = new Date(`${circuit.raceDate}T00:00:00Z`).getTime();
-  const sessions = await getSessions({ year: 2026, session_name: sessionName });
+  const sessions = await getSessions({ year: circuit.raceDate.slice(0, 4), session_name: sessionName });
   return (
     sessions
       .map((s) => ({ s, diff: Math.abs(new Date(s.date_start).getTime() - raceMs) }))
@@ -84,25 +90,63 @@ async function openF1Classification(
     });
 }
 
-/**
- * Starting grid for a circuit's Grand Prix, OpenF1-first (live minutes after
- * qualifying — the same source as /live) with Jolpica as fallback once the
- * slower mirror publishes. Grid order is the qualifying classification;
- * penalties may still shuffle it.
- */
-export async function getStartingGrid(circuit: Circuit): Promise<GridRow[]> {
+/** The published race grid is separate from the qualifying classification. */
+export async function getStartingGrid(circuit: Circuit): Promise<StartingGrid | null> {
+  const snapshot = publishedGridSnapshot(circuit.raceDate, Date.now());
+  try {
+    const session = await findWeekendSession(circuit, "Race");
+    if (session) {
+      const raceRows = (await getRaceStartingGrid({ session_key: session.session_key }))
+        .filter((r) => r.session_key === session.session_key && r.meeting_key === session.meeting_key);
+      const grid = raceRows
+        .filter((r): r is typeof r & { position: number } =>
+          typeof r.position === "number" && Number.isInteger(r.position) && r.position > 0
+        )
+        .sort((a, b) => a.position - b.position);
+      const positivePositions = grid.map((r) => r.position);
+      const gridHasPole = positivePositions[0] === 1;
+      const uniquePositions = new Set(positivePositions).size === positivePositions.length;
+      const uniqueDrivers = new Set(raceRows.map((r) => r.driver_number)).size === raceRows.length;
+      // A pit-lane starter has no numbered grid place but still counts toward
+      // the completeness of the feed relative to a known published snapshot.
+      if (gridHasPole && uniquePositions && uniqueDrivers && (!snapshot || raceRows.length >= snapshot.rows.length)) {
+        const drivers = await getDrivers({ session_key: session.session_key });
+        const driverMap = new Map(drivers.map((d) => [d.driver_number, d]));
+        const rows = grid.map((r): GridRow => {
+          const driver = driverMap.get(r.driver_number);
+          const driverName = driver?.full_name ?? `#${r.driver_number}`;
+          const teamName = driver?.team_name ?? "—";
+          return {
+            position: r.position,
+            driverName,
+            familyName: driverName.split(" ").at(-1) ?? driverName,
+            teamName,
+            teamColor: driver?.team_colour ? `#${driver.team_colour}` : teamColorFromName(teamName),
+            time: typeof r.lap_duration === "number" ? formatLapTime(r.lap_duration) : null,
+          };
+        });
+        // A race grid can appear before the associated driver roster in OpenF1.
+        if (rows.every((row) => !row.driverName.startsWith("#"))) return { status: "published", rows };
+      }
+    }
+  } catch (err) {
+    console.warn("[f1lytics] OpenF1 starting grid unavailable:", err);
+  }
+
+  if (snapshot) return snapshot;
+
   try {
     const rows = await openF1Classification(circuit, "Qualifying");
-    if (rows.length > 0) return rows;
+    if (rows.length > 0) return { status: "qualifying-preview", rows };
   } catch (err) {
-    console.warn("[f1lytics] OpenF1 grid fetch failed:", err);
+    console.warn("[f1lytics] OpenF1 qualifying preview failed:", err);
   }
 
   try {
-    const quali = await getQualifyingResults("2026", String(getApiRound(circuit)));
+    const quali = await getQualifyingResults(circuit.raceDate.slice(0, 4), String(getApiRound(circuit)));
     const race = quali[0] ?? null;
-    if (!race || race.date !== circuit.raceDate) return [];
-    return [...(race.QualifyingResults ?? [])]
+    if (!race || race.date !== circuit.raceDate) return null;
+    const rows = [...(race.QualifyingResults ?? [])]
       .sort((a, b) => Number.parseInt(a.position, 10) - Number.parseInt(b.position, 10))
       .map((r) => ({
         position: Number.parseInt(r.position, 10),
@@ -112,9 +156,10 @@ export async function getStartingGrid(circuit: Circuit): Promise<GridRow[]> {
         teamColor: teamColorFromName(r.Constructor.name),
         time: r.Q3 ?? r.Q2 ?? r.Q1 ?? null,
       }));
+    return rows.length ? { status: "qualifying-preview", rows } : null;
   } catch (err) {
-    console.warn("[f1lytics] Jolpica grid fallback failed:", err);
-    return [];
+    console.warn("[f1lytics] Jolpica qualifying preview failed:", err);
+    return null;
   }
 }
 
